@@ -1,0 +1,243 @@
+[정정-기본자원요구량과 한도]
+0.5CPU 와 256메비바이트가 기본 할당량이라고 했다.
+하지만 POD가 기본적인 자원 할당량을 선택하기 위해 기본 설정을 LimitRange 라는 네임스페이스에 생성해야한다.
+------------------------------------------------------------
+[CPU]
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: cpu-limit-range
+spec:
+  limits:
+  - default:
+      cpu: 1
+    defaultRequest:
+      cpu: 0.5
+    type: Container
+	
+[MEMORY]
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: mem-limit-range
+spec:
+  limits:
+  - default:
+      memory: 512Mi
+    defaultRequest:
+      memory: 256Mi
+    type: Container
+------------------------------------------------------------
+아래의 항목외에 기 존재하는 POD 에서는 자원사양을 변경할 수가 없습니다.
+
+spec.containers[*].image
+spec.initContainers[*].image
+spec.activeDeadlineSeconds
+spec.tolerations
+------------------------------------------------------------
+
+Hello and welcome to this lecture.
+
+My name is Michelle.
+
+Let's look at a 3 node kubernetes cluster.
+다음 3개의 쿠버네티스 클러스터 노드를 살펴 봅시다.
+
+Each node has a set of CPU, memory and disk resources available, 
+각각의 노드는 CPU와 메모리 그리고 사용가능한 디스크 용량이 설정되어있습니다.
+
+every pod consumes a set of resources,
+모든 POD는 이런 자원 세트를 소비합니다.
+
+in this case, two CPUs, one memory and some disk space.
+이 경우에는 2개의 CPU, 1개의 메모리 그리고 어느정도의 디스크 스페이스 입니다.
+
+(Whenever:언제든지)
+Whenever a pod is placed on a node, it consumes resources available to that node.
+POD가 NODE 에 놓이는 언제든, 노드에서 이용 가능한 자원을 소비합니다.
+
+As we have discussed before, it is the kubernetes scheduler that decides which node a pod goes to.
+우리가 이전에 논의했던것과 같이. 이것은 어떤 노드에 POD 가 가는지는 결정하는 것은 쿠버네티스 스케쥴러입니다.
+
+The scheduler takes into consideration the amount of resources required by a pod and those available on the nodes.
+스케쥴러는 POD가 요청하는 량의 자원과 노드가 제공가능한 자원에 대해 고려합니다.
+
+In this case, the scheduler schedules a new pod on node too.
+이번 경우는, 스케쥴러는 새로운 POD가 노드에 올라가는 것으로 예약합니다.
+
+(sufficient:충분한)
+If the node has no sufficient resources, the scheduler avoids placing the pod on that node, 
+만약 노드가 더이상 충분한 리소스가 없으면, 스케쥴러는 POD 를 배치하는 것을 피합니다.
+
+instead places the pod on one where sufficient resources are available.
+대신에 POD를 가용자원이 있는 다른 곳에 위치 시킵니다.
+
+If there is no sufficient resources available on any of the nodes, kubernetes hold back scheduling the pod,
+만약 충분한 자원이 더이상 NODE 들에 남아 있지 않다면, 쿠버네티스는 POD 를 스케쥴링하는 작업을 보류합니다.
+
+you will see the pod in a pending state.
+POD의 Pending 상태를 보실 것입니다.
+
+(insufficient:불충분)
+If you look at the events, you will see the reason, insufficient CPU.
+만약 이벤트 부분을 살펴보면, 그 이유를 알수 있을 것입니다. CPU가 불충분
+
+Let us now focus on the resource requirements for each pod.
+각각의 POD 에 필요한 자원 요구량에 대해 집중해 봅시다.
+
+What are these blocks and what are their values 
+저 블록들은 무엇이고 저 블록의 값들은 무엇일까요?
+
+by default kubernetes assumes that a pod or a container within a pod requires point five CPU and 256 megabyte of memory.
+기본적으로 쿠버네티스는 POD 또는 POD내에 속해 있는 컨테이너당 0.5개의 CPU 와 256MB의 메모리를 필요로 합니다.
+
+This is known as the resource request for a container, the minimum amount of CPU or memory requested by the container when the scheduler tries to place the pod on a node.
+이것이 스케쥴러가 POD를 NODE에 위치시킬때 컨테이너가 요구하는 CPU, MEMORY 최소자원 요구량으로 알려져 있습니다.
+
+It uses these numbers to identify a node which has sufficient amount of resources available.
+이 번호를 사용하여 사용가능한 자원의 량을 가진 노드를 식별합니다.
+
+[0.5개 CPU, 256MB 메모리, 디스크공간은 미정]
+
+
+Now, if you know that your application will need more than this, you can modify these values by specifying them in your pod of our deployment definition files.
+만약 당신의 어플리케이션이 이보다 더 큰 자원 요구량을 요구할 경우. POD정의파일을 통해서 원하는 값으로 수정 가능합니다.
+
+In the simple pod definition file, add a section called Resources, 
+re여기 간단한 POD 정의파일에 Resources 라 부르는 섹션을 추가 합니다.
+
+under which add requests and specify the new values for memory and CPU usage.
+Resources 라 부르는 항목 아래에 requests 를 추가하고 원하는 CPU와 메모리 값을 지정합니다.
+
+In this case, I set to one GB of memory and one count of CPU.
+이번 경우 1GB의 메모리와 1개의 CPU를 설정합니다.
+
+So what does one count of C.P.U really mean?
+1개의 CPU란 실제 어떤 의미일까요?
+
+Remember, these block are used for illustration purposes only.
+기억하세요 이 블록은 삽화적 목적으로 사용되었습니다.
+
+It doesn't have to be in the increment of 0.5.
+이것은 0.5씩 즐가할 필요는 없습니다.
+
+You can specify any value as low as zero point one
+0.1부터 원하는 어떤 값이건 지정 가능합니다.
+
+zero point one C.P.U can also be expressed as one hundred M where M stands for Meely.
+0.1 CPU 는 또한 100M 로도 표현 할 수 있습니다.
+
+You can go as low as one M, but not lower than that.
+당신은 1M 같은 낮은 값을 지정 할 수도 있지만, 이보다 더 낮을 수는 없습니다.
+
+One count of C.P.U is equivalent to one vCPU, that 1 vCPU in AWS or 1 core in GCP or Azure or 1 hyper thread.
+1CPU는 1vCPU 값과 동일합니다. 1vCPU = 1 AWS vCPU, 또는 1Core of GCP 또는 1Hyper Thres in Azure.
+
+You could request a higher number of CPU's for the container, provided your nodes are sufficiently funded.
+당신의 컨테이너에 보다 많은 수의 CPU를 요청 할수도 있습니다만, 자원을 공급하는데에는 충분한 돈이 필요합니다.
+
+Similarly with memory, you could specify 256, maybe by using the MI suffix or specify the same value in memory like this, or use the suffix g for gigabyte 
+메모리의 경우도 유사하게, 당신은 256 메가 바이트의 메모리를 지정할 수 있습니다. MI 접미사를 이용하거나 메모리에 동일 한 값으로. 또는 기가바이트의 G를 접미사로 사용할 수 있습니다.
+
+note the difference between G and GI 
+G와 GI의 차이에 대해 확인하십시오. 
+
+(refers:표현하다, 참조하다) (whereas:반면에)
+g is gigabyte and it refers to a thousand megabytes, whereas GI refers to GibiByte and refers to 1024 Mi(MebiByte)
+G는 기가 바이트 입니다. 그리고 이건 1000메가 바이트를 표현 합니다.  반면에 GI의 경우 G는 GibiByte를 의미하고 1024 MebiByte 를 표현합니다.
+
+the same applies to megabyte and kilobyte.
+메가바이트와 킬로바이트에도 동일하게 적용가능합니다.
+
+
+
+Let's now look at a container running on a node in the docker world.
+그럼 도커 월드에 노드가 동작중인 컨테이너를 살펴 봅시다.
+
+A docker container has no limit to the resources it can consume on a node.
+도커 컨테이너는 노드에서 소비가능한 자원의 한계를 가지고 있지 않습니다.
+
+Say a container starts with one vCPU on a node.
+1개의 vCPU가 노드에 할당되어 컨테이너가 시작했다고 가정합시다.
+
+It can go up and consume as much resource as it requires,
+도커 계속해서 성장하고 컨테이너는 필요한 만큼의 많은 자원을 소비합니다.
+
+(suffocate:숨을막다)
+suffocating the native processes on the node or other containers of resources.
+노드에 있는 기본 프로세스들을 질식 시킵니다. 다른 컨테이너들의 리소스를.
+
+However, you can set a limit for the resource usage on this pod.
+하지만 해당 POD에서 사용하는 리소스의 한도를 지정 할 수 있습니다.
+
+By default, Kubernetes sets a limit of one vCPU to containers.
+기본적으로 쿠버네티스는 컨테이너 1vCPU의 한도를 지정합니다.
+
+(explicitly:명시적으로)
+So if you do not specify explicitly, a container will be limited to consume only one vCPU from the node.
+만약 당신이 명시적으로 지정하는게 아니라면, 노드에 컨테이너는 오직 1vCPU로 한도가 정해질 것입니다.
+
+The same goes with memory.
+메모리의 경우도 마찬가지입니다.
+
+By default, Kubernetes sets a limit of 512 MebiByte on containers.
+기본적으로 쿠버네티스는 컨테이너당 512MebiByte의 메모리 한계를 지정합니다. 
+
+If you don't like the default limit, you can change them by adding a limited section under the resources section In your definition file.
+만약 기본적으로 지정되는 리밋이 싫다면, 정의파일내 리밋 섹션을 자원 섹션 아래에 추가하여 이를 변경 할 수 있습니다.
+
+Specify new limits for the memory and CPU like this.
+이렇게 CPU와 메모리 자원을 새롭게 지정합니다.
+
+When the pod is created, Kubernetes sets new limits for the container.
+POD가 생성되면, 쿠버네티스는 새로운 컨테이너 리밋을 설정 할 것입니다.
+
+
+---------------------------------------------------------------
+POD내 스펙 부분에서 요구 사항과 한계 사항을 지정 할 수 있다.
+spec:
+	containers:
+		resources:
+			request:
+				memory: "1Gi"
+				cpu: 1
+			liits:
+				memory: "2Gi"
+				cpu: 2
+---------------------------------------------------------------
+
+
+Remember that the limits and requests are set for each container within the pod.
+기억하세요. 한도와 요청은 POD안에 있는 각각의 컨테이너 마다 설정되는 것을.
+
+(exceed:초과하다)
+So what happens when a pod tries to exceed resources beyond its specified limit?
+그럼 POD가 지정해둔 한도를 초과하려고 하면 무슨일이 생길까요?
+
+(throttles:조절판, 누르다, 절기하다, 목을 조르다)
+In case of CPU, Kubernetes throttles the CPU so that it does not go beyond the specified limit.
+CPU의 경우, 쿠버네티스틑 지정된 리밋을 초과하지 않도록 CPU를 조절 합니다.
+
+A container cannot use more CPU resources than its limit.
+컨테이너는 지정된 한도 보다 많은 CPU자원을 사용할 수 없습니다.
+
+However, this is not the case with the memory.
+하지만 메모리의 경우는 다릅니다.
+
+A container can use more memory resources than its limit.
+컨테이너는 부여된 한도 보다 많은 메모리 자원을 사용할 수 있습니다.
+
+(constantly:끊임없이)
+So if a pod tries to consume more memory than its limit constantly, the pod will be terminated.
+만약 POD가 끊임없이 한도 보다 많은 메모리를 사용하려 하면, POD는 소멸 될 것입니다.
+
+
+Well, that's it for this lecture on resource requirements in kubernetes.
+
+Head over to the coding exercises session and practice viewing, configuring and troubleshooting resource
+
+requirements in corporate.
+
+Thank you.
+
+And I will see you in the next lecture.

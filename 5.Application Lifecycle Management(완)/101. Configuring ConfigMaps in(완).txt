@@ -1,0 +1,213 @@
+------------------------------------------------------
+>> kubectl create configmap
+>> 	<config-name> --from-literal=APP_COLOR=blue
+>> 	              --from-literal=APP_MODE=prod
+>> 	              --from-literal=<key>=<value>
+>> 	              --from-literal=<key>=<value>
+
+>> 	<config-name> --from-file=%path%
+>> 	              --from-file=%path%
+------------------------------------------------------
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dapi-test-pod
+spec:
+  containers:
+    - name: test-container
+      image: k8s.gcr.io/busybox
+      command: [ "/bin/sh", "-c", "env" ]
+      envFrom:
+      - configMapRef:
+          name: special-config
+  restartPolicy: Never
+
+
+(Identify:식별하다, 확인하다.)
+
+
+
+In this lecture we discuss how to work with configuration data in Kubernetes.
+이번 강의에서는 우리는 어떻게 쿠버네티스의 설정 데이터가 동작하는가에 대해 알아보겠습니다.
+
+In the previous lecture we saw how to define environment variables in it pod definition file.
+우리는 이전 강의에서 POD 정의파일에서 환경 변수를 지정하는 방법에 대해 보았습니다.
+
+When you have a lot of pod definition files it will become difficult to manage the environment data stored within the query files.
+당신이 많은 량의 POD 정의파일을 가지고 있을때엔, 쿼리파일에 저장된 환경데이터의 관리를 어렵게 만들 것입니다. 
+
+(centrally:중앙에서)
+We can take this information out of the pod definition file and manage it centrally using ConfigurationMaps.
+우리는 이런 POD정의파일 밖에 있는 정보들을 가지거나 ConfigurationMaps 를 이용하여 중앙에서 관리할 수 있습니다.
+
+ConfigMaps are used to pass configuration data in the form of key value pairs in Kubernetes.
+설정맵은 쿠버네티스에서 키-벨류 형태로 설정 정보를전달하는데 사용됩니다. 
+
+When it pod is created inject the config map into the pod.
+POD가 안에 설정정보가 주립되어 생성되면
+
+So the key value pairs that are available as environment variables for the application hosted inside the container in the pod.
+키-벨류 쌍은 환경변수로 작용합니다. 어플리케이션이 POD 안의 컨테이너로 호스팅 되도록
+
+There are two phases involved in configuring ConfigMaps.
+여기에는 설정맵을 설정하는 것에 2가지가 얽혀 있습니다.
+
+First create the ConfigMaps and second Inject them into the POD.
+첫번째로는 설정맵을 생성하는 것이고 두번째는 설정맵을 POD 안에 주입하는 것입니다.
+
+Just like any other Kubernetes object.
+모든 다른 쿠버네티스 오브젝트 처럼
+
+There are two ways of creating a configmap.
+설정맵을 생성하는데에 2가지 방법이 있습니다.
+
+The imperative way - without using a ConfigMap definition file and the Declarative way by using a Config map definition file.
+명령적 방법 - 설정맵 정의파일 없이 생성하기 그리고 선언적 방법 - 설정맵 정의파일 생성하기.
+
+If you do not wish to create a configmap definition, you could simply use the kubectl create configmap command and specify the required arguments.
+만약 당신이 설정맵 정의파일 생성을 원치 않는다면, "kubectl create configmap"명령을 사용하시면 됩니다. 그리고 필수 아규먼트를 지정하시면 됩니다.
+
+Let's take a look at that first with this method.
+그럼 첫번째 방법을 살펴 봅시다.
+
+you can directly specify the key value pairs in the command line. 
+당신은 커맨드라인에 키-벨류 쌍으로 직접 지정가능 합니다.
+
+To create a configMap of the given values, run the kubectl create configmap command.
+설정맵에 값을 전달하여 생성하기 위해서는 "kubectl create configmap"를 실행하면 됩니다.
+
+The command is followed by the <config name> and the option <-–from-literal>.
+명령어는 뒤에는 설정 명과 옵션이 붙습니다.
+
+The from literal option is used to specify the key value pairs in the command itself.
+프롬 리터럴 옵션은 커맨드 자체에 키-벨류 쌍을 지정하는데 사용됩니다.
+
+In this example, we are creating a configmap by the name app-config, with a key value pair APP_COLOR equals blue.
+예를들어, 우리가 configmap 을 app-config 라는 이름으로 생성합니다.
+
+
+If you wish to add additional key value pairs simply specify the from literal options multiple times.
+만약 추가가능한 키-벨류 쌍을 추가하고 싶다면, from-literal-option 을 복수번 지정하면 됩니다.
+
+However this will get complicated when you have too many configuration items.
+하지만 이렇게 되면 설정 항목이 많아질수록 복잡해집니다. 
+
+Another way to input configuration data is through a file.
+설정 데이터를 입력하는 또다른 방법은 파일을 통하는 것입니다.
+
+Use the from file option to specify a path to the file that contains the required data.
+from-file-option을 통해 필요한 데이터가 포함된 파일의 경로를 지정하세요.
+
+The data from this file is read and stored under the name of the file 
+이 파일로 데이터는 읽고 파일이름 아래 저장됩니다.
+-----------------------------------------------------------------
+let us now look at the declarative approach.
+이제 선언적 접근법에 대해 알아 봅시다.
+
+(just like how we did for:우리가 ~에게 했던것 처럼)
+For this, we create a definition file just like how we did for the pod.
+그러기 위해 우리는 우리가 POD 에 했던것 처럼 정의파일을 생성 합니다.
+
+[configMap 에는 spec 대신에 data 가 들어 있다.]
+
+The file has apiVersion, kind, metadata and instead of spec, here we have “data”.
+파일에는 apiversion, kind, metadata 그리고 spec 대신에 data가 있습니다.
+
+The apiVersion is v1, kind is ConfigMap. Under metadata specify the name of the config map.
+apiVersion 은 v1, 종류는 configMap, 메타데이터 아래에는 configMap의 이름을 지정합니다.
+
+We will call it app-config. 
+우리는 이걸 app-config 라고 부를 겁니다.
+
+Under data add the configuration data in a key-value format. 
+데이터 아래에 설정정보를 키-벨류 형태로 추가합니다. ex) APP-COLOR: blue
+
+------------------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+	name: app-config
+data:
+	APP_COLOR: blue
+	APP_MODE: prod
+------------------------------------------------------------
+
+Run the kubectl create command and specify the configuration file name. 
+kubectl create 명령을 실행하고 설정파일 이름을 지정합니다.
+
+>> kubectl create -f config-map.yaml
+
+So that creates the app-config config map with the values we specified.
+그러면 app-config 라는 설정 맵이 우리가 지정한 값으로 생성됩니다.
+
+You can create as many configmaps as you need in the same way for various different purposes.
+당신은 당신이 원하는 아주 다양한 설정맵을 동일한 방법으로 다양한 목적에 맞게 생성 할 수 있습니다.
+
+Here I have one for my application, other for mysql and another one for redis.
+여기 제 어플리케이션 하나가 있습니다. 다른것은 mysql 과 redis 를 위한 것이 있습니다.
+
+(appropriately:적절하게)
+So it is important to name the config maps appropriately as you will be using these names later while associating it with PODs.
+따라서 설정맵의 이름을 적절하게 짓는것은 중요합니다.
+
+To view the configmaps, run the kubectl get configmaps command.
+설정맵을 보기 위해서느 kubectl get configmaps 명령어를 입력하면 됩니다.
+
+>> kubectl get configmaps
+
+This lists the newly created configmap named app-config.
+이 명령은 새롭게 생성된 app-config 이라는 이름의 설정맵이 나열됩니다.
+
+The kubectl describe configmaps command 
+>> kubectl describe configmaps 
+명령어는
+
+List the configuration data as well under the data section
+데이터 섹션 아래에 설정 데이터를 나열합니다.
+
+now that we have the config map created 
+이제 우리는 configMap 설정을 가지게 되었습니다.
+
+let us proceed with step 2 
+이제 스텝2로 진행해 봅시다.
+
+configuring it with a pod 
+POD 에 설정을 주입하기
+
+here I have a simple pod definition file that runs my simple web application 
+여기 web어플리케이션이 동작하는 간단한 POD 정의파일이 있습니다.
+
+to inject an environment variable add a new property to the container called envFrom. 
+환경 변수를 주입 하기 위해서는 새로운 프로퍼티를 컨테이너에 추가 해야 합니다. envForm 이라고 불리는
+ 
+The envFrom property is a list, so we can pass as many environment variables as required. 
+envForm 속성은 은 리스트 입니다. 그래서 우리는 우리가 원하는 만큼 많은 환경 변수를 전달 할 수 있습니다.
+
+Each item in the list corresponds to a configMap item. 
+목록의 각각의 아이탬은 configMap의 아이탬에 상응합니다.
+
+Specify the name of the configmap we created earlier.
+configmap 의 이름을 정의하는 것은 우리가 이전에 했습니다.
+
+This is how we inject a specific configmap from the ones we created before. 
+이것은 우리가 지정한 configmap 에 우리가 이전에 작성한것을 주입하는 방법입니다.
+
+Creating the pod definition file now creates a web application with a blue background. 
+POD정의파일을 생성하면 파란색 배경의 웹 어플리케이션이 생성됩니다.
+
+What we just saw was using configMaps to inject environment variables.
+우리가 방금 본 것은 환경변수를 주입하기 위해 configMaps 를 사용한 것이였습니다.
+
+There are other ways to inject configuration data into pods 
+여기 다른 방법이 있습니다. 설정 데이터를 POD 에 주입하는
+
+you can inject it as a single environment variable or you can inject the whole the data as files in a volume.
+당신은 단일 환경 변수를 여기 주입할 수 있습니다. 또는 당신은 여기 파일로 된 모든 데이터를 주입할 수 있습니다.
+
+(accompany:동반하다, ~을수반하다, 따르게하다)
+We will look at some of these options in the coding exercises that accompany this lecture.
+우리는 해당 옵션에 대해서 이 강의에 동반되는 코딩 연습으로 알아볼것입니다.
+
+So head over to the coding exercises section and practice viewing configuring and troubleshooting environment
+
+variables on a live Kubernetes environment.

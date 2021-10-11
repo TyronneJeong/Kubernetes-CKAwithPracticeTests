@@ -1,0 +1,327 @@
+Hello and welcome to this lecture in this lecture.
+
+We will discuss about namespaces in kubernetes,
+이번시간에는 네임스페이스에 대해 다뤄보겠습니다.
+
+
+let us begin with an analogy.
+비유를 동원해 시작해봅시다.
+
+
+There are two boys named Mark 
+저기 마크라 불리는 두 소년이 있습니다.
+
+(to differentiate :차별화하다)
+to differentiate them from each other.
+각 서로를 차별화 하기 위해
+
+We call them by their last names.
+우린 그들의 라스트 네임으로 부릅니다.
+
+Smith and Williams they come from different houses.
+스미스와 윌리엄. 그들은 각자 다른 집에 삽니다.
+
+Of course the Smiths and the Williams There are other members in the house.
+당연하게도, 스미스와 윌리범 그들은 각 집의 다른 구성원 입니다.
+
+
+[각자 다른집에 사는 동일한 성 마크를 가진 두 소년의 이야기]
+
+(address:주소, 주소를 쓰다.)
+The individuals within the house address each other simply by their first names.
+그 개인은 그들의 성에 따라 주소를 각각 쓰고 있습니다.
+
+For example the father addresses Mark simply as Mark.
+예를들어, 아버지는 마크라는 주소를 사용합니다.
+
+
+However if the father wishes to address the mark in the other house he would use the full name.
+하지만, 그 아버지가 다른집에 마크라는 주소를 짓고 싶어하는 경우, 그는 풀 네임을 써야 합니다.
+
+someone outside of these houses would also use the full name to refer to the boys or anyone within these houses.
+이 하우스의 구성원중 밖에 있는 사람은 소년이나 집안의 다른 누군가의 이름을 참고하여 써야 할지도 모릅니다.
+
+Each of these houses have their own set of rules 
+이 각각의 집은 그들만의 규칙이 있습니다.
+
+(consume:소비하다, 써버리다, 소멸시키다.)
+that defines who does what each of these houses have their own set of resources that they can consume.
+이 집의 각 인원이 사용가능한 자원의 집합을 정의해둔 규칙.
+
+
+(correspond:일치하다, 해당하다, 교신하다, 에 상당하다)
+Now let's get back to kubernetes these houses correspond to namespaces in kubernetes.
+이제 다시 쿠버네티스로 돌아가 봅시다. 이 하우스라는것이 쿠버네티스의 네임스페이스와 같습니다.
+
+So far in this course we've created objects such as pods deployments and services in our cluster.
+이 코스 후반에. 우리는 클러스터내에 POD 나 디플로이먼트 그리고 서비스 같은 오브젝트를 생성할 것입니다.
+
+Whatever we have been doing.
+우리가 가진게 무엇이건
+
+we have been doing within a namespace.
+우리는 네임 스페이스 안에 이것들을 가집니다.
+
+We were inside a house all this while 
+이 모든것들이 하우스 안에 있습니다.
+
+this namespace is known as the default namespace 
+이것은 기본 네임스페이스라고 알려진 네임스페이스 입니다.
+
+and it is created automatically kubernetes, when the cluster is first set up.
+그리고 이건 클러스터가 처음으로 설정되면 쿠버네티스에서 자동으로 생성되어 집니다.
+
+[default namespace를 진지하게 바라보는중]
+
+kubernetes, creates a set of pods and services for its internal purpose such as those required by the networking solution, The DNS service etc. 
+쿠버네티스는 내부에서 사용할 목적으로 네트워킹 솔루션이나 DNS서비스등등의 요청에 따라 pod 집합이나 서비스를 생성합니다.
+
+(isolate:격리하다 고립시키다)
+to isolate these from the user and to prevent you from accidentally deleting or modifying these services 
+사용자로부터 해당 노드나 서비스를 격리시키기 위해서 그리고 실수로 이를 삭제하거나 수정해버리는것에 대비하기 위해서
+
+kubernetes creates them under another namespace created at cluster startup named Kube system.
+쿠버네티스는 클러스터 시작 시키에 큐버 시스템이라고 불리는 네임스페이스 아래에 이들을 생성합니다. 
+
+[default namespace, kube system namespace, kube public namespace]
+
+a third namespace created by Kubernetes automatically is called kube public.
+세번째 네임스페이스는 큐브 퍼블릭이라 불리는 것에 의해 자동으로 생성됩니다.
+
+This is where resources that should be made available to all users are created.
+이건 이런 모든 유저가 생성가능하도록 만들어야 하는 자원들이 있는 장소입니다.
+
+If your environment is small or your learning and playing around with a small cluster 
+만약 당신의 환경이 작거나 작은 클러스터내에서 학습하거나 연습한다면,
+
+you shouldn't really have to worry about namespaces.
+네임스페이스에 대해 걱정할 필요가 없습니다.
+
+you could continue to work in the default namespace.
+기본 스페이스 만으로도 충분할지 모릅니다.
+
+However, as when you grow and use a kubernetes cluster for enterprise or production purposes.
+하지만, 당신이 성정하고 기업이나 제품 상산용 목적일 때는
+
+(consider:고려하다)
+you may want to consider the use of namespace.
+네임스페이스 활용을 고려해야 할수도 있습니다.
+
+you can create your own namespaces as well.
+당신 소유의 네임스페이스 역시 가질 수도 있습니다.
+
+For example, if you wanted to use the same cluster for both dev and production environment but at the same time isolate the resources between them 
+예를 들면, 만약 당신이 개발과 인프라환경 모두 동일한 클러스터를 사용하기를 원지만 각각의 자원이 서로 분리되어 있다면.
+
+you can create a different namespace for each of them.
+이 둘은 또다른 네임스페이스에 생성할 수 있습니다.
+
+That way while working in the dev environment.
+이방법은 개발 환경에서 유효합니다.
+
+
+you don't accidentally modify a resources in production.
+당신이 갑작스럽게 자원을 수정하지 않는다면, 
+
+
+(policies:정책)
+Each of these namespace can have its own set of policies that define who can do what.
+이 각각의 네임스페이스는 누가 무엇을 할수 있는지 같은 걸 정한 네임스페이스 고유의 정책을 가질 수 있습니다.
+
+(quota:몫, 분배가능한 고정된 어떤것)
+You can also assign quota of resources to each of these named spaces that. 
+이들 각각이 네임드 공간에 자원의 일부를 할당 할 수도 있습니다.
+
+(certain:확실한)
+we each namespace is guaranteed a certain amount and does not use more than it's allowed Limit.
+각각의 네임스페이스는 승인된 한계량 보다 더 많이 사용하지 못하게 정확한 량이 보장됩니다.
+
+
+
+[디폴트 네임스페이스]
+going back to the default namespace 
+기본 네임스페이스로 돌아가서, 기본 네임스페이스가
+
+that we have been working on just like how the members within the House refer to each other by their first names.
+각자의 성에 따라 집안에서 서로를 부르는 방법 처럼 과거부터 현재 까지 해오고 있습니다. 
+
+(refer:보내다, 참조하다, 부르다, 가리키다)
+The resources within a namespace can refer to each other simply by their names.
+네임스페이스에 자원들은 서로의 이름을 이용하여 각자를 가리킬 수 있습니다.
+
+
+In this case the web app pod can reach the db service simply using the hostname "db-service."
+웹 어플리케이션의 경우, pod 는 db서비스를 호스트 네임 db-service 로 부를 수 있습니다.
+
+
+(if required :필요한경우)
+if required The Web app Pod can reach a service in another namespace as well.
+필요한 경우 웹 어플리케이션 POD가 다른 네임스페이스의 서비스에 연락할 수 있습니다.
+
+For this you must append the name of the namespace to the name of the service.
+이를 위해 네임 스페이스의 이름을 서비스의 네임에 추가 해야 합니다.
+
+
+For example for the web pod in the default namespace to connect to the database in the dev environment or namespace.
+예를 들어, 기본 네임스페이스에 web pod를 개발환경에나 여타 네임스페이스의 데이터 베이스에 연결하기 위해서는
+
+Use the servicename.namespace.svc.cluster.local format that would be db service.
+서비스네임.네임스페이스.서비스.클러스터.로컬 형식의 포맷을 사용합니다. db-service 같이.
+
+["db-service.dev.svc.cluster.local"]
+
+you're able to do this because when the service is created a DNS entry is added automatically in this format.
+이렇게 호출이 가능한데 이유는 서비스가 생성될때 DNS 엔트리에 이 같은 포맷으로 자동 등록되기 때문입니다.
+
+looking closely at the DNS name of the service.
+서비스의 DNS 을 자세히 살펴봅시다.
+
+The last part "cluster.local" is the default domain name of the kubernetes cluster.
+마지막 부분 cluster.local 은 쿠버네티스 클러스터의 기본 도메인네임 입니다.
+
+SVC is the subdomain for service followed by the namespace and then the name of the service itself.
+SVC는 네임스페이스 뒤에 붙는 서비스의 부 도메인 입니다. 그리고 서비스 네임 자체입니다.
+
+
+Let us now look at some of the operational aspects of namespace.
+이제 네임 스페이스를 운영의 관점으로 바라 봐 봅시다.
+
+Let's start with a kubectl commands.
+쿠버컨트롤 명령으로 시작합시다.
+
+For example, this command is used to list all the pods but it only lists the pods in the default namespace
+this command:[kubectl get pods]
+예를 들어 이 명령어는 pod 가 속한 기본 네임스페이스의 모든 리스트들을 출력하기 위해 사용되었습니다.
+
+to list pods in another namespace.
+다른 네임스페이스의 pod 를 리스트 하려면
+
+(along:~따라)
+Use the namespace option in the command along with the name of the namespace.
+네임스페이스의 이름을 따라 namespace 옵션을 사용하십시오.
+
+ex) kubectl get pods --namespace=kube-system
+
+In this case Kube system.
+이 경우 큐브 시스템입니다.
+
+here I have a pod definition file.
+여기 pod 정의파일을 가지고 있습니다.
+
+when you create a pod using this file.
+pod 생성을 위한 이 파일을 사용할 떄면
+
+The pod is created in the default namespace 
+그 pod 는 기본 네임스페이스에 생성됩니다.
+
+to create a pod in another namespace use the namespace option.
+다른 네임스페이스에 pod 를 생성하기 위해서는 네임스페이스 옵션을 사용하십시오.
+
+if you want to make sure that this board gets created in the dev environment all the time.
+이 보드가 항상 개발환경에 생성되도록 만들고 싶다면,
+
+Even if you don't specify the namespace in the command line you can move the namespace definition into the pod definition file .
+커맨드 라인에 네임스페이스를 지정하지 않았을 때 조차도, POD정의파일을 통해 네임스페이스 정의를 옮길수 있습니다.
+
+like this under the metadata section.
+메타섹션 아래에 이렇게요.
+
+This is a good way to ensure your resources are always created in the same namespace.
+이건 해당 자원이 항상 같은 네임스페이스 공간에 위치시키기 위한 좋은 방법입니다.
+
+So how do you create a new namespace 
+그럼, 새로운 네임스페이스는 어떻게 만들까요?
+
+Like any other object use an namespace definition file 
+다른 오브젝트들과 같이. 네임스페이스 정의파일을 사용합니다.
+
+the API version is V1 kind is namespace and under metadata specify the name.
+API 버전은 v1 kind 는 네임스페이스, 그리고 메타데이터 아래 이름을 정의합니다.
+
+In this case Dev.
+이 경우에는 dev 이겠져.
+
+run the kubectl create command to create the namespace.
+네임스페이스를 생성하기 위해 kubectl create 명령어를 실행합니다.
+
+Another way to create a namespace is by simply running the command "kubectl Create namespace" followed by the name of the namespace.
+네임스페이스를 만들 또다른 방법은 kubectl create namespace 커맨드를 실행하는 것입니다.
+
+
+now say we're working in three namespaces.
+이제, 우린 3개의 네임스페이스 아래에 작업중입니다.
+
+As we discussed before by default we are in the default namespace
+이전에 논의했던것처럼, 기본적으로 우린 기본 네임스페이스 아래에 있습니다.
+
+which is why we can see the resources inside the default namespace using the kubectl get pods command and to view those in the dev namespace.
+이것이 왜 우리가 kubectl get pods 커맨드로 기본 네임스페이스의 자원을 볼수 있는지에 대한 이유입니다. 그리고 dev 네임스페이스의 것들도 볼수 있는.
+
+??????? 진짠가???? kubectl get pods 하면 기본 네임스페이스외에 dev 도 보이나?
+
+
+We have to use the namespace option but what if we want to switch to the dev namespace permanently 
+우린 네임스페이스 옵션을 사용해야합니다. 하지만 만약 우리는 dev 네임스페이스로 네임스페이스를 영구적으로 스위치 하길 원한다면?
+
+so that we don't have to specify the namespace option anymore.
+그럼 우린 네임스페이스 옵션을 더이상 지정할 필요가 없습니다.
+
+Well, in that case, use the kubectl config command to set the namespace in the current context Dev
+좋습니다. 이경우에는 현재 컨텍스트인 dev 로 네임스페이스를 지정하기위해 kubectl confing 커맨드를 사용합니다.
+
+you can then simply run the kubectl get pods command without the namespace option to list pods in the dev environment 
+그렇게 하고 나면, dev 환경의 pod 리스트를 kubectl get pods 커맨드에 네임스페이스 옵션없이 간단히 실행할 수 있습니다.
+
+but you will need to specify the option for other environments such as default or prod.
+하지만 기본 네임스페이스 또는 prod 네임스페이스처럼 다른 네임스페이스 공간을 지정할 필요가 있을수 있습니다.
+
+similarly you can switch to the prod namespace the same way.
+유사하게, 같은 방식으로 prod 네임스페이스로 스위치 할 수도 있습니다.
+
+Finally to view pods in all namespace use the all namespace option in the command.
+최종적으로, 모든 네임스페이스에 pod 를 보기 위해서는 all namespace 옵션을 커맨드로 사용하면 됩니다.
+
+This will list all the pods in all of the namespaces 
+이걸로 모든 pod 들을 리스트 할 수 있습니다.
+
+taking a closer look at the command.
+해당 커맨드는 자세히 봅시다.
+
+>> kubectl config set-context $(kubectl config current-context) --namespace=dev
+>> kubectl config set-context --current --namespace=my-namespace
+This command first identifies the current context and then sets the namespace to the desired one for that current context.
+첫번째로, 이 커맨드는 현재 컨텍스츠를 식별합니다. 그리곤 현재 컨텍스트에 네임스페이스를 원하는 값으로 설정합니다.
+
+(are used to:~하는데 사용되다)
+Well contexts are used to manage multiple clusters in multiple environments from the same management system.
+컨텍스트는 동일한 관리 시스템으로부터 멀티플 환경의 멀티플 클러스터 관리에 사용됩니다.
+
+(topic:주제)
+It is a totally separate topic to discuss and requires its own lecture so we will discuss context in another lecture 
+컨텍스는 이 강의에서 논의되거나 질의기 확연히 구분되는 주제입니다. 그래서 우린 컨텍스트에 대해서는 다른 강의에서 다룰 것 입니다.
+
+(quota:몫, 할당량)
+to limit resources in a namespace create a resource quota 
+네임스페이스에 자원을 제한하여면 리소스 할당량을 생성해야합니다.
+
+to create one.
+할달량을 만들려면
+
+Start with a definition file for resource quota 
+할달량을 위해 파일을 정의하는것 부터 시작하세요.
+
+specify the namespace for which you want to create the quota 
+할당량을 어디에 생성할껀지 네임스페이스를 정하고
+
+and then under spec provide your limits such as 10 pods 10 CPU units 10 GB byte of memory etc..
+그리고 스펙에 맞춰 한도를 부여하세요. 10pod, 10cpu, 10 gb 메모리 등등.
+
+
+
+Well that's it for this lecture.
+
+Head over to the coding exercise and section and practice working with namespaces and I will see you in the next lecture.
+머리를 움직여라(이동해라) 코딩 연습으로 그리고 네임스페이스에 대해 연습하세요. 그리고 다음시간에 봅시다.
+
+
+

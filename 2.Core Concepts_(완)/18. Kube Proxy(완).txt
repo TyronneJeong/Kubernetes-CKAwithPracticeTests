@@ -1,0 +1,155 @@
+Hello and welcome to this lecture. 
+
+In this lecture, we will talk about Kube Proxy. Within a kubernetes cluster 
+이번 강의에서는 쿠버네티스 클러스의 쿠버 프록시에 대해 말해보겠습니다.
+
+every pod can reach every other pod.
+모든 파드들은 다른 파드들에게 연락할 수 있습니다.
+
+
+[POD 네트워킹 솔루션 - ?? 누구?]
+
+(accomplished:완료된, 성취된)
+This is accomplished by deploying a POD networking solution to the cluster. 
+이것은 POD네트워킹 솔루션이 클러스터에 디플로이되어져서 가능해졌습니다.
+
+(spans:닿다, 걸치다)
+A POD network is an internal virtual network that spans across all the nodes in the cluster to which all the PODs connect to.
+POD네트워크는 POD에 연결하고자 하는 클러스터의 모든 노드들이 거쳐가는 외부의 가상 네트워크 입니다.
+
+Through this network are able to communicate with each other.
+이 네트워크를 거쳐가면, 서로 소통하는것이 가능합니다.
+
+There are many solutions available for deploying such a network.
+이런 네트워크를 디플로이 하는데 사용 가능한 많은 방법들이 있습니다.
+
+In this case, I have a web application deployed on the first node and a database application deployed on the second.
+대상 케이스의 경우, 
+첫번째 노드에는 웹 에플리케이션을 배포했습니다.
+그리고 두번째 노드에는 데이터베이스 어플리케이션을 배포했습니다.
+
+The web app can reach the database, simply by using the IP of the database POD.
+웹 어플리케이션은 데이터베이스에 연결가능합니다..
+간단하게 데이터베이스 포드의 IP사용 으로
+
+But there is no guarantee that the IP of the database part will always remain the same.
+하지만 이 경우 데이터 베이스 IP가 항상 그대로 유지될것이란 보장이 없습니다.
+
+If you've gone through the lecture on services as discussed in the beginners course. 
+만약 당신이 초심자 과정을 이수했다면 
+
+you must know that a better way for the web application to access the database is using a service.
+웹 어플리케이션이 데이터베이스에 엑세스 하기 위한 더 좋은 방법이 서비스를 이용하는 것이라는 걸 분명 알것입니다.
+
+So we create a service to expose the database application across the cluster.
+그래서 클러스터를 가로질러 데이터베이스 어플리케이션에 서비스를 생성해서 제공했습니다.
+
+The web application can now access the database using the name of the service "db".
+웹 어플리케이션은 이제 서비스 이름을 사용하여 데이터 베이스에 엑세스 하는게 가능합니다.
+
+The service also gets an IP address assigned to it 
+서비스는 또한 서비스에 할당 받은 IP도 가지고 있습니다.
+
+(whenever:언제든지, 때마다 - 부사)
+whenever a pod tries to reach the service using its IP or name. 
+POD가 서비스에 IP또는 이름을 사용하여 연결을 시도할 떄 마다,
+
+(forwards:전송하다, 앞으로, 밖으로)
+it forwards the traffic to the back end pod. In this case the database.
+트래픽을 백엔드 POD 로 전달합니다. 이 경우에는 데이터베이스입니다.
+
+
+
+[알쏭달쏭 퀴즈쇼 - 서비스 IP나 이름을 통해 접근할 수 있으나 실존하지는 않는 서비스]
+
+But what is this service and how does it get an IP?
+하지만 이 서비스는 무엇인가요? 그리고 서비스가 어떻게 IP를 얻었을까요?
+
+Does the service join the same POD Network?
+서비스는 같은 POD 네트워크에 합류해 있나요?
+
+The service cannot join the pod network because the service is not an actual thing.
+그 서비스는 POD네트워크에 합류할수 없습니다. 왜냐하면 서비스는 실제 존재하는 것이 아니기 떄문입니다.
+
+It is not a container like pod so it doesn't have any interfaces or an actively listening process.
+이 서비스는 POD같은 서비스가 아닙니다. 그래서 어떠한 인터페이스도 활성화된 리스닝 프로세스도 가지고 있지 않습니다.
+
+(as: ~ 으로만)
+It is a virtual component that only lives in the cabinet as memory.
+이건 메모리상으로만 존재하는 가상 컴포넌트 입니다.
+
+But then we also said that the service should be accessible across the cluster from any node.
+하지만 먼저 말했듯이 그 서비스는 어떤 노드로부터건 클러스터를 가로 질러 엑세스 가능해야만 합니다.
+
+So how is that achieved?
+그럼 어떻게 달성될 까요?
+
+That’s where kube-proxy comes in.
+여기가 쿠버프록시가 등장할 곳입니다.
+
+Kube-proxy is a process that runs on each node in the kubernetes cluster.
+쿠버 프록시는 쿠버클러스터내 각각의 노드에서 동작하는 프로세스 입니다.
+
+Its job.
+
+It is to look for new services and every time and new service is created 
+????????????
+이건 새로운 서비스를 찾는 것입니다. 매시간마다 그리고 새로운 서비스가 생성됩니다.??????
+???????????????????????????
+
+
+(appropriate:적절한) (to forward:전송하다)
+it creates the appropriate rules on each node to forward traffic to those services to the backend pods.
+이건 대상 서비스에서 백엔드 파드로 트래픽을 발생시키려는 각 노드에 적절한 규칙을 생성합니다.
+(구글)각 노드에 적잘한 규칙을 생성하여 해당 서비스에 대한 트래픽을 백엔드 포드로 전달합니다.
+
+One way it does this is using IP TABLES rules.
+하나의 방법으로 이건 IP 테이블 규칙을 사용하는 것입니다.
+
+(heading:방향, 목베기, 표제)
+In this case it creates an IP tables rule on each node in the cluster to forward traffic heading to the IP of the service which is 10.96.0.12 to the IP of the actual pod which is 10.32.0.15.
+이 예시에서는 클러스터에 각 노드들에게 IP테이블규칙을 생성하고, 서비스 IP 10.96.0.12 를 실제 POD IP 10.32.0.15 로 트래픽을 발생시킵니다.
+
+
+
+[큐버 프록시 설정]
+
+So how kube-proxy configure the service
+그럼 어떻게 쿠버 프록시는 서비스를 설정할까요.
+
+We discuss a lot more about networking and services kube-proxy and POD networking.
+우린 네트워킹과 쿠버프록시 와 파드 네트워킹 서비스에 대해 많은것들을 다뤘습니다. 
+
+Later in this course again we have a large section just for networking.
+코스 후반에 다시한번 네트워킹에 대한 큰 섹션이 있습니다.
+
+This is a high level overview for now.
+지금은 고차원에서 관찰까지 입니다.
+
+We will now see how to install kube-proxy.
+우리는 나중에 쿠버프록시를 어떻게 설치하는지 볼 것입니다.
+
+Download the kube-proxy binary from the kubernetes release page. Extract it and run it as a service. 
+쿠버네티스 배포 페이지에서 쿠버 프록시를 다운로드 하고 압축 해제 후 서비스를 실행합니다.
+
+The kubeadm tool deploys kube-proxy as PODs on each node.
+쿠버 ADM 도구는 쿠버 프록시를 각 노드의 파드 마다 배포합니다.
+
+In fact it is deployed as a daemon set, so a single POD is always deployed on each node in the cluster.
+사실 이건 데몬 세트가 배포되는 것입니다.
+그래서 싱글 파드는 항상 배포되어 있는 것입니다. 각 클러스터의 노드마다.
+
+Well if you don't know about daemon set yet don't worry we have a lecture on that coming up in this course.
+만약 당신이 데몬에 대해서 잘 모른다면, 걱정하지는 마세요. 이 코스의 다음 강좌에 강의가 있습니다.
+
+(have covered : ~ 다루었다)
+We have now covered a high-level overview of the various components in the kubernetes control plane.
+이제 우리는 쿠버네티스 컨트롤 패널내 다양한 컴포넌트들의 개요에 대해 개괄적으로 다루었습니다.
+
+(As mentioned :말한것과 같이)
+As mentioned we will look at some of these in much more detail at various sections in this course.
+말한것과 같이. 이 코스의 다양한 섹션에서 좀 더 상세한 내용을 볼 것입니다.
+
+Well that's it for this lecture.
+
+I will see you in the next section.

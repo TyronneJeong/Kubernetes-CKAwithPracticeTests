@@ -1,0 +1,103 @@
+Hello there.
+
+Before we begin, I want to spend a minute on the Kubernetes Series of courses. Kubernetes is one of
+
+the most trending technology in cloud computing as of today.
+
+It is supported on any cloud platform and supports hosting enhanced and complex applications on various
+
+kinds of architectures that make it a vast and complex technology.
+
+There are a set of pre-requisite knowledge required such as containers, applications, YAML files etc.
+
+A lot of topics to discuss, a lot of concepts to cover such as the Architecture, Networking, Load Balancing,
+
+a variety of monitoring tools, Auto Scaling, Configuration, Security, Storage etc.
+
+There are students from different backgrounds, such as the Absolute Beginners to Kubernetes, or those
+
+with some experience looking for specialized knowledge in administration or those from an application
+
+development background.
+
+There are two certifications in the mix as well.
+
+One for the administrators and another for the application developers covering all of these topics for
+
+all of these topics for all of these students in a single course is an impossible task. Which is why we created a 3 course
+
+series so each course can target specific audience topics and certifications.
+
+The Kubernetes for the Absolute Beginners course, the Certified Kubernetes Administrator's course and
+
+the certified kubernetes application developer’s course.
+
+Let's look at what we cover in each of these courses.
+
+The kubernetes for the Absolute Beginners course helps a beginner having no prior experience with containers
+
+or container orchestration
+
+get started with the concepts of Kubernetes. As
+
+this is a beginners course.
+
+We do not deep dive into technical details.
+
+instead we focus on a high level overview of Kubernetes, setting up a simple lab environment to play with
+
+Kubernetes, learning the pre-requisites required to understand and get started, understanding the various
+
+concepts to deploy an application such as pods replica sets deployments and services.
+
+This course is also suitable for a non-technical person trying to understand the basic concepts of Kubernetes,
+
+just enough to get involved in discussions around the technology.
+
+The Kubernetes for Administrators course focuses on advanced topics on Kubernetes and in-depth discussions
+
+into the various concepts around deploying a high availability cluster for production use case.
+
+Understanding more about scheduling, monitoring, maintenance, security, storage and troubleshooting.
+
+This course also helps you prepare for the Certified Kubernetes Administrator Exam and get you
+
+verified as a Kubernetes Administrator.
+
+The Kubernetes for Developers course is for Application Developers who are looking to learn how to
+
+design, build and configure cloud native applications.
+
+Now you don't have to be an expert application developer for this course and there is no real coding
+
+or application development involved in either this course or the certification itself.
+
+You only need to know the real basics of development on a platform like python or NodeJs.
+
+This course focuses on topics relevant for a developer such as ConfigMaps, Secrets & ServiceAccounts,
+
+Multi-container Pods, Readiness & Liveness Probes, Logging & Monitoring, Jobs, Services and
+
+networking.
+
+This course will also help you prepare for the Certified Kubernetes Application Developer exam.
+
+All of these courses are filled with coding exercises and quizzes that will help you practice developing
+
+and deploying applications on Kubernetes.
+
+Now remember that there are some topics that overlap between these courses.
+
+So we recap and discuss them and when required.
+
+Now you don't have to take these courses in order.
+
+If you're an administrator you may choose to take the beginners as well as the second course and get
+
+yourself certified as a Kubernetes Administrator. Or take the beginners course and the developers
+
+course to get yourself certified as a Kubernetes Application Developer. Which I’d say is the easier
+
+of the two.
+
+if you were to ask me. So if you are ready, let’s get started.

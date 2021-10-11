@@ -1,0 +1,376 @@
+Hello and welcome to this lecture.
+안녕하세요, 강의에 오신 것을 환영합니다
+
+We start with a basic overview of the Kubernetes cluster architecture.
+쿠버네티스 클러스터의 기본적인 개요로 시작을 하겠습니다.
+
+We first look at the architecture at a high level and then we drill down into each of these components.
+우린 먼저 아키텍처의 고차원인 모습을 먼저 봅니다. 그리고 난후 각각의 컴포넌트들에 접근합니다.
+
+we see what their roles and responsibilities are and how they are configured.
+우리는 그들의 역할을 봅니다. 그리고 그들의 역할이 어떻게 구성되어 있는지 봅니다.
+
+
+(respect:존경하다, ~관계하다.)
+And finally, you go through a practice test where you look at an existing cluster and are asked to identify various details with respect to these components in the cluster.
+그리고 최종적으로, 연습문제 클러스터가 존재하고 클러스터내 컴포넌트와 관계된 다양한 디테일에 대해 질의받는 스테이지로 갑니다. 
+
+
+
+We're going to use an analogy of ships to understand the architecture of Kubernetes.
+우리는 쿠버네티스 아키텍처를 이해하기 위해 배를 비유할 겁니다.
+
+The purpose of Kubernetes is to host your applications in the form of containers in an automated fashion(이게 왜 방식?).
+쿠버네티스의 목적은 당신의 어플리케이션을 자동화된 형태의 컨테이너 폼으로 호스팅 하는 일 입니다.
+
+so that you can easily deploy as many instances of your application as required and easily enable communication between different services within your application.
+그래서, 필요에 따라 어플리케이션 인스턴스 같은 것들을 매우 쉽게 배포하고 당신의 어플리케이션 내에서 서로 다른 서비스들과 쉽게 커뮤니케이션 가능하도록 할 수 있습니다.
+
+So there are many things involved that work together to make this possible.
+때문에, 쿠버네티스는 이것들이 가능하게 만들기 위해 같이 일하는 것들과 많은 부분 엮여 있습니다.
+
+So let's take a 10000 feet look at the Kubernetes architecture.
+그럼 쿠버네티스 아키텍처의 10,000 피트 아래를 봅시다.
+------------------------------------------------------------------------
+
+We have two kinds of ships.
+우린 두 가지 종류의 배를 가지고 있습니다.
+
+In this example cargo ships that does the actual work of carrying containers across to sea and control ships that are responsible for monitoring and managing the cargo ships.
+해당 예시에서는 실제 컨테이너를 바다건너로 이동시키는 화물선
+그리고 화물선들의 모니터링과 관리를 담당하고 있는 관제선이 있습니다.
+
+The Kubernetes cluster consists(구성) of a set of nodes which may be physical or virtual On-Premise or On Cloud that host applications in the form of containers.
+쿠버네티스 클러스터는 노드 셋으로 구성 되어있습니다. 이것들은 물리적이거나 가상의 온프레미스 이거나 컨테이너 형태의 온 클라우드 일 수도 있습니다.
+
+These relate to the cargo ships.
+이것들은 화물선에 관계되어있습니다.
+
+In this analogy, the worker nodes in the cluster are ships that can load containers.
+이 예시에서, 클러스터내 워커 노드는 컨테이너를 운송할 수 있는 배입니다.
+
+
+But somebody needs to load the containers on the ships 
+하지만 몇몇은 배에 컨테이너를 운송하는 것이 필요하지만
+[and]
+not just load plan.. how to load.. identify the right ships store information about the ships monitor and track the location of containers on the ships manage the whole loading process etc..
+운송 계획이 아닌, 어떻게 운송하고 어떻게 올바른 배 저장정보를 식별하고 등등을 필요로 합니다.
+
+
+This is done by the control ships that host different offices and departments monitoring  equipments, communication equipments cranes for moving containers between ships etc. 
+다른 오피스를 호스팅 하고 부서를 모니터링 하고, 장비하고, 커뮤니케이션하고, 배와 컨테이너를 옮기는 일들을 관제선이 합니다.
+
+The control ships relate to the master node in the Kubernetes cluster.
+관제선은 쿠버네티스의 마스터 노드와 관계 있습니다.
+
+(regarding:~관하여)
+The master node is responsible for managing the Kubernetes cluster storing information regarding the different nodes, planning which containers course where monitoring the nodes and containers on them etc.
+마스터 노드는 쿠버네티스 다른 노드에 관계한 클러스터 저장 정보를 관리하는 것과 모니터링하고 컨테이너를 두는 곳을 계획하는 일을 책임지고 있씁니다.
+
+[컴퓨터 집합:컨트롤 플레인 컴포넌트, 노드 컴포넌트]
+
+The Master node does all of these using a set of components together known as the control plane components.
+마스터 노드는 '컨트롤 플레인 컴포넌츠'로 알려진 구성요소를 같이 사용하여 이 모든것을 담당합니다.
+
+We will look at each of these components now.
+우린 지금 이 컴포넌츠들을 자세히 보겠습니다.
+
+Now there are many containers being loaded and unloaded from the ships on a daily basis.
+현재 매일 수많은 컨테이너들이 배로부터 옮겨지고 있고, 내려지고 있습니다.
+
+And so you need to maintain information about the different ships what container is on which ship and what time it was loaded etc. 
+그래서 어떤 컨테이너가 있는지, 어떤배, 몇시에 운송되었는지 등등 다른 배들에 관한 관리정보가 필요합니다.
+
+All of these are stored in a highly available key value store known as Etcd.
+이런 정보들 모두는 고가용성 키-벨류 저장소 ETCD로 불리는 곳에 저장됩니다.
+
+The Etcd is a database that stores information in a key-value format.
+ETCD는 키-벨류 형태로 정보를 저장하는 데이터 베이스 입니다.
+
+
+We will look more into what Etcd cluster actually is what data is stored in it and how it stores the data in one of the upcoming lectures.
+우린 ETCD 클러스터 실제 어떤데이터가 저장되어 지는지 그리고 어떻게 저장되는지 등을 다가오는 강의에서 자세하게 살펴볼 겁니다.
+
+
+[스케쥴러]
+
+When ships arrive, you load containers on them using cranes. the cranes identify the containers that need to be placed on ships.
+배가 도착할때에, 당신은 크레인을 동원해 컨테이너를 싣습니다. 크레인은 배에 선적 해야할 필요한 있는 컨테이너들을 식별합니다.
+
+It identifies the right ship based on its size, its capacity, the number of containers already on the ship and any other conditions such as the destination of the ship.
+크레인은 사이즈, 용적량, 이미 선적된 컨테이너의 수 그리고 기타 다른(배의 목적지 같은) 상태등을 근거로 올바른 배를 식별합니다.
+
+The type of containers, it is allowed to carry etc. 
+컨테이너의 종류, 운송이 허용되는 것 등등.
+
+So those are schedulers in a Kubernetes cluster.
+위에 설명한 것들을 하는게 쿠버네티스 클러스터에 있는 스케쥴러 입니다.
+
+a scheduler identifies the right node to place a container on based on the containers resource requirements, the worker nodes capacity or any other policies or constraints(제약) such as tents
+컨테이너 자원 요구사항, 워커노드 용적량 또는 기타 정책 또는  텐트와 같은 제약사항을 근거로 컨테이너에 옮겨갈 올바른 노드를 식별합니다. 
+
+and (테인스앤드 한 단어인듯)
+ 
+tolerations(용인, 관용, 허용되는 오차) or node affinity(선호도) rules that are on them.
+허용오차라던가 노드 선호도 규칙도 있습니다.
+
+We will look at these in much more detail with examples and practice tests later in this course.
+이와 관련된 조금 더 자세한 내용과 예제는 코스 후반 다른 강좌에서 살펴 보겠습니다.
+
+We have a whole section on scheduling alone.
+스케쥴링은 완전한 섹션으로 가지고 있습니다.
+
+
+
+
+[컨트롤러 매니저]
+- 컨트롤러 매니저
+- 노드컨트롤러
+- 레플리케이션 컨트롤러
+
+[운영팀과 화물팀 = 노드컨트롤러?]
+- 해당 경로를 살피는 운영팀과
+- 화물의 손상을 살피는 화물팀
+
+
+There are different offices in the dock that are assigned to special tasks or departments(분야).
+저기 독에 특별한 업무 또는 분야를 할당받은 다른 오피스가 있습니다.
+
+For example the operations team takes care of ship handling traffic control etc. 
+예를 들면 [운영팀]은 배들의 해상교통등을 살핍니다.
+
+(deal:가하다, 행동하다, 죽이다.등)
+They deal with issues related to damages, the routes the different ship state etc. 
+운영팀은 다른배들의 상태나 항로 손상등에 관련된 이슈를 다룹니다.
+
+The cargo team takes care of containers when continuous are damaged or destroyed.
+[화물팀]은 컨테이너들을 주기적으로 손상되거나 파손되는것 들 을 살핍니다.
+
+They make sure new containers are made available.
+화물팀은 새로운 컨테이너들이 사용가능하도록 만들어져 있는지 확인합니다.
+
+we have these services office that takes care of the I.T. and communications between different ships. 
+우리는 I.T 나 다른배들과 통신역할을 하는 서비스 사무실들[운영팀 & 화물팀]을 가지고 있습니다.
+
+Similarly, in Kubernetes we have controllers available that take care of different areas.
+마찬가지로, 쿠버네티스에서는 우리가 다른 영역을 살필수 있는 컨트롤러들이 있습니다.
+
+The node-controller takes care of nodes.
+[더 노드 컨트롤러]가 노드들을 다룹니다.
+
+They're responsible for on boarding new nodes to the cluster handling situations where nodes become unavailable or get destroyed 
+노드가 사용불가한 상태나 파괴되어 클러스터 핸들링 상황이 일어난 곳에 새로운 노드를 온 보딩하는 일을 담당합니다.
+
+[Replication Controller - 컨테이너 복제담당]
+
+[and] the replication controller ensures that the desired number of containers are running at all times in your replication group.
+그리고 복구 컨트롤러는 복구 그룹내 항상 원하는 수의 컨테이너가 실행중인 것을 보장합니다.
+
+
+[쿠버API 서버]
+
+So we have seen different components like the different offices, the different ships, the data store, the cranes.
+여기까지 다른 오피스, 다른 배, 데이터 저장소, 크레인등의 컴포넌트들을 보았씁니다.
+
+But how do these communicate with each other.
+헌데 이들 끼리는 어떻게 커뮤니케이션을 하는 걸 까요.
+
+How does one office reach the other office and who manages them all at a high level.
+어떻게 하나의 오피스가 다른 오피스에 연락하고 누가 이 모든걸 고수준에서 관리할 까요?
+
+The kube-api server is the primary management component of kubernetes. 
+더 쿠버API 서버가 그 쿠버네티스 컴포넌트 기본 관리자 입니다.
+
+The kube-api server is responsible for orchestrating all operations within the cluster.
+쿠버API서버는 클러스터내 모든 동작들을 조화롭게 만드는 것을 책임지고 있습니다.
+
+It exposes the Kubernetes API which is used by externals users to perform management operations on the cluster.
+쿠버API서버는 클러스터내 외부사용자들이 관리작업을 수행할수 있게 하는 쿠버네티스API를 제공합니다. 
+
+??????????????????????????????
+as well as the various controllers to monitor the state of the cluster 
+클러스터의 상태를 모니터하기 위한 다양한 컨트롤러
+
+and make the necessary changes as required and by the worker nodes to communicate with the server.
+요청되거나 서버랑 통신하기 위한 워커노드에 의해 필요한 변화가 생성됩니다.
+??????????????????????????????
+
+
+
+
+[컨테이너 런타임 엔진]
+Now we are working with containers here.
+이제 우린 컨테이너의 이곳에 작업하고 있습니다.
+
+Containers are everywhere.
+컨테이너는 어디에나 있습니다.
+
+so we need everything to be container compatible.
+그래서 우린 컨테이너와 호환되기 위한 모든 것들이 필요합니다.
+
+Our applications are in the form of containers.
+우리의 어플리케이션은 컨테이너의 형태로 존재합니다.
+
+(entire: 전체의, 완전한)
+the different components that form the entire management system.
+on the master nodes could be hosted in the form of containers.
+마스터 노드에 올라간 다른 컴포넌트들()도 컨테이너 형태로 호스팅 될 수 있습니다.
+
+The DNS service networking solution can all be deployed in the form of containers.
+[DNS 서비스 네트워킹 솔루션]은 전부 컨테이너 형태로 배포 되어질수 있습니다.
+
+So we need these software that can run containers 
+그래서 우린 컨테이너를 구동 시키는 소프트웨어가 필요합니다.
+
+and that's the container runtime engine.
+그리고 이것이 컨테이너 런타임 엔진입니다.
+
+
+
+
+[도커]
+
+A popular one being Docker.
+가장 유명한것은 도커 입니다.
+
+So we need Docker.
+그래서 우리는 도커가 필요합니다.
+
+(equivalent:같은, 동등한, 등가의, 동적)
+it's supported equivalent installed on all the nodes in the cluster including the master nodes.
+도커는 마스터 노드를 포함한 클러스터내 모든 노드들에 동적 인스톨을 지원합니다.
+
+if you wish to host the control plane components as containers. 
+만약 당신이 [컨트롤 플레인 컴포넌트]를 컨테이너로 호스팅 하고 싶다면..말이지요..
+
+Now it doesn’t always have to be Docker.
+지금당장 도커일 필요는 없습니다.
+
+Kubernetes supports other run time engines as well like ContainerD or Rocket.
+쿠버네티스는 다른 런타임 엔진들(컨테이너D나, 롸켓)같은 것도 썩잘 지원합니다.
+
+
+
+
+
+
+
+
+[배????????????]
+
+let's now turn our focus on to the cargo ships.
+이제 다시 화물선으로 시선을 옮겨 봅시다.
+
+Now every ship has a captain.
+현재 모든 배들에는 선장이 있습니다.
+
+The captain is responsible for managing all activities on these ships.
+선장은 이 배의 모든 활동에 대해 관리를 책임지고 있습니다.
+
+The captain is responsible for liaising with the master ships.
+선장은 모선과의 연락을 책임지고 있습니다.
+
+(let:허락하다, 시키는 것)
+starting with letting the master ship know that they are interested in joining the group
+그들이 모선의 그룹에 가입하길 희망한다는 것을 알리는것 부터 시작합니다.
+
+receiving information about the containers to be loaded on the ship
+배에 선적되기 위한 컨테이너의 정보를 수신받는 것.
+
+and loading the appropriate containers as required 
+
+sending reports back to the master about the status of this ship and the status of the containers on the ship etc.
+선장은 마스터 쉽과의 연락을 담당합니다.
+
+
+
+
+
+[쿠버렛]
+
+Now the captain of the ship is the kubelet in Kubernetes. 
+
+A kubelet is an agent that runs on each node in a cluster.
+이제 배의 선장은 쿠버네티스의 쿠버렛입니다. 쿠버렛은 클러스터에 각 노드들을 실행시키는 에이전트 입니다.
+
+It listens for instructions from the kube-api server and deploys or destroys containers on the nodes as required.
+쿠버렛은 쿠버API 서버로부터 명령을 듣고 필요에 따라 컨테이너를 배포하거나 노드의 컨테이너를 종료시킵니다.
+
+The kube-api server periodically fetches status reports from the kubelet to monitor the state of nodes and containers on them.
+쿠버API 서버는 주기적으로 쿠버렛에게 노드나 컨테이너의 상태를 모니터한 상태보고서를 받아갑니다.
+
+The kubelet was more of a captain on the ship that manages containers on the ship. But the applications running on the worker nodes need to be able to communicate with each other.
+쿠버렛은 배에서 컨테이너를 관리하는 선장에 더 가깝습니다. 하지만 워커 노트에서는 동작중인 어플리케이션간 통신이 가능해질 필요가 있습니다.
+
+(might have ~이 있을 수 있습니다,)
+For example you might have a web server running in one container on one of the nodes and a database server running on another container on another node.
+예를 들면 당신이 노드중 하나의 컨테이너에서 웹 서버를 구동중이고 또다른 또 다른 노드의 컨테이너에서는 데이터베이스서버를 구동중일수 있습니다.
+
+How would the web server reach the database server on the other node
+그렇다면 어떻게 웹서버가 다른 노드에 있는 데이터베이스 서버에 닿을 수 있을까요?
+
+
+[쿠버 프록시]
+
+Communication between worker nodes are enabled by another component that runs on the worker node known as the Kube-proxy service. 
+
+The Kube-proxy service ensures that the necessary rules are in place on the worker nodes to allow the containers running on them to reach each other.
+워커 노드들간의 통신은 또 워커 노드상에서 동작중인 쿠버 프록시 서비스에 의해 가능해집니다.
+쿠버 프록시는 워커노드에서 서로 연락이 가능하도록 허용된 컨테이너로의 필요규칙을 보장해 줍니다.
+
+
+
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆[요약]☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆
+[마스터 & 워커 노드]
+So to summarize we have [master] and [worker nodes]
+요약하자면 마스터와 워커노드가 있습니다.
+
+
+[마스터에는!!]
+on the master.
+
+[ETCD클러스터]
+we have the ETCD cluster which stores information about the cluster
+마스터에는 클러스터의 정보를 저장하는 ETCD 클러스터가 있습니다.
+
+[큐브스케쥴러]
+we have the Kube scheduler that is responsible for scheduling applications or containers on Nodes.
+노드에 속한 어플리케이션 또는 컨테이너의 스케쥴링을 책임지는 쿠버 스케쥴러가 있습니다.
+
+[노드, 레플리케이션 컨트롤러 (w.큐브컨트롤러매니저)]
+We have different controllers that take care of different functions like the node control, replication-controller etc..
+각 노드컨트롤러나 레플리케이션 컨트롤러등 각 다른 기능을 하는 다른 컨트롤러 들이 있습니다.
+
+[큐브API서버]
+we have the Kube api server that is responsible for orchestrating all operations within the cluster 
+클러스터내 모든 오퍼레이션들의 오케스트레이션을 책임지는 큐브API 서버가 있습니다.
+
+
+
+
+[워커 노드에는!!] - 각 워커 노드마다 존재
+on the worker node.
+
+[큐블렛]
+we have the kubelet that listens for instructions from the Kube-api server and manages containers
+큐브API서버로 부터 지시를 듣고 컨테이너를 관리하는 큐블렛이 있습니다.
+
+[큐브 프록시]
+and the kube-proxy that helps in enabling communication between services within the cluster.
+클러스터 내 서비스간 통신이 가능하게 돕는 큐브 프록시가 있습니다.
+
+
+
+
+
+
+
+So that's a high level overview of the various components.
+여기까지 고차원에서 보는 다양한 컴포넌트들이였습니다.
+
+We will drill down into each of these in the upcoming lectures.
+이제 다가오는 강좌를 통해 각각 조금 더 깊숙히 들여다 볼 것입니다.
+
+That's it for now and I will see you in the next lecture.
+오늘은 여기까지 입니다. 그리고 저는 다음 강좌에서 뵙겠습니다.

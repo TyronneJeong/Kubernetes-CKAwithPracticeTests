@@ -1,0 +1,48 @@
+OK, so in the previous lecture we discussed about storage drivers, 
+좋습니다. 이전 강의에서 우리는 스토리지 드라이버에 대해 논의했습니다.
+
+storage drivers help manage storage on images and containers.
+스토리지 드라이버는 이미지와 컨테이너에서 저장을 돕습니다.
+
+(briefly touched:간략하게 다루다)
+We also briefly touched upon volumes in the previous lecture.
+우리는 또한 기전 강의에서 볼륨에 대해서도 간략하게 다뤘습니다.
+
+We learned that if you want to persist storage, you must create volumes.
+우리는 이것을 배울 것입니다. 만약 당신이 영구적인 저장소가 필요하다면 볼륨을 무조건 생성 해야 합니다.
+
+Remember that volumes are not handled by storage drivers.
+기억하세요. 이 볼륨은 스토리지 드라이버에 의해 핸들링 되지 않습니다.
+
+Volumes are handled by volume driver plug ins.
+볼륨은 볼륨 드라이버 플러그인에 의해 핸들링 됩니다.
+
+The default volume driver plug in is local.
+디폴트 볼륨 드라이버 플러그인 은 로컬 입니다.
+
+The local volume plug in helps create a volume on the Docker host and store its data under the /var/lib/docker/volumes directory.
+로컬 볼륨 플러그 인은 볼륨을 생성하는 걸 돕습니다. 도커 호스트와 저장소에. 이 데이터는 /var/lib/docker/volumes 디렉토리 아래에 저장됩니다.
+
+There are many other volume driver plug ins that allow you to create a volume on third party solutions
+여기에는 다양한 다른 볼륨 드라이버 플러그인들이 있습니다. 볼륨을 생성 하도록 승인 받은 써드파이 솔루션들이.
+
+like Azur File Storage, Convoy, Digital Ocean Block Storage, flocker, GCE-docker, GlusterFS, NetApp, RexRay, Prtworx, Vmware vSphere Storage
+아쥴 파일 스토리지 라던가, 콘보이, 디지털 오션 블록 스토리지, 플로커, GCE 도커, 넷엡, 렉스레이, 포트웍스, VM웨어 스토리지 등등
+
+And remember this for storage.
+스토리지를 위해 이것을 기억 하세요.
+
+These are just a few of the many.
+저것들은 단지 일부입니다.
+
+Some of these volume drivers support different storage providers, for instance, RexRay storage driver can be used to provision storage on AWS EBS, S3, EMC storage arrays like Isilon and Scale IO or Google Persistent Desk or open stack cinder.
+몇몇 볼륨 드라이버는 인스턴스를 위해 다른 스토리지 프로바이더를 지원합니다. RexRay 스토리지 드라이버는 AWS EBS 나 S3, EMS 스토리지 어레이 같은 프로비저닝 스토리지(미리 모든 구성을 셋팅 해두고 사용자 요청시 제공해주는 서비스)를 사용할 수 있습니다.
+
+When you run a docker container, you can choose to use a specific volume driver such as the rexray/ebs to provision a volume from Amazon ebs.
+도커 컨테이너를 실행 할떄, 특정 볼륨 드라이버를 선택 할 수 있습니다. 렉스레이나 아마존 EBS 같은 프로비저닝 볼륨 같은 것들을요.
+
+This will create a container and attach a volume from the aws cloud when the container exits, your data is safe in the cloud.
+이 방법은 컨테이너를 생성합니다. 그리고 볼륨을 추가합니다. AWS 클라우드로 부터. 컨테이너가 생성되면, 그러면 당신의 데이터는 클라우드에 안전하게 도관됩니다.
+
+In the upcoming lectures, we will see more about volumes in and kubernetes.
+다음 강의에서는 볼륨과 쿠버네티스에 대해 자세히 알아 보겠습니다.

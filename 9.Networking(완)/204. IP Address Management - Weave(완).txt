@@ -1,0 +1,115 @@
+------------------------------------------------------------------------
+# 인터페이스 조회는 ifconfig
+>> ifconfig -a
+
+# IP 주소 조회
+>> ip addr show weave
+
+------------------------------------------------------------------------
+Hello and welcome to this lecture 
+안녕하세요.
+
+in this lecture we discussed about IP address management.
+이번 강의에서 우리는 IP 주소 관리에 대해 다뤄보겠습니다.
+
+So how does IP address management work in kubernetes.
+그럼 어떻게 IP 주소 관리가 작동 할 까요.
+
+Notice this section does not concern the IP address assigned to the nodes in the network.
+주목 하세요. 이번 섹션 에서는 더이상 노드의 IP 주소 할당에 대해 관심을 가지고 있지 않습니다.
+
+We can manage that on your own or with your own external IPAM solutions.
+우리는 자체적 또는 외부 IPAM 솔루션을 사용하여 이를 관리 할 수 있습니다.
+
+What this section covers is however the word tool bridge networks and the nodes assigned an IP subnet.
+이번 섹션은 브릿지 네트워크 라는 단어와 IP 서브넷이 할당된 노드에 대해 설명 합니다.
+
+And how are the pods assigned an IP.
+그리고 POD 가 어떻게 IP 를 부여 받는지도요.
+
+Where is this information stored and who is responsible for ensuring there are no duplicate IP is assigned.
+여기는 정보가 저장된 장소 입니다. 그리고 누가 IP 중복 할당을 방지하고 있는지가 저장된 장소입니다.
+
+Let's start with The Who.
+그럼 누구 부터 시작합시다.
+
+Let's ask CNI as they're the ones who define the standards 
+CNI 를 그들로 표현 합시다.  표준을 정의하는 사람들.
+
+CNI says it is the responsibility of the CNI plug in the network solution provider to take care of assigning IP to the containers.
+CNI는 컨테이너에 IP 할당을 처리하는 것은 네트워크 솔루션 공급자의 CNI 플러그인이 담당한다고 말합니다.
+
+Remember the basic plugin we built earlier.
+기억하세요. 기본 플러그인은 우리가 이미 만들었습니다.
+
+We actually took care of assigning IP addresses within this plugin.
+우리는 플러그인 내에서 실제 IP 주소를 할당 하는 것을 처리했습니다.
+
+There was a section for assigning IP to the container network namespace.
+여기에는 컨테이너 네트워크 네임스페이스에 IP할당을 위한 섹션이 있었습니다.
+
+But how do we manage these IPs 
+하지만 우리가 어떻게 이 API 들을 관리할 수 있을까요?
+
+kubernetes doesn't care how we do it.
+쿠버네티스는 우리가 무엇을 하건 신경쓰지 않습니다.
+
+We just need to do it by making sure we don't assign any duplicate IPs and manage it property.
+우리는 그저 확인하여 처리하길 원합니다. 우리가 할당 하지 않은 중복 IP 와 관리 속성들을요.
+
+An easy way to do it is to store the list of IPs in a file and make sure we have necessary code in our script to manage this file properly.
+이것을 하기 위한 손 쉬운 방법은 파일내 IP목록을 저장하고 파일을 관리하기 위한 스크립트 코드를 확인하는 것 입니다.
+
+This file would be placed on each host and manages the IPs of pods on those nodes 
+이 파일은 각 호스트에 놓여져 있고 각 호스트의 POD IP를 관리합니다.
+
+instead of coding that ourselves in our script CNI comes with two built in plugins to which you can outsource this task to.
+우리가 이 코드들을 직접 코딩하는 대신에. CNI 는 두개의 빌트인 플러그인을 통해 이 작업을 아웃소싱 할 수 있습니다.
+
+In this case the plugin that implements the approach that we followed for managing the IP addresses locally on each host is the host local plugin 
+이번 경우에 각 호스트에서 로컬로 Ip 주소를 관리 하기 위해 따랏던 접근 방식을 구현하는 플러그인이 호스트 로컬 플러스 인 입니다.
+
+but is still our responsibility to invoke that plugin in our script 
+하지만 여전히 해당 플러스인을 호출하는 것은 우리의 책임 입니다.
+
+or we can make our script dynamic to support different kinds of plugins.
+또는 다른 종류의 플러그인을 지원하도록 스크립트를 동적으로 만들 수 있습니다.
+
+The CNI configuration file has a section called IPAM in which we can specify the type of plug in to be used the subnet and route to be used.
+CNI 설정파일은 IPAM 이라 불리는 섹션이 있습니다. 우리가 사용할 플러그인의 유형을 지정 할 수 있는 그리고 사용된곳을 추적 할 수 있는 IPAM,
+
+This details can be read from our script to invoke the appropriate plugin, instead of hard coding it to use hosted local every time
+호스트된 로컬을에 사용하기 위해 하드코딩 하는 대신 이 세부정보는 스크립트에서 읽어 적절한 플러그인을 호출 할 수 있습니다.
+
+>> cat/etc/cni/net.d/net-script.conf
+
+different network solution providers does it differently.
+다른 네트워크 솔루션 공급자는 다르게 수행 합니다.
+
+Let's see how we works managers IP addresses.
+그럼 우리가 IP 주소 관리를 하는 방법을 봅시다.
+
+In fact you have seen some of the IPs assigned by WEAVE in the previous practice test.
+사실 우리는 이전 테스트에서 WEAVE 를 통해 IP 할당을 해 보았습니다.
+
+We've by default allocates the IP range 10.32.0.0/12 for the entire network.
+우리는 기본적으로 IP 대역 10.32.0.0/12 를 전체네트워크에 허용 했습니다.
+
+That gives the network IP from range 10.32.0.1 to 10.47.255.244.
+이것은 IP 10.32.0.1 에서 10.47.255.244 까지의 네트워크 IP 를 부여합니다.
+
+That's about a million IPs that you can use for pod on the network 
+이것은 POD를 위해 사용할 수 있는 거의 100만개의 IP 입니다. 
+
+from this range. The peers decide to split the IP addresses equally between them and assigns one portion to each node
+이 레인지에서 위브피어는 IP 주소들을 그들과 동일하게 나눕니다. 그리고 각 노드들위 위치를 할당해줍니다.
+
+pods created On this node we'll have IP is in this range.
+POD 들은 이 노드들에서 생성되고 우리는 이 대역에서 IP 를 가지게 됩니다.
+
+Of course these ranges are configurable with additional options past while deploying the weave plug into a cluster.
+당연하게 이 대역은 추가적인 옵션으로 설정 가능 합니다.
+
+Well for this lecture.
+
+Head over to the practice test and explore a IPAM in the weave CNI plugin.

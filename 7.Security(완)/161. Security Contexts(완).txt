@@ -1,0 +1,91 @@
+---------------------------------------------------------------------------------------
+# 컨테이너를 실행한 사용자가 나옴
+>> kubectl exec ubuntu-sleeper -- whoami
+
+# POD 빠르게 종료
+>> kubectl delete pod ubuntu-sleeper --force
+---------------------------------------------------------------------------------------
+[pod-defiition.yaml]
+apiVersion: v1
+kind: Pod
+metadata:
+	name: web-pod
+spec:
+	securityContext:		<-- POD 레벨로 지정
+	  runAsUser: 1000
+	containers:
+	- name: ubuntu
+	  securityContext:		<-- 컨테이너 레벨로 지정 + 여기 지정되지 않은 컨테이너는 POD 레벨 컨텍스트 보안을 따른다.
+	    runAsUser: 1000
+		capabilities:		<-- 이것은 컨테이너 레벨에서만 사용가능
+		  add: ["MAC_ADMIN"]
+---------------------------------------------------------------------------------------
+Hello and welcome to this lecture on Security Contexts in Kubernetes.
+안녕하세요. 이번 강의에서는 컨텍스트 보안에 대해 강의 하겠습니다.
+
+My name is Mumshad Mannambeth as we saw in the previous lecture.
+
+When you run a docker container you have the option to define a set of security standards such as the ID of the user used to run the container.
+도커 컨테이너를 구동 할 때. 당신은 몇 보안 표준 세트를 지정 할 수 있습니다. 컨테이너를 구동 시키는데 사용되는 사용자 ID 같은.
+
+The Linux capabilities that can be added or removed from the container etc. 
+리눅스는 그 보안 기능을 컨테이너에 추가 또는 제거 할수 있는 능력이 있습니다.
+
+These can be configured in Kubernetes as well. 
+이것 역시도 쿠버네티스에서 구성 될 수 있습니다.
+
+As you know already, in Kubernetes containers are encapsulated in PODs.
+이미 알다 시피, 쿠버네티스 컨테이너는 POD 에 캡슐화 되어 있습니다.
+
+You may choose to configure the security settings at a container level or at a pod level.
+당신은 보안 셋팅을 구성하기 위해 컨테이너 레벨 또는 POD 레벨을 선택 할 수도 있습니다.
+
+If you configure it at a pod level the settings will carry over to all the containers within the pod.
+만약 이것을 POD 레벨로 구성 한다면 해당 설정은 포드내 모든 컨테이너에 적용됩니다.
+
+If you figure it at both the pod and the container the settings on the container will override the settings on the pod 
+만약 POD 과 컨테이너 양쪽 모두 설정을 한다면, 컨테이너의 설정이 POD 설정을 덮어 쓰게 됩니다.
+
+let us start with a pod definition file.
+PDO정의파일로 가봅시다.
+
+This pod runs an ubuntu image with the sleep command. 
+이 POD 는 우분투 이미지로 실행중입니다. 슬립 커맨드와 함께.
+
+To configure security context on the container, had a field called security context under the specs section of the pod 
+이 컨테이너에 컨텍스트 보안 설정을 구성하기 위해, POD 의 SPEC 섹션 아래 Security Context 라고 불리는 필드를 가지고 있습니다.
+
+used to runAsUser option to set the user I.D. for the pod 
+POD에 유저 ID 를설정하기 위해 runAsUser 옵션을 사용합니다.
+---------------------------------------------------------------------------------------
+[pod-defiition.yaml]
+apiVersion: v1
+kind: Pod
+metadata:
+	name: web-pod
+spec:
+	securityContext:		<-- POD 레벨로 지정
+	  runAsUser: 1000
+	containers:
+	- name: ubuntu
+	  securityContext:		<-- 컨테이너 레벨로 지정
+	    runAsUser: 1000
+		capabilities:		<-- 이것은 컨테이너 레벨에서만 사용가능
+		  add: ["MAC_ADMIN"]
+---------------------------------------------------------------------------------------
+to set the same configuration on the container level 
+컨테이너 레벨에서 동일한 구성을 설정 하기 위해서
+
+move the whole section under the container specification like this 
+이 전체 섹션을 컨테이너 아래로 이동 합니다. 이렇게요.
+
+to add capabilities used the capabilities option and specify a list of capabilities to add to the pod.
+능력을 추가하기 위해 능력 옵션을 사용합니다. 그리고 POD 에 추가할 능력의 목록을 지정합니다.
+
+Well that's all.
+
+On security context in Kubernetes head over to the coding exercises section and practice viewing configuring
+
+and troubleshooting issues related to security contexts in Kubernetes.
+
+That's it for now and I will see you in the next lecture.

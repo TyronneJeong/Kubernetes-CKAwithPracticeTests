@@ -1,0 +1,36 @@
+Hello and welcome to this lecture on TLS Certificates in Kubernetes. 
+안녕하세요. 이번 강의는 TLS 인증서에 관한 강의입니다.
+
+Securing the cluster with TLS and troubleshooting TLS related issues can be especially difficult if you are not familiar with the basics of TLS certificates.
+TLS를 이용한 클러스터 보안과 TLS 관련 이슈의 트러블 슈팅은 특별히 어렵습니다. 당신이 TLS 인증서의 기본에 대해 친숙하지 않다면요.
+
+We sent out a Poll during the creation of this course about your knowledge on TLS Certificates.
+이과정을 만드는 동안 TLS 인증서에 대한 설문조사를 보냈습니다.
+
+Most of you got back to us saying you had no clue about it or were not very comfortable with it.
+대부분의 대답은 이에 대해 아는바가 없다는 것 또는 익숙하지 않다는 것이였습니다.
+
+So we decided to put together a set of lectures that will help you gain enough knowledge to work with certificates in kubernetes. 
+그래서 우리는 강의를 합하여 제공하기로 결심하였습니다. 쿠버네티스 인증서를 이용하여 일을 할 수 있을 정도로 충분히 많은 지식을 얻게 도와주기 위해
+
+And of course these lectures will help you otherwise as well. 
+그리고 당연하게요. 이 강의는 다른 면으로도 도움이 될 것입니다.
+
+If you are comfortable with this concept, feel free to skip the pre-requisite lectures and head straight over to the ones relevant to kubernetes.
+만약 TLS 인증에 대해서 친숙 하다면, 편하게 생각하고 사전 지식 강의를 건너 뛰어도 괜찮습니다. 그리고 
+
+(By the end of this section:이 섹션이 끝날때 까지. by 를 까지로 사용한 예)
+By the end of this section you should be an expert when it comes to working with certificates in general as well as with kubernetes.
+이 섹션이 끝날 때면 당신은 쿠버네티스 뿐만 아니라 일반적인 인증서 작업에 대해서도 전문가가 될 것입니다.
+
+You should be able to easily configure and troubleshoot issues related to certificates. And the only way to do it, as I understand, is to learn and understand how it works in and out.
+당신은 손쉽게 구성하고 인증서과 관련된 이슈에 대한 문제를 해결 할 것입니다. 그리고 이걸 하길 위한 유일한 방법은 배우고 이해하는 것입니다. 이것이 어떻게 동작하는지.
+
+
+And that’s what we are going to do in this section.
+이것이 이번 섹션에서 우리가 하려는 것입니다.
+
+We will start with the basics of certificates in general.
+우리는 일반적인 인증의 기본과 함께 시작 할 것입니다.
+
+If you are already comfortable with certificates, certificate authorities and how they work feel free to skip this lecture and go over to the next where we discuss this in the kubernetes terms.

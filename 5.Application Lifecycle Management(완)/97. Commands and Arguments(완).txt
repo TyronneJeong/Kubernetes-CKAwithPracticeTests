@@ -1,0 +1,102 @@
+------------------------------------------------
+[도커파일]
+FROM Ubuntu
+ENTRYPOINT ["slee"]
+CMD["5"
+
+[POD 정의파일]
+spec:
+	containers:
+		- name: ubuntu-sleeper
+		  image: ubuntu-sleeper
+		  command:"sleep2.0"
+		  args:["10"]
+		  
+		  또는
+		  command:
+			- "sleep"
+			- "1200"
+			식으로도 지정 가능함.
+			
+		  args:["--option", "2000"]
+		     식으로 배열을 인자로 넘김.
+------------------------------------------------
+Hello and welcome to this lecture in this lecture.
+
+We will now look at Command and Arguments in a Kubernetes POD.
+명령어와 아규먼트에 대해 알아보겠습니다.
+
+In the previous lecture we created a simple Docker image that sleeps for a given number of seconds.
+이전의 강의에서 우리는 간단한 도커 이미지를 생성했습니다. sleep 을 숫자와 함께 넘겨서.
+
+We named it ubuntu-sleeper and we ran it using the docker command docker run ubuntu-sleeper. 
+우리는 이 이미지의 이름을 ubuntu-sleeper 라고 지었고, docker run ubuntu-sleeper 라는 도커 커맨드를 이용하여 실행했습니다.
+
+By default It sleeps for five seconds but you can override it by passing a command line argument.
+기본적으로, 5초간 sleep 을 합니다. 하지만 이 값을 오버라이드 하면 커맨드라인 아규먼트가 전달되게 됩니다.
+
+We will now create a pod using this image.
+우리는 이제 이 이미지를 사용하는 pod 를 생성할 것입니다.
+
+We start with a blank pod definition template,
+우리는 속이 비어있는 POD 정의 템플릿과 함께 시작합니다.
+
+input the name of the pod and specify the image name.
+POD 의 네임을 입력하고 image 네임을 지정합니다.
+
+When the pod is created, it creates a container from the specified image, and the container sleeps for five seconds before exiting.
+POD 가 생성될때, POD 는 특정 이미지의 컨테이너를 생성합니다. 그리고 그 컨테이너는 종료되기전 5초간 SLEEP 을 합니다.
+
+Now if you need the container to sleep for 10 seconds as in the second command 
+만약 당신이 두번째 명령을 통해 10초간 sleep 하기를 원한다면,
+
+how do you specify the additional argument in the pod definition file.
+추가적인 아규먼트를 어떻게 지정할 까요. 당신의 POD 정의파일에서.??
+
+Anything that is appended to the docker run command will go into the “args” property of the pod definition file in the form of an array like this.
+도커 런 커맨드에 덧붙인 모든 것은 POD정의파일에 args 배열형태로 프로퍼티 안으로 가게 됩니다.
+
+Let us try to relate that to the docker file we created earlier.
+이전에 생성했던과 도커 파일을 연결 지어 봅시다.
+
+(as well as:게다가)
+The Dockerfile has an Entrypoint as well as a CMD instruction specified. 
+도커 파일은 엔트리 포인트를 가지고 있습니다. 게다가 CMD 명령을 지정할 수 있습니다.
+
+The entrypoint is the command that is run at startup, and the CMD is the default parameter passed to the command. 
+엔트리 포인트는 스타텁 할때 실행하는 명령입니다. 그리고 CMD 는 커맨드에 전달되는 기본적인 파라미터입니다.
+
+With the args option in the pod definition file we override the CMD instruction in the Dockerfile.
+POD정의파일에 args 옵션을 사용하는 경우, 우리는 도커파일의 CMD 명령어를 덮어 쓰게 됩니다.
+
+But what if you need to override the entrypoint? 
+하지만 엔트리 포인트를 덮어 쓰고 싶다면?
+
+Say from sleep to a hypothetical sleep2.0 command? 
+가령, sleep 에서 가상의 sleep2.0 명령으로.?
+
+In the docker world.
+도커 월드에서는
+
+(corresponding:동일한, 상응하는, 일치하는, 통신의, 통신관계의)
+We would run the docker run command with the entry point option set to the new command the corresponding entry in the pod definition file would be using a command field 
+POD 정의파일의 엔트리에 상응 하는 새로운 커맨드를 설정 하기 위해 엔트리포인트 옵션을 포함한 도커 런 커맨드를 우리는 실행 합니다.
+
+the command field corresponds to entry point instruction in the docker file
+커맨드 필드는 도커파일에 엔트리 포인트에 상응합니다.
+
+so to summarize there are two fields that correspond to two instructions
+요약하자면 저기에는 2개의 명령에 상응하는 2개의 필드가 있습니다. 
+
+in the docker file.
+도커파일에
+
+The command field overrides the entry point instruction and the args field overrides the command instruction in the docker file.
+커맨드 필드는 엔트리 포인트 명령을 덮어 씁니다. 그리고 args 필드는 도커 파일내 CMD 명령을 덮어 씁니다.
+
+Remember it is not the command field that overrides the CMD instruction in the docker file.
+기억하세요. 커맨드 필드가 아닙니다. 덮어쓰는건 도커파일에 CMD 명령어 입니다.
+
+Well that's it about commands and arguments in Kubernetes head over to the coding exercises section
+
+and practice viewing configuring and troubleshooting commands and arguments in kubernetes.

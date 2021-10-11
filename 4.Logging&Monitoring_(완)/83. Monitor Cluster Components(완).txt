@@ -1,0 +1,129 @@
+--------------------------------------------------------
+git clone https://github.com/kodekloudhub/kubernetes-metrics-server.git
+
+--> 리파지에서 받은 yaml 파일들이 폴더에 내려받아짐
+>> kubectl create -f .
+해당 디렉토리에서 명령어 실행시 모든 파일들을 생성함
+
+>> kubectl get node
+
+--------------------------------------------------------
+
+
+Hello and welcome to this lecture. 
+
+In this lecture we talk about Monitoring a Kubernetes cluster.
+이번 강의에서 우리는 쿠버네티스 클러스터를 모니터링 하는 것에 대해 배워보겠습니다.
+
+So how do you monitor resource consumption on Kubernetes? Or more importantly what would you like to monitor?
+당신은 쿠버네티스에서 리소스 소비량을 어떻게 모니터 하고 있나요? 또는 조금더 중요한걸로. 무엇으로 모니터링 하고 있나요?
+
+(I had like to ~:~하고 싶다)
+I’d like to know Node level metrics such as the number of nodes in the cluster how many of them are healthy 
+저는 이걸 노드 레벨 메트릭스로 알고 싶습니다. 클러스터내 노드들이 얼마나 건강한지를 숫자로.
+
+(as well as:게다가)
+as well as performance metrics such as CPU. Memory, network and disk utilization.
+게다가 CPU, Memory, 네트워크 그리고 디스크 활용같은 메트릭스로요.
+
+As well as POD level metrics such as the number of PODs, and performance metrics of each POD such as the CPU and Memory consumption on them.
+게다가 POD 레벨 메트릭스(POD수,각각의 POD의 자원 소비량)
+
+So we need a solution that will monitor these metrics store them and provide analytics around this data
+그래서 우리는 저 매트릭스저장소를 모니터링하고 저 분석 데이터를 제공해줄 해결책이 필요합니다
+
+(does not come with:제공하지 않다)
+As of this recording, Kubernetes does not come with a full featured built-in monitoring solution.
+이 기록에서 쿠버네티스는 모든 특징을 가진 빌트인 모니터링 솔루션을 제공하지 않습니다.
+
+(proprietary:독점)
+However, there are a number of open-source solutions available today, such as the Metrics-Server, Prometheus, Elastic Stack, and proprietary solutions like Datadog and Dynatrace.
+하지만 몇몇의 오픈 소스 솔루션을 오늘날 이용가능합니다. 가령 메트릭스 서버라던가 프로메테우스 라던가, 엘라스틱 스택이라던가, 독점 솔루션 같은 데이터 독과 다이나프레이트
+
+Heapster was one of the original projects that enabled monitoring and analysis features for kubernetes
+힙스터는 모니터링과 특징 분석이 가능한 오리지널 프로젝트중 하나였습니다.
+
+You will see a lot of reference online when you look for reference architectures on monitoring Kubernetes.
+쿠버네티스 모니터링에 관한 아키텍처를 찾고자 할때 많은 자료를 볼 수 있을 것입니다.
+
+However, Heapster is now Deprecated and a slimmed down version was formed known as the Metrics Server.
+하지만 힙스터는 현재 비권장 되어씁니다. 그리고 메트릭스 서버라는 것의 한 부분으로 슬림다운 되었습니다.
+
+You can have one metrics server per kubernetes cluster 
+당신은 쿠버네티스 클러스터당 하나의 메트릭스 서버를 가질 수 있습니다.
+
+(aggregates:집계하다)
+the metric server retrieves metrics from each of the kubernetes nodes and pods, aggregates them and stores them in memory.
+메트릭스 서버는 각각의 쿠버네티스 노드와 POD 로 부터 메트릭스를 조회합니다. 그리고 이들을 집계하고 메모리에 저장 시킵니다.
+
+Note that the metric server is only an in memory monitoring solution and does not store the metrics on the desk and as a result.
+메트릭스 서버는 단지 메모리 모니터링 솔루션일 뿐이며, 그리고 결과를 데스크에 저장하지 않는다는것을 유념하십시오.
+
+you cannot see historical performance data.
+시간대별로 동작 한 데이터를 볼 수 없습니다.
+
+For that you must rely on one of the advanced monitoring solutions we talked about earlier in this lecture.
+그런것들을 위해서는 우리가 이 강의 초반에 언급했던것 같은 고급화된 모니터링 솔루션에 의존 해야 합니다.
+
+So how are the metrics generated for the PODs on these nodes?
+그럼 어떻게 이 노드에 POD 에 대한 메트릭스를 생성되는 것일까요?
+
+Kubernetes runs an agent on each node known as the kubelet, which is responsible for receiving instructions from the kubernetes API master server and running PODs on the nodes.
+쿠버네티스는 큐블렛이라 부르는 에이젼트를 각 노드에 실행합니다.
+이 큐블렛은 API서버로부터 명령을 수신받는것을 책임지고 있고 NODE 에 POD를 실행하는 역할을 담당하고 있습니다.
+
+The kubelet also contains a subcomponent known as as cAdvisor or Container Advisor. 
+큐블렛 역시 cAdvisor 또는 컨테이너 어드바이져라고 불리는 서브컴포넌트를 포함하고 있습니다.
+
+cAdvisor is responsible for retrieving performance metrics from pods, and exposing them through the kubelet API
+cAdvisor 는 POD로 부터 성능 메트릭스를 조회하고 그 기록을 큐블렛API을 통해 제공하는 역할을 담당합니다.
+
+to make the metrics available for the Metrics Server. 
+메트릭스 서버를 위해 성능메트릭스를 만드는 것이 가능해집니다.
+
+If you are using minikube for your local cluster,
+만약 당신이 로컬 클러스터를 위해 minukube 를 이용한다면
+
+run the command minikube addons enable metrics-server. 
+>> minikube addons enable metrics-server
+를 실행하시면 됩니다.
+
+For all other environments deploy the metrics server by cloning the metrics-server deployment files from the github repository.
+모든 다른 환경은 메트릭스 서버(메트릭스 서버의 배포파일 복제로)를 깃허브 리파지토리에 배포하게 됩니다.
+
+And then deploying the required components using the kubectl create command.
+그런다음 kubectl 명령어를 통해 필요한 컴포넌트들을 배포합니다.
+
+This command deploys a set of pods, services and roles to enable metrics server to poll for performance metrics from the nodes in the cluster.
+이 명령어는 pod 집합이나 서비스 그리고 메트릭스 서버의 역할을 투표하기 위해 배포합니다.
+
+Once deployed, give the metrics-server some time to collect and process data.
+한번 배포되면, 메트릭스 서버는 데이터를 수집하고 처리 합니다.
+
+Once processed, cluster performance can be viewed by running the command kubectl top node.
+한번 처리되면 클러스터 성능은 kubectl top node 명령어를 통해 볼 수있습니다.
+
+## 현재사용중인 CPU 자원과 메모리 사용량 코어 수 등을 노드별로 출력함
+>> kubectl top node
+
+This provides the CPU and Memory consumption of each of the nodes. 
+이 명령어는 각 노드별 CPU 와 메모리 소모량을 제공합니다.
+
+As you can see 8% of the CPU on my master node is consumed, which is about 166 milli cores.
+보시는 바와 같이 8% CPU 가 my master 노드에서 소비되고 있습니다.
+이건 166 밀리코어입니다.
+
+Use the kubectl top pod command to view performance metrics of pods in kubernetes.
+kubectl top pod 명령어를 사용하면 POD별 성능 메트릭스를 볼 수 있습니다.
+
+>> kubectl top node
+>> kubectl top pod
+
+
+That's it for this lecture.
+
+Head over to the coding exercises section and practice viewing performance metrics on the kubernetes
+
+cluster.
+
+Thank you.

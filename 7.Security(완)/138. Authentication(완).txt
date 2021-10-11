@@ -1,0 +1,205 @@
+--------------------------------------------
+사용자 정보를 파일로 관리하는 것이 deprecated 됨 1.19에서
+하지만 테스트를 위해서는 다음 단계를 진행하여 확인함
+
+1. /tmp/user/user-details.csv 파일 생성
+# user fiel contets
+password123,user1,u0001
+password123,user2,u0002
+password123,user3,u0003
+password123,user4,u0004
+
+2. kube-apiserver.taml 파일에 정적 파일을 지정함. - 볼륨 마운트
+containers:
+  - command:
+    - kube-apiserver
+      <content-hidden>
+    image: k8s.gcr.io/kube-apiserver-amd64:v1.11.3
+    name: kube-apiserver
+    volumeMounts:
+    - mountPath: /tmp/users
+      name: usr-details
+      readOnly: true
+  volumes:
+  - hostPath:
+      path: /tmp/users           <------------
+      type: DirectoryOrCreate
+    name: usr-details
+
+3. kube-apiserver.yaml 파일에 스타트 옵션을 추가함.
+containers:
+  - command:
+    - kube-apiserver
+    - --authorization-mode=Node,RBAC
+      <content-hidden>
+    - --basic-auth-file=/tmp/users/user-details.csv <-------
+--------------------------------------------
+Hello and welcome to this lecture on authentication in a kubernetes cluster,
+안녕하세요 이번 강의에서는 클러스터 인증에 관해 알아보겠습니다. 
+
+as we have seen already.
+이미 알다 시피
+ 
+The kubernetes cluster, consists of multiple nodes, physical or virtual and various components that work together.
+쿠버네티스 클러스터는 다수의 노드와 피지컬 또는 가상의 컴포넌트가 함께 동작하도록 구성 되어 있습니다.
+
+(administrative:관리의, 행정상의)
+If users like administrators that access the cluster to perform administrative tasks, 
+만약 관리자와 같은 사람이 관리업무를 보기 위해 클러스터에 접근 한다면
+
+the developers that access the cluster to test or deploy applications, we have end users who access the applications deployed on the cluster 
+클러스터에 접근하여 테스트 하고 어플리케이션을 배포하는 개발자들, 클러스터에 배포된 어플리케이션에 접근하는 엔드 유저가 있습니다.
+
+and we have third party applications accessing the cluster for integration purposes.
+그리고 통합목적으로 클러스터에 접근 하는 써드 파티 어플리케이션 이 있습니다.
+
+Throughout this section, we will discuss how to secure our cluster by securing the communication between internal components and securing management access to the cluster through authentication and authorization mechanisms 
+이 강의를 통해, 내부 컴포넌트간 커뮤니케이션 보호와 인증과 인증 매커니즘을 통한 접근 관리 보호를 통해 우리의 클러스터를 보호하는 방법에 대해 의논할 것입니다.
+
+in this lecture. Our focus is on securing access to the kubernetes cluster with authentication mechanisms.
+이 강의에서 우리의 주안점은 인증 매커니즘을 통해 우리의 쿠버네티스 클러스터의 접근을 보호 하는 것 입니다.
+
+So we talked about the different users that may be accessing the cluster security of end users who access the applications deployed on the cluster is managed by the applications themselves internally.
+그래서 우리는 클러스터에 배포된 어플리케이션에 접속하는 최종 사용자의 클러스터 보안에 접근하는 다른 사용자에 대해 말해 보겠습니다.
+
+(take out:~제외하다)
+So we will take them out of our discussion.
+때문에 우리는 그것들(?)은 논의대상에서 제외할 것입니다.
+
+Our focus is on users access to the kubernetes cluster for administrative purposes.
+우리의 주안점은 관리 목적으로 쿠버네티스 클러스터에 접근하는 사용자 접근 입니다.
+
+So we are left with two types of users, humans such as the administrators and developers and robots such as other processors or services or applications that require access to the cluster.
+그래서, 우리에게 두가지 유형의 사용자가 남아 있습니다. 관리자인 사람, 그리고 개발자, 그리고 프로세스나 서비스 어플리케이션 같은 로봇이 있습니다.
+
+kubernetes does not manage user accounts natively, it relies on an external source like a file with user details or certificates or a third party identity service like LDAP to manage these users.
+기본적으로 쿠버네티스는 유저 계정을 관리하지 않습니다. 이것은 외부 소스에 의존 합니다. 예를 들어 LDAP 같은 써드 파이 식별 서비스라던가, 파일, 인증, 등을 통해 사용자 정보를 관리합니다.
+
+And so you cannot?? create users in a kubernetes cluster or view the list of users like this.
+그리고 쿠버네티스 클러스터에 사용자를 생성 하거나 사용자 목록을 보려면 이렇게 합니다.
+
+>> kubectl create user user01
+>> kubectl list users
+
+However, in case of service accounts, kubernetes can manage them.
+하지만 서비스 계정의 경우 쿠버네티스가 계정을 관리합니다.
+
+>> kubectl create serviceaccount sa1
+
+You can create and manage service accounts using the kubernetes API.
+쿠버네티스API 를 통해 서비스 계정을 생성하고 관리할 수 있습니다.
+
+(exclusively:독점적으로)
+We have a section on service accounts exclusively where we discuss and practice more about service accounts.
+우리는 서비스 계정에 대한 강의가 별도로 준비되어있습니다. 
+
+For this lecture, we will focus on users in kubernetes, all user access is managed by the API server,
+이 강의에서는 유저에 대해서 집중 하겠습니다. 모든 유저의 접근은 API 서버의 관리를 받습니다.
+
+whether you're accessing the cluster through a kubectl tool or the API directly, 
+kubectl 도구를 통해 클러스터에 접근을 하든 API 를 직접 호출하여 접근을 하던
+
+all of these requests go through the API server.
+모든 호출은 API 서버를 통하게 됩니다.
+
+The KubeAPI server authenticates the request before processing it.
+kubeapi 서버는 요청을 처리하기 전에 그 인증을 합니다.
+
+So how does the KubeAPI server authenticate?
+그럼 어떻게 API 서버는 인증을 할 까요.
+
+There are different authentication mechanisms that can be configured.
+여기에는 설정에 따른 다른 인증 매커니즘이 있습니다.
+
+You can have a list of usernames and passwords in a static password file or usernames and tokens in a static token file,
+사용자 이름과 패스워드 목록을 담은 정적 파일또는 토큰을 가질 수 있습니다.
+
+or you can authenticate using certificates.
+또는 인증서를 통해서 인증을 할 수 있습니다.
+
+And another option is to connect to third party authentication protocols like that LDAP, 쿠베롭??? etc..
+그리고 다른 옵션으로 써드 파티 인증 프로토콜을 이용해접속 할 수도 있습니다. LDAP 이라던가 등등
+
+------------------------------------------------------------
+We will look at some of these next.
+써드파티 인증 도구에 대해서는 이후에 다뤄보겠습니다.
+
+Let's start with static password and token files as it is the easiest to understand.
+이해하기가 용이한 정적인 패스워드 파일 또는 토큰 파일부터 시작하겠씁니다.
+
+Let's start with the simplest form of authentication, you can create a list of users and their passwords in a CSV file and use that as the source for user information.
+단순한 인증 형태부터 시작 하겠습니다. 당신은 사용자의 목록과 그들의 패스워드를 CSV 파일로 생성할 수 있고 사용자 정보로 이용할 수 있습니다.
+
+The file has three columns password, username and user I.D.
+그 파일은 3개의 컬럼을 가지고 있습니다. 사용자이름, USER ID, 그리고 패스워드.
+
+within the pass the file name has an option to the KubeAPI server.
+전달되는 파일 네임 속에는 KubeAPI 서버에 대한 옵션이 있습니다. (해석이 이상함)
+
+>> kube-apiserver --basic-auth-file=user-details.csv
+
+Remember the KubeAPI Server service and the various options we looked at earlier in this course, 
+기억하세요 이전에 이과정에서 보았던 kubeAPI 서버 서비스와 다양한 옵션에 대해서.
+
+that is where you must specify this option, you must then restart the KubeAPI server for these options to take effect.
+저것이 옵션을 지정해야만 하는 장소이고, 다음 옵션이 효과가 발휘하기 위해 재시작을 해야만 합니다.
+
+If you set up your cluster using the kubeadm tool, then you must modify the KubeAPI Server pod definition file.
+만약 kubeadm 도구로 클러스터를 구성한 경우에는 kubeAPI 서버 pod 정의파일을 수정 해야 합니다.
+
+The Kubeadm tool will automatically restart the kubeapi server once you update this file.
+kubeadm 도구는 파일을 한번 수정 하면 자동으로 kubeapi 서버를 재시작 시킵니다.
+----------------------------------------------------
+[/etc/kubernetes/manifests/kube-apiserver.yaml]
+spec:
+	containers:
+		-command:
+			- --basic-auth-file=user-details.csv
+----------------------------------------------------
+(credentials:자격증명)
+To authenticate using the basic credentials while accessing the API server, specify the user and password in a command like this.
+API 서버에 접속 하는 동안 기본자격증명을 사용하여 인증하여면 사용자와 패스워드를 다음과 같이 지정해야 합니다.
+
+In The CSV File with the user details that we saw, we can optionally have a fourth column with the group details to assign users to specific groups.
+우리가 보았던 사용자 상세정보가 있는 CSV 파일 안에 그룹의 상세정보를 담는 4번째 컬럼을 추가할 수 있습니다. 사용자가 할당 받은 지정 그룹
+
+------------------------------------------------------------
+Similarly, instead of a static password file, you can have a static token file here instead of password you specify a token 
+유사하게 정적인 패스워드 파일 대신에 정적 토근 파일로 패스워드를 대신할 수 있습니다.
+
+
+------------------------------------------------------------
+passed token file as an option token or어프?? file to the kubeAPI server 
+KubeAPI 서버로 전달된 토큰 파일은
+
+while authenticating specified a token as an authorization bearer token to your request like this.
+
+토큰을 API 서버에 인증키로 보내는 방법에 대한 설명
+
+>>curl -v-k http://~~~~/pods --header "Authorization: Barer asdqpwii2389r3io2rinwdj8f238823"
+------------------------------------------------------------???
+
+That's it for this lecture.
+
+Remember that this authentication mechanism that stores usernames, passwords and tokens and clear text in a static file is not a recommended approach as it is insecure.
+기억하세요. 이 인증 매커니즘 사용자이름과 패스워크 그리고 토큰을 정적인 파일에 저장하는건 안전하지 않기 때문에 권장하는 방식이 아닙니다.
+
+But I thought this was the easiest way to understand the basics of authentication and kubernetes going forward.
+하지만 이 방법은 인증의 기본을 이해하기 쉬운 방법이라고 생각하기 때문에 계속 진행 할 것입니다.
+
+We will look at other authentication mechanisms.
+우리는 좀 더 다양한 인즈 매커니즘에 대해 알아 보겠습니다.
+
+(point out:지적하다)
+I also want to point out that if you were trying this out in a kubeadm setup, you must also consider volume mounts to passing the out file
+또한 이 것을 지적 하고 싶습니다. kubeadm 설정을 통해 이부분을 시도 한다면, 파일을 전달 하기 위한 볼륨 마운트 역시 고려 해야만 합니다.
+
+details about these are available in the article that follows. 
+좀더 상세한 내용은 따라오는 내용에서 더 가능 합니다.
+
+And remember to set up authorization for the new users.
+그리고 기억하세요. 새로운 사용자를 위해 인증을 설정 하는 것.
+
+We will discuss about authorization later in this course in the upcoming lectures, we will discuss
+
+about certificate based authentication and how the various components within this kubernetes are secured using certificates.

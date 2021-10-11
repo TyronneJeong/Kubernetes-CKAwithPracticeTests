@@ -1,0 +1,205 @@
+Hello and welcome to this lecture in this lecture.
+인사
+
+In this lecture we will talk about the Kube-API server in kubernetes.
+이번강의에서는 쿠버API 서버에 대해 말해볼까 합니다.
+
+Earlier we discussed that the Kube-api server is the primary management component in kubernetes.
+앞서 말한바와 같이 쿠버API서버는 쿠버네티스의 기본 컴포넌트 매니저 입니다.
+
+when you run a kubectl command, the kubectl utility is infact reaching to the kube-apiserver.
+kubectl 명령어를 실행 할떄, kubectl 유틸리는 사실 kube api 서버에 연락을 합니다.
+
+The kube-api server first authenticates the request and validates it. 
+쿠버API서버는 우선 요청에 대해 인증을 하고 유효성을 검사합니다.
+
+It then retrieves the data from the ETCD cluster and responds back with the requested information.
+이것들을 하고나면 etcd클러스터에서 데이터 폼을 검색합니다. 그리고 요청된 정보와 함께 응답합니다.
+
+You don’t really need to use the kubectl command line.
+실제 kubectl 명령어 라인을 쓸 필요는 없습니다.
+
+(could:~일수도있다) (invoke:부르다)
+Instead, you could also invoke the API directly by sending a post request like this.
+대신에 요청이전에 아래와 같이 보내어 API를 다이렉트로 부를 수 도 있습니다.
+
+
+[쿠버 API 에 커맨드가 아닌 파드 생성을 살펴보기]
+
+let's look at an example of creating a pod.
+파드를 생성하는 예제를 살펴 봅시다.
+
+when you do that as before the request is authenticated first and then validated.
+이전과 같이 요청을 했을 때, 인증을 처음 거치게 됩니다. 그리고 검증 됩니다.
+
+In this case, the API server creates a POD object without assigning it to a node.
+이 경우 API 서버는 노드에 할당하지 않고 POD객체를 생성합니다.
+
+updated the information in the ETCD server, updates the user that the POD has been created.
+etcd서버에서 갱신된 정보가 POD가 생성되었던 사용자를 갱신을 합니다.
+
+[노드에게는 알리지 않고 ETCD 서버가 파드 객체 생성과 피드백을 다함]
+
+
+
+[쿠버-스케쥴러가 노드 없는 파드(어플리케이션단지) 처음 확인]
+
+The scheduler continuously monitors the API server and realizes that there is a new pod with no node assigned.
+스케쥴러는 주기적으로 API서버를 감시하다가 새로운 POD가 노드에 할당없이 있다는걸 알게됩니다.
+
+the scheduler identifies the right node to place the new POD on and communicates that back to the kube-apiserver.
+스케쥴러는 새로운 POD 가 위치할 적당한 노드를 식별합니다. 그리고 쿠버API 서버에 응답합니다.
+
+[쿠버API 서버는 중계역할을 한다.]
+
+The API server then updates the information in the ETCD cluster.
+API 서버는 다음으로 ETCD 클러스터에 그 정보를 업데이트 합니다.
+
+(passes:전달하다) (appropriate:적절한)
+The API server then passes that information to the kubelet in appropriate worker node.
+API 서버는 그 정보를 적절한 노드에 있는 큐블렛에게 전달합니다.
+
+
+[큐블렛 : 전달받은 파드를 노드에 심는다. + 컨테이너 런타임 엔진 가동!!]
+
+(instructs:지시하다)
+The kubelet then creates the POD on the node and instructs the container runtime engine to deploy the application image.
+큐브렛은 다음으로 노드에 POD 를 생성합니다. 그리고 어플리케이션 이미지를 컨테이너 런타임 앤징에 올리도록 지시합니다.
+
+[작업완료 후처리 : API에 다시전달 -> ETCD 서버에 다시 응답]
+
+Once done, the kubelet updates the status back to the API server and the API server then updates the data back in the ETCD cluster.
+이게 끝나면, 쿠버렛은 상태를 API서버에 다시 상태를 갱신합니다. 
+그런다음 API 서버는 ETCD 클러스터에 데이터를 갱신합니다.
+
+A similar pattern is followed every time a change is requested.
+변경이 요청될 때 마다 유사한 패턴이 반복됩니다.
+
+[요약]
+사용자요청 -> 쿠버API 서버의 API 를 통해 수신 -> 쿠버API서버는 파드 객체생성
+-> ETCD 클러스터내 정보생성 -> 사용자에게 응답!! 
+
+[쿠버스케쥴러 입장]
+쿠버스케쥴러는 API 서버를 모니터링 하다가 파드 객체 확인! -> 스케쥴러가 적당한 노드 식별 -> 큐블렛에세 파드 전달 -> 큐블렛은 파드객체에게 진짜 파드를 선물하고 컨테이너 런타임 엔진으로 어플리케이션을 구동시킴 -> 작업이 완료되면 쿠버API 서버에 해당 사실 통보 -> 쿠버API 서버는 변경내용을 ETCD 클러스터에 갱신 -> 작업완료
+
+
+[쿠버API 서버는 중요하다. 의 강조]
+(at:위치에)
+The kube-apiserver is at the center of all the different tasks that needs to be performed to make a change in the cluster.
+쿠버API서버는 클러스터에서 동작하거나 변화되기를 바라는 모든 다른 작업의 중심에 있습니다.
+
+To summarize, the kube-api server is responsible for Authenticating and validating requests, retrieving and updating data in ETCD data store.
+요약하자면 쿠버API 서버는 요청을 검증하고 인증하는 역할을 합니다. 그리고 ETCD 클러스터에 데이터를 조회하고 갱신하는 역할도 합니다.
+
+in fact, kube-api server is the only component that interacts directly with the etcd datastore.
+사실 쿠버API 서버는 단지 ETCD 데이터 저장소와 직접적으로 상호작용하는 컴포넌트일 뿐입니다.
+
+The other components such as the scheduler, kube-controller-manager & kubelet uses the API server to perform updates in the cluster in their respective areas.
+스케쥴러나, 쿠버컨트롤매니저, 큐블렛과 같은 컴포넌트들은 클러스터내 각자의 영역에서 업데이트를 수행할 목적으로 API서버를 사용합니다.
+
+
+
+[쿠베드민]
+
+If you bootstrapped your cluster using kubeadm tool then you don't need to know this
+만약 쿠배드민 도구를 사용하여 클러스터를 부트스트랩한 경우 해당 부분을 알 필요는 없습니다.
+
+but if you are setting up the hard way, then kube-apiserver is available as a binary in the kubernetes release page.
+하지만 반약 수작업으로 셋팅한 경우, 쿠버API서버는 쿠버네티스 공개 페이지의 바이너리처럼 가능합니다.
+
+[클러스터에 쿠버API 설치를 하는 방법에 대해 알랴줌]
+>> kube-apiserver.service
+
+Download it and configure it to run as a service on your kubernetes master node.
+마스터 노드에 서비스 처럼 실행하기 위해 다운로드 받고 설정하세요.
+
+The kube-api server is run with a lot of parameters as you can see here. 
+쿠버 API 서버는 보시는것 처럼 수많은 파라미터와 함께 실행됩니다.
+
+(Throughout:~동안) (peak:한 부분, 돌출부)
+Throughout this section we are going to take a peak at how to install and configure these individual components of the kubernetes architecture.
+이 섹션 동안, 우리는 쿠버네티스 아키텍처에서 개별 컴포넌트들을 어떻게 설치하고 설정하는지 쬐끔 가질 것입니다.
+
+(on some of these:이들중 일부에)
+You don't have to understand all of the options right now but I think having a high level understanding on some of these.
+당장 이 모든 옵션들을 알 필요는 없습니다. 하지만 이것들중 일부의 높은 수준의 이해를 갖추고 있다면
+
+
+[우리는 스크래치를 사용하는 걸까 쿠베드민을 사용하는 걸까..]
+(configure:구성하다)
+now will make it easier later when we configure the whole cluster and all of its components from scratch.
+스크래치를 통해 모든 클러스터와 컴포넌트들을 구성 할 때 쉽게 만들어줄 겁니다.
+
+
+
+[컴포넌트들의 위치와 옵션들을 알고 있어야 하는 이유 - 잔소리]
+
+The kubernetes architecture consists of a lot of different components working with each other, talking to each other in many different ways.
+쿠버네티스 아키텍쳐는 다양하게 동작하고 다양하게 통신하는 각 다른 컴포넌트들로 구성되어 있습니다.
+
+so they all need to know where the other components are.
+때문에 그들은 항상 다른 컴포넌트들은 어디있는지 알 필요가 있습니다. 
+
+There are different modes of authentication, authorization, encryption and security. And that’s why you have so many options when we go through the relevant section in the course.
+그들은 인증, 보안, 암호화 등에 다양한 모드들이 있습니다. 
+그리고 그게 해당 과정의 관련섹션을 지날때 다양한 옵션을 가져야 하는 이유입니다.
+
+
+
+[컴포넌트들간 소통을 위한 기본 - 인증파일]
+
+(pull up:(뽑아서)가져오다)
+we will pull up this file and look at the relevant options.
+우리는 이 파일을 뽑아서 가져온 다음 관련 옵션들을 볼것입니다.
+
+For now we will look at a few important ones.
+지금은 몇몇 중요한 부분을 볼것입니다.
+
+A lot of them are certificates that are used to secure the connectivity between different components.
+저 옵션들중 많은 부분은 다른 컴포넌트와 연결되기 위해 보안에 사용되는 인증서 입니다.
+
+We look at these certificates in more detail when we go through the SSL/TLS certificates lecture later in this course.
+이 과정 후반에 SSL/TLS 인증 강의를 수강할때 인증서를 좀 더 자세히 보겠습니다.
+
+(rid:구하다, 치우다, 구축하다)
+There is a whole section just for it. So we will get rid of them for now.
+단지 인증만을 위한 통 섹션이 있습니다. 때문에 당장은 해당 부분을 미뤄둘 것입니다.
+
+But just remember all of the various components we are going to look at in this section will have certificates associated(연결된 인증서) with them.
+하지만 이 섹션에서 보게 될 다양한 컴포넌트들 모두는 연결된 인증서가 있다는 것을 기억하세요.
+
+
+
+[ETCD 서버 설정]
+
+The option ETCD-servers is where you specify the location of the ETCD servers.
+"etcd-server" 옵션은 ETCD서버의 위치(주소정보)를 지정하는 곳 입니다.
+
+This is how the kube-api server connects to the etcd servers.
+이것이 쿠버API 서버가 ETCD 서버에 접속하는 방법입니다.
+
+So how do you view the kube-api server options in an existing cluster
+그럼 기존에 존재하는 클러스터에서는 어떻게 쿠버API 서버 옵션을 어떻게 보나요?
+
+
+[쿠베드민 으로 설치했니, 스크래치로 설치했니]
+
+It depends on how you set up your cluster.
+이건 클러스터를 어떻게 설정했느냐와 연관되어있습니다.
+
+If you set it up with kubeadm tool, kubeadm deploys the kube-api server as a pod in the kube-system namespace on the master node
+만약 당신이 쿠버ADM 도구로 설정을 했다면, 쿠베드민은 마스터 노드에서 쿠버시스템 네임스페이스에 있는 POD 처럼쿠버 API 서버를 배포합니다.
+
+you can see the options within the pod definition file located at "/etc/kubernetes/manifests" folder.
+파드 정의파일 위치에서 이런 옵션들도 볼 수 있습니다.
+>> /etc/kubernetes/manifests/kube-apiserver.yaml
+
+kube-api server service located at /etc/systemd/system/kube-apiserver.service 
+
+쿠버API 서버 서비스는 아래 위치에 이씃ㅂ니다. /etc/systemd/system/kube-apiserver.service
+
+You can also see the running process and the effective options by listing the process on the master node and searching for kube-apiserver.
+또 마스터 노드의 프로세스 목록과 쿠버API서버의 검색으로 실행중인 프로세스와 적용가능한 옵션들을 볼 수 있씁니다.
+
+Well that's it for this lecture.
+여기까지 강의 마치겠습니다.

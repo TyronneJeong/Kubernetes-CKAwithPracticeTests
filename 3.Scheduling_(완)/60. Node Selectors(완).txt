@@ -1,0 +1,130 @@
+Hello and welcome to this lecture. In this lecture
+
+we will talk about nodes selectors in Kubernetes.
+이번 강의에서는 노드 셀렉터에 대해 다뤄 보겠습니다.
+
+Let us start with a simple example.
+간단한 예제부터 시작하시죠.
+
+You have a three node cluster of which two are smaller nodes with lower hardware resources and one of them is a larger node configured with higher resources.
+여기 3개의 노드 클러스터가 있습니다. 2개의 작은 노드는 저사양의 하드웨어 자원이 있고, 나머지 하나는 큰 노드로, 고수준의 자원이 구성되어 있습니다.
+
+you have different kinds of worker node running in your cluster.
+당신의 클러스터에는 다른 종류의 워커 노드가 동작중에 있습니다.
+
+You would like to dedicate the data processing woker node that require higher horsepower to the larger node as that is the only node that will not run out of resources in case the job demands extra resources.
+당신은 높은 마력을 요구하는 데이터 처리 워커 노드를. 이 경우 작업이 요구하는 추가적인 자원이 부족하지 않을 유일한 큰 노드에 전속시키길 원합니다.
+
+However, in the current default setup, any pods can go to any nodes.
+하지만 기본적인 설정으로는 모든 POD 은 모든 NODE 에 갈수가 있습니다.
+
+So Pod C in this case may very well end up on nodes two or three which is not desired. 
+때문에 이경우 POD C 는 원하지 않았던 노드2나 노드3으로 끝날 수도 있습니다.
+
+To solve this we can set a limitation on the pods 
+이 상황을 해결하기 위해 우리는 POD에 한도를 설정을 할 수 있습니다.
+
+so that they only run on particular nodes.
+그리고 이건 특정 노드에서만 동작합니다.
+
+There are two ways to do this.
+이걸 위한 방법은 두가지가 있습니다.
+
+The first is using Node selectors which is the simple and easier method.
+첫번째로는 단순하고 간단한 방법으로 노드 셀렉터를 이용하는 것입니다.
+
+For this we look at the pod definition file.
+이걸 위해 우린 POD 정의파일을 봅니다.
+
+we created earlier this file has a simple definition to create a pod with a data processing image.
+이전에 이 파일을 생성했던 이 파일은 데이터 프로세싱 이미지를 가지는 POD 생성에 간단한 정의를 가지고 있습니다.
+
+to limit this pod to run on the larger node.
+이 POD를 커다란 노드에서 동작 하도록 제약 하기 위해서
+
+We add a new property called Node selector to the spec section and specify the size as large.
+우린 노드셀렉터라는 속성을 SPEC 섹션에 추가해야 합ㄴ다, 그리고 얼마만큼 큰지를 지정해야 합니다.
+
+***************************
+spec:
+	nodeSelector:
+		size: Large
+***************************
+
+But wait a minute.
+하지만 잠시만요.
+
+Where did the size large come from and how does Kubernetes know which is the large node. 
+하지만 Large 라는 사이즈는 어디에서 온 것인가요? 그리고 쿠버네티스는 어떤게 큰 노드인지 어떻게 알까요?
+
+The key value pair of size and large are in fact labels assigned to the nodes the scheduler uses these labels to match
+size 와 Large 라는 키-벨류 쌍은 사실 스케쥴러가 이 레이블에 매치되는 노드에 할당된 레이블입니다.
+
+and identify the right node to place the pods on 
+그리고 POD 에 놓을 올바른 노드를 식별합니다.
+
+labels and selectors are a topic we have seen many times throughout this Kubernetes course such as with services replica sets and deployments
+레이블과 셀렉터는 우리가 쿠버네티스 코스에서 많이 보아왔던 주제입니다. 서비스, 레플리카셋, 디플로이먼트 에서
+
+to use labels in a known selector like this.
+이것들과 같이 알려진 셀렉터에 레이블을 사용하려면
+
+You must have first labelled your nodes prior to creating this pod.
+POD를 생성하기 이전에 노드에 먼저 레이블을 해야만 합니다.
+
+So let us go back and see how we can label the nodes 
+그럼 어떻게 우리는 노드에 레이블링이 가능한지로 돌아가 봅시다.
+
+to label a node.
+노드에 레이블링 하기 위해서는
+
+Use the command kubectl label nodes followed by the name of the node and the label in a key value pair format.
+kubectl label nodes 명령어를 사용해야합니다. 노드 이름을 붙고, 레이블의 키가 붙어야 합니다.
+
+>> 노드에 레이블링 하는 방법, 레이블링 하면 POD 를 특정 NODE 로 흐르도록 유도할 수 있다.
+>> kubectl label nodes <node-name> <label-key>=<label-value>
+
+
+In this case it would be kubectl label nodes Node1 followed by the label in a key value format such as size equals large.
+이번경우는 kubetl label nodes node-1 size=Large 와 같이 되었습니다.
+
+>> kubectl label nodes node-1 size=Large
+
+Now that we have labeled the node 
+이제 이걸로 노드에 레이블을 붙였습니다.
+
+we can get back to creating the pod this time with the node selector set to a size of large.
+우리는 POD 생성으로 돌아갈 수 있습니다. 노드셀렉터에 size 를 Large 로 설정하면서.
+
+When the pod is now created it is placed on Node 1 as desired 
+POD 가 지금 생성되었을때, 이 노드는 원했던것 처럼 Node1 에 할당 될 것입니다.
+
+------------------------------------------------------------------
+size 가 Large 인 노드를 찾아가도록 POD 에 지정
+spec:
+	nodeSelector:
+		size: Large
+		
+노드에 Large 를 지정하는건 커맨드로 입력가능
+>> kubectl label nodes node-1 size=Large
+------------------------------------------------------------------
+
+(serve:섬기다, 쓰이다, 이바지하다)
+node selectors served our purpose but it has limitations.
+노드 셀렉터는 우리의 목적대로 쓰입니다. 하지만 이것도 한계는 있습니다.
+
+We used a single label and selector to achieve our goal here.
+우린 단일 레이블을 사용하였고, SELECTOR 는 우리의 목적대로 동작하였습니다.
+
+But what if our requirement is much more complex.
+하지만 우리의 요구사항이 훨씬 더 복잡하다면?
+
+For example, we would like to say something like place the pod on a large or medium node or something like place the pod on any nodes that are not small.
+예를 들어
+우리가 LARGE 또는 MEDIUM 노드로 POD를 해줬으면 또는 SMALL 이 아닌 모든 노드에 할당해주길 가정할 수 있습니다.
+
+You cannot achieve this using Node selectors .
+그러면 nodeSelector 만으로는 해당 목적을 달성 할 수 없습니다.
+
+for this node affinity and anti affinity features were introduced  and we will look at that next.
+그럼 이런 노드 선호도 및 비선호에 대한 특증은 다음 시간에 소개하도록 하겠습니다.

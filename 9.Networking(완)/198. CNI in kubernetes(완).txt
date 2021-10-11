@@ -1,0 +1,108 @@
+Hello and welcome to this lecture.
+안녕하세요.
+
+In this lecture will discuss about CNI in Kubernetes 
+이번강의에서 우리는 CNI 에 대해 다루어 보겠습니다.
+
+in the prerequisite lectures We started all the way from the absolute basics of network namespaces.
+사전 강의에서 우리는 네트워크 네임스페이스의 완전 기초 강의부터 시작했씁니다.
+
+then we saw how it is done in Docker, we then discussed why you need standards for networking containers and how the container network interface came to be and then we saw a list of supported plugins available with CNI.
+그런 다음 우리는 도커 안에서 일어나는 일을 보았고, 왜 네트워킹 컨테이너에 표준이 필요한지에 대해 다루었으며 어떻게 CNI Container Network Interface 가 작동되는지에 대해 다루었습니다. 그리고 CNI 에서 이용가능한 지원 플러그인 목록을 보았습니다.
+
+In this lecture we will see how kubernetes is configured to use these network plugins. 
+이번 강의에서 우리는 어떻게 쿠버네티스가 (CNI)네트워크 플러그인을 구성하는지를 살펴보겠습니다.
+
+As we discussed in the pre-requisite lecture CNI defines the responsibilities of container runtime. 
+이전강의에서 우리가 논의했던것 처럼 CNI 는 컨테이너 런타임에서의 책무를 정의합니다.
+
+As per CNI, container runtimes, in our case Kubernetes, is responsible for creating container network namespaces.
+CNI에 따라 컨테이너 런타임은(우리의 경우 쿠버네티스) 컨테이너 네트워크 네임스페이스 생성을 담당 합니다.
+
+identifying and attaching those namespaces to the right network by calling the right network plugin.
+확인하고 올바른 네트워크 플러그인의 호출을 통해 해당 네임스페이스를 올바른 네트워크로 연결 합니다.
+
+So where do we specify the CNI plugins for Kubernetes to use? 
+그럼 어디에 쿠버네티스가 사용하는 CNI 플러그인을 지정하였을까요?
+
+The CNI plugin must be invoked by the component within Kubernetes that is responsible for creating containers. 
+CNI 플러그인은 무조건 쿠버네티스 컴포넌트에 의해 호출되어져야 합니다. 
+
+Because that component must then invoke the appropriate network plugin after the container is created.
+왜냐하면 해당 컴포넌트는 컨테이너 생성된 후 적절한 네트워크 플러그인을 호출 해야 하기 때문입니다.
+
+The CNI plugin is configured in the kubelet service on each node in the cluster.
+CNI 플러그인은 클러스터내 각 노드의 큐블렛 서비스속에 설정 되어 있습니다.
+
+If you look at the kubelet service file, you will see an option called network-plugin set to CNI.
+큐블렛 서비스 파일을 보면 네트워크 플러그인이라는 옵션이 CNI 로 설정 된 것을 볼 수 있습니다.
+------------------------------------------------------------------------
+[Kubelet.service]
+ExecStart=/usr/local/bin/kubelet
+	--..
+	--network-plugin=cni
+	--cni-bin-dir=/opt/cni/bin
+	--cni-conf-dir=/etc/cni/net.d
+	--..
+------------------------------------------------------------------------
+You can see the same information on viewing the running kubelet service.
+실행 중인 큐블릿의 출력을 통해서도 해당 동일 정보를 볼 수도 있씁니다.
+
+>> ps -aux| grep kubelet
+
+You can see the network plugins set to CNI and a few other options related to CNI such as the CNI bin directory and CNI Config directory.
+네트워크 설정이 CNI 로 설정된 것을 볼 수 있습니다. 그리고 몇 다른 옵션들로, CNI bin 디렉토리, CNI 설정 디렉토리 등도 볼 수 있습니다.
+
+The CNI bin directory has all the supported CNI plugins as executables. 
+CNI bin 디렉토리는 모든 실행가능한 지원 CNI 프러그인들이 존재합니다.
+
+Such as the bridge, dhcp, flannel etc. The CNI config directory has a set of configuration files.
+가령 브릿지라던가 DHCP 라던가 FLANNEL 등등, CNI config 디렉토리에는 설정 파일 세트가 있습니다.
+
+This is where kubelet looks to find out which plugin needs to be used. 
+이곳은 큐블릿이 어떤 플러그인이 사용될때 그것을 찾는 장소 입니다.
+
+In this case it finds the bridge configuration file. 
+이번 경우에 그 파일은 브릿지 설정 파일이 되겠습니다.
+
+If there are multiple files here, It will choose the one in alphabetical order.
+여기에 다수의 파일이 있다면, 알파벳순으로 하나의 파일이 선택 됩니다.
+
+If you look at the bridge conf file, it looks like this.
+브릿지 설정 파일을 보면 이렇게 생겼습니다.
+
+>> cat /etc/cni/net.d/10-bridge.conf
+
+This is a format defined by the CNI standard for a plugin configuration file.
+플러그인 설정 파일을 위해 CNI 표준 포맷으로 정의되어 있습니다.
+
+It’s name is mynet, type is bridge.
+이름은 mynet 이고 타입은 브릿지 입니다.
+
+It also has a set of other configurations which can be related to the concepts we discussed in the prerequisite lectures on bridging, routing and Masquerading in NAT. 
+우리가 지난강의에서 다루었던, 브릿지, 라우팅, 마스커레이딩 IN NAT의 개념에 관계된 것들을 할수 있는 다른 설정 파일의 집합을 포함하고 있습니다.
+
+The isGateway defines whether the bridge network interface should get an IP address assigned so it can act as a gateway. 
+isGateway 는 브릿지 네트워크 인터페이스가 게이트 웨이 역할을 할 수 있도록 할당된 IP 를 받아야 하는지 여부를 정의합니다.
+
+The ipMasq defines if a NAT rule should be added for IP masquerading. 
+ipMasq 는 NAT 룰이 IP 마스커레이딩에 추가되어야 하는 경우 정의합니다. T/F
+
+The IPAM section defines IPAM configuration.
+ipam 섹션은 ipam 설정을 정의합니다.
+
+This is where you specify the subnet or the range of IP addresses that will be assigned to pods and any necessary routes. 
+여기서 서브넷 또는 IP 주소의 대역을 정의합니다. 이작업으로 POD 들에게 IP를 할당하고 필요한 route 작업을 합니다.
+
+The type host-local indicates that the IP addresses are managed locally on this host.
+type 항목의 host-local 은 IP 주소가 이 호스트의 로컬에서 관리된다는 것을 가리킵니다.
+
+Unlike a DHCP server maintaining it remotely. 
+이와는 다르게 DHCP 서버는 이것을 원격으로 관리합니다.
+
+The type can also be set to DHCP to configure an external DHCP server.
+TYPE 항목은 DHCP 로도 설정 할 수 있습니다. 외부 DHCP 서버를 설정 하기 위해서요.
+
+Well the set for this lecture.
+
+Head over to the practice exercises and practice working with CNI in Kubernetes.ㄴ

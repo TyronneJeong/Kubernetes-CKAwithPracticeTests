@@ -1,0 +1,183 @@
+Hello and welcome to this lecture in this lecture.
+생략
+
+
+[큐버 스케쥴러]
+
+we will talk about Kube Scheduler.
+쿠버 스케쥴러에 대해 이야기 해보겠습니다.
+
+Earlier we discussed that the kubernetes scheduler is responsible for scheduling pods on nodes.
+일전에 말했듯이. 쿠버네티스 스케쥴러는 노드안에 파드의 스케쥴링을 책임지고 있씁니다.
+
+Now don't let the graphic mislead you.
+지금 이 그래픽으로 오해하지 않도록 합니다.
+
+
+[큐버 스케쥴러가 하는 일 :: 파드-> 노드]
+
+remember the scheduler is only responsible for deciding which pod goes on which node. 
+기억하게요 스케쥴러는 오직 어떤 노드에 어떤 파드가 가 가는지만 결정합니다.
+
+It doesn’t actually place the pod on the nodes.
+이게 실제로 노드에 파드가 할당되는 것은 아닙니다.
+
+That’s the job of the kubelet. The kubelet or the captain on the ship is who creates the pod on the ships.
+해당 작업은 큐블렛이 합니다. 큐블렛 또는 배의 선장은 파드는 생성하는 사람입니다.
+
+[큐블렛 == 선장 -> 파드를 만들어주는 사람]
+
+The scheduler only decides which pod goes where.
+스케쥴러는 단지 파드가 어디로 가는지만 결정합니다.
+
+Let's look at how the scheduler does that in a bit more detail.
+스케쥴러가 어떻게 하는지 자세히 살펴봅시다.
+
+[스케쥴러가 하는일 좀 더 자세히 보기]
+
+First of all why do you need a scheduler? 
+우선 왜 스케쥴러가 필요합니까?
+
+(make sure : 반드시 ~ 되도록 하다)(ends up: 끝내다)
+When there are many ships and many containers, You want to make sure that the right container ends up on the right ship.
+저기 많은 배와 컨테이너가 있을 때, 저 컨테이너가 올바른 배에 선적되길 원할것입니다.
+
+For example there could be different sizes of ships and containers.
+예를 들면 저기 다른 크기의 배와 컨테이너가 있을 수 있습니다.
+
+(accommodate:수용하다)
+You want to make sure the ship has sufficient(충분한) capacity to accommodate those containers.
+당신은 저 배에 저 컨테이너를 충분히 수용가능도록 용적량을 가지고 있길 원할것입니다.
+
+different ships maybe going to different destinations.
+다른 배는 아마 다른 목적지로 갈 겁니다.
+
+You want to make sure your containers are placed on the right ships 
+당신은 당신의 컨테이너가 제대로 된 배에 확실히 옮겨지길 원할것입니다.
+
+so they end up in the right destination 
+그래야 컨테이너들이 제대로 된 목적지에 도착합니다.
+
+
+
+
+
+(certain:(특정지어)몇, 어떠한), (criteria:특징)
+In kubernetes, the scheduler decides which nodes the pods are placed on depending on certain criteria.
+쿠버네티스에서 스케쥴러는 파드가 가진 몇몇 특성에 따라 옮겨질 노드를 결정합니다.
+
+
+(may:~설사 할지라도, ~인지도 모른다.)
+You may have PODs with different resource requirements,
+당신은 다른 자원 요구사항을 가진 POD 를 가지고 있을지라도,
+
+(dedicated:헌신적인, 전용, 하나의 뜻만 가지는) (certain:특정)
+You can have nodes in the cluster dedicated to certain applications.
+클러스터내 특정 어플리케이션 전용 노드를 가질 수 있습니다.
+
+
+
+
+[POD중매쟁이 이야기]
+
+So how does the scheduler assign these PODs? The scheduler looks at each POD and tries to find the best node for it.
+그럼 어떻게 스케쥴러는 이 POD를 할당하는 걸까요?
+스케쥴러는 각 POD를 살펴봅니다. 그리고 가장 파드에 가잘 적합한 노드를 찾아봅니다.
+
+For example, let’s take one of these PODs.
+예를 들면 이 포드들 중에 하나를 가져가 봅시다.
+
+The big blue one. It has a set of CPU and Memory requirements.
+이 커다란 청색 노드. 이녀석은 CPU와 메모리 요구사항이 설정되어 있씁니다.
+
+(goes through : 통과하다, 거치다)
+The scheduler goes through two phases to identify the best node for the pod 
+스케쥴러는 포드에 가장 적합한 노드를 식별하기 위해 다음 두단계를 거칩니다.
+
+In the first phase.
+첫번쨰 단계에서는 
+
+The scheduler tries to filter out the nodes that do not fit the profile for this pod.
+스케쥴러는 해당 포드의 프로필에 맞지 않는 노드를 걸러냅니다.
+
+(sufficient:충분한)
+For example, the nodes that do not have sufficient CPU and memory resources requested by the pod.
+예를 들어, 노드는 포드가 요청한 충분한 CPU와 메모리자원이 할당되어 있지 않습니다.
+
+
+So the first two small nodes are filtered out. 
+그래서 첫번째 두 작은 노드들은 걸러집니다. 
+
+So we are now left with two nodes on which the POD can be placed.
+이제 포드를 할당 할 수 있는 두개의 노드가 남아 있습니다.
+
+Now how does the scheduler pick one from the two.
+이제 스케쥴러는 어떻게 둘중에 하나를 뽑을까요. 
+
+the scheduler ranks the node to identify the best fit for the pod.
+스케쥴러는 포드에 가장 적합한것을 식별하도록 노드에 순위를 매깁니다.
+
+It uses a priority function to assign a score to the nodes on a scale of 0 to 10.
+이것은 0에서 10까지 노드의 점수를 매기는 우선순위 기능을 사용합니다.
+
+For example the scheduler calculates the amount of resources that would be free on the nodes after placing the pod on them.
+예를 들면 스케쥴러는 포드가 노드에 할당된 이후의 남을 수 있는 여유자원의 량을 계산합니다.
+
+(would have:가질수 있습니다.)
+In this case, the one on the right would have 6 CPUs free if the pod was placed on it 
+이 경우에는 오른쪽 녀석은 포드를 할당할 경우 6개의 CPU자원을 사용할 수 있습니다. 
+
+which is 4 more than the other one. 
+이녀석은 다른녀석보다 4개의 더 많은 량입니다.
+
+so it gets a better rank. And so it wins.
+그래서 6개의 CPU가 좀더 좋은 순위를 얻습니다. 그래서 이겼습니다.
+
+So that's how a scheduler works at a high level.
+이것이 고차원에서의 스케쥴러가 동작하는 방식입니다.
+
+And of course these can be customized and you can write your own scheduler as well.
+그리고 당연하게 이것들은 커스터마이즈 가능합니다 그리고 당신이 원하는 스케쥴대로 작성도 가능합니다.
+
+There are many more topics to look at such as resource requirements, limits, taints and tolerations, node selectors, affinity rules etc.
+여기 다음과 같은 더 많은 주제가 있습니다. 자원 요구사항들, 테인트와 톨러런스, 노드 선택, 선호도 규칙 등등.
+
+(entire:완전한)
+(Which is why:그렇기 때문에) we have an entire section dedicated to scheduling coming up in this course where we will discuss each of these in much more detail.
+그렇기 때문에, 이 과정에서 이 각각에 대한 상세내용을 다루는 스케쥴링 전용 전체 섹션이 준비되어있습니다.
+
+For now we will continue to focus on the scheduler as a process at a high level.
+지금 계속해서 고차원에서의 프로세스처럼 스케쥴러에 집중하겠습니다.
+
+So how do you install the kube-scheduler?
+그럼 쿠버스케쥴러를 어떻게 인스톨 할 까요?
+
+Download the kube-scheduler from the kubernetes release page. Extract it and run it as a service.
+쿠버네티스 배포페이지에서 쿠버스케쥴러를 다운로드 하세요. 압축을 풀고 서비스를 실행합니다.
+
+when you run it as a service.
+서비스를 실행시켰을때.
+
+You specify the scheduler configuration file.
+스케쥴러 설정파일을 정의해야 합니다.
+
+So how do you view the kube-scheduler server options?
+쿠버 스케쥴 서버 옵션이 어떻게 보이나요?
+
+(as : ~ 으로)
+Again, if you set it up with kubeadm tool, kubeadm deploys the kube-scheduler as a pod in the kube-system namespace on the master node.
+또한번, 당신이 쿠버ADM 도구를 활용해서 설정한 경우, 쿠버ADM 은 쿠버스케쥴러를 포드로 배포합니다.
+
+
+You can see the options within the pod definition file located at etc kubernetes manifests folder.
+파드 정의 파일 에서 옵션들을 볼 수 있씁니다.
+
+You can also see the running process and the effective options by listing the process on the master node and searching for kube-scheduler.
+또한 마스터노드의 목록과 쿠버스케쥴의 검색을 통해 프로세스의 목록을 통해 동작중인 프로세스와 효과적인 옵션들을 볼 수 있습니다.
+
+
+
+
+Well that's it for this lecture.
+
+I will see you in the next.

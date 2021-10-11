@@ -1,0 +1,213 @@
+Hello and welcome to this demo, 
+
+in this demo, we're going to see how to create a pod using a YAML definition file.
+
+OK, so in order to create YAML files, you can actually use any editor of your choice.
+
+You could even use just a notepad or notepad plus plus or Atem or there are multiple options available.
+
+In my case, I tend to use PyCharm or a tool from the ZetBrain family.
+
+So I personally use PyCharm, which is actually a Python editor, and it has a it has good support for YAML files.
+
+So I use Zet Brains PyCHarm as my editor.
+
+If you would like to use PyCharm you can actually go to ZetBrain.com and select PyCharm.
+
+Zetbranes.com for / PyCharm.
+
+And you can actually see when you click on download, you can actually see there are two options.
+
+One is a professional version and another is community version, which is free.
+
+So you can actually download this lightweight IDE which is free and to develop definition files.
+
+And later on I will also show some tips and tricks around using this IDE which will make your life a developing Kubernetes to definition files in YAML very easy.
+
+So there are ways that you can there are plug-ins that will help you validate your file available with PyCharm.
+
+So we look at those as well.
+
+So to start with, I'm going to create a new project.
+
+I'm going to call it as Pod, and I'm just going to create the project.
+
+So that's that's my folder named Pod and On the Pod
+
+I'm going to start by creating a pod definition file.
+
+I'm going to name that "Pod-definition.YAML".
+
+And so now I have one file, and as we saw in the lecture, every this definition file has the four root level properties, which are API version.
+
+So I'm going to specify each of those.
+
+So we have API version, kind, metadata and spec.
+
+OK, so as we discussed, API version is going to be 'V1' for POD, the kind, as we know, is Pod. So I'm going to set that as pod.
+
+The metadata is an object or a dictionary.
+
+So I'm going to hit enter and I'm going to hit tab.
+
+Or you could actually use spaces as well.
+
+I'm going to provide the properties on the metadata, which are name, and I'm going to set a name for "myPod", which is going to be "myapp-pod".
+
+And when I hit enter, as you see it goes to the next line.
+
+But it's intended it has equal number of spaces before it then the previous line.
+
+And I'm going to have labels and other labels.
+
+So since labels is a dictionary again, I'm going to invent the next few lines to the right as well.
+
+And the labels I have app and the name of the app is going to be my app.
+
+Now, if you look at this whole file and if you look at the bottom, PyCharm has support for understanding YAML files.
+
+So if you look at the bottom, you can actually see the various elements in a tree structure.
+
+So as you can see document, one of one indicates this, file this and the entire file.
+
+And under this file, it it actually shows you can restructure the various properties.
+
+So you have API version, which is directly under the file kind.
+
+Metadata and spec are all directly under the file or root properties of the file, which is what we wanted.
+
+And if you look at V1, V1 is actually under API version.
+
+So now as you can see under the document I have API version and under that I have V1.
+
+So that matches what we are trying to do.
+
+Similarly, if I select part, you can see that it's under kind and if you select name, which is under
+
+metadata, you can see that it's under metadata.
+
+Similarly, when you select labels, you will also see that it is under metadata.
+
+So that means names and labels are children of metadata and they are.
+
+So there are siblings and they must be intended.
+
+They must have the same intonation.
+
+So under a name you have myapp-pod so you can see the hierarchy there.
+
+Similarly, app is under labels and my app is under app, which is under labels.
+
+If you look at it, name and labels need to be on the same vertical line for now.
+
+If I simply move labels to the right, you now see that labels is under names and labels is now a child of name and which is not right.
+
+It is supposed to be a sibling, so I'm going to remove those extra spaces, I'm going to hit backspace and I'm going to level it.
+
+So this is right.
+
+And under labels, you can actually have as many labels as you want so you can create any key value pair here.
+
+You can say call center is their location, North America or something like the type of this particular pod, maybe a front end or something like that.
+
+So anything that will help you group this particular part in the future.
+
+For now, I'm just going to remove all of that.
+
+And I'll now move on to the specs section under the specs section.
+
+Remember, the specs section is unique to each object that you're creating.
+
+So for a pod under the spec section, you actually have containers and other containers, you have the
+
+containers is in fact an array or a list.
+
+So you have a list of items.
+
+So you need each item in the list is identified by a dash.
+
+So you have to put a dash followed by a space and then name, which is the name of my pod, sorry,
+
+the name of my container inside the pod.
+
+And that's going to be nginx control container.
+
+And then I have image, which is the name of the image itself, which is nginx
+
+So if you look at it, I have another spec, I have containers which is a list, and then I have an item in the list which is which has a name and image.
+
+Now if you try and look at the hierarchy of what we just created safe I select name, I see that it's under spec and it's in our containers.
+
+But there's something in between which says item once one of one.
+
+What that actually means is that's what indicates that the container is a list and it has multiple items.
+
+And this is the first item of just one item.
+
+So this two lines is one item in the containers.
+
+Similarly, you can have we know that we discussed that you can have additional containers in a pod.
+
+So if you had additional containers, then this is how you would define it.
+
+You would in the new line, you would add a new dash, followed by new information about the followed by information about the new pod, which could be like a backend container.
+
+And the image is it could be something like redis or something.
+
+So.
+
+In this case, now, when it's like name, you can actually see that it says item two or two and then one of two.
+
+So now it actually identifies each item in the array or the list.
+
+So that indicates that the format is correct and that is what we were trying to do.
+
+I'm just going to get rid of the second container that I'm going to leave it as one container pod.
+
+So this is good.
+
+I'm now going to copy this, the contents of this and create an actual pod using this the content that
+
+we just created.
+
+So I'm going to go into the Kube master and I'm going to create a folder structure for my demos.
+
+I'm going to call it demos and under demos.
+
+I'm going to create a folder called Pod and Under-pod.
+
+I'm going to create a file named "Pod-Definition.YAML".
+
+And I will paste the contents that I just created.
+
+OK, so when I know I'm going to verify the contents of the file.
+
+I can now run the Kube control get parts command before I create the power, I just want to make sure there's nothing running. So if you're following me from the previous lab where I deploy the pod using the control room command,
+
+that's the part that's still running.
+
+So I'm going to get rid of that using the KubeCtl delete deployment command.
+
+So that's gone when now we're under control.
+
+Get part command.
+
+I see that there are no resources found.
+
+I can now create a new pod using the keep control create pod definition, the Yaml command.
+
+And I see that a new pod, my part, myapp-pod is created.
+
+When I run the KubeCtl get to command, I see that it's in the process of creating the container
+
+and I will now monitor it.
+
+And when I run it again, I see that it's in a running state.
+
+Well, that's it for this lecture.
+
+In the next demo, we're going to look at some tips and tricks around working with Yaml files in PyCahrm.
+
+Thank you for your time and I will see you in the next demo.
+
+(정리완료)

@@ -1,0 +1,268 @@
+>> kubectl get nodes --show-labels
+>>
+
+Hello and welcome to this lecture. In this lecture
+
+We will talk about known affinity feature in Kubernetes.
+우리는 선호도 특징에 대해 이야기해 보겠습니다.
+
+The primary purpose of node affinity feature is to ensure that pods are hosted on particular nodes.
+노드 선호도의 가장 기본적은 목적은 POD 가 특정 노드로 호스팅 되는것을 보장하는 것입니다.
+
+(ends up being:결국 되다)
+In this case to ensure the large data processing pod ends up on node-1 
+이번 경우에서는 커다란 데이터 프로세싱 POD 가 결국 node1 에 할당되는걸 보장하는 것입니다.
+
+------------------------------------------------------------
+in the previous lecture we did this easily using nodes selectors
+이전 강의에서 우리는 손쉽게 사용가능한 nodeSelector 를 사용하였습니다.
+
+we discussed that you cannot provide advanced expressions like or or not with node selectors 
+우리가 논의했던가. 조금더 다양한 표현 가령 OR 나 NOT OR 같은것들을 nodeSelector 를 통해 제공할수는 없었습니다.
+
+the node affinity feature provides us with advanced capabilities to limit pod placement on specific nodes.
+노드선호도특징은 POD를 특정 NODE 에 위치하게 만들 제약을 가할 수 있는 조금 더 다양한 능력을 제공합니다.
+
+with great power comes great complexity.
+커다란 파워는 커다란 복잡도를 불러옵니다.
+
+So the simple node selector specification will now look like this with node affinity 
+단순 노드 셀렉터 사양은 노그 선호도와 함께 다음과 같이 표시됩니다.
+
+
+--------------------------------------------------------------------------------------
+SPEC:
+	nodeSelector:
+		size: Large
+와 다르게
+spec:
+	affinity:
+		nodeAffinity:
+			requiredDuringSchedulingIgnoredDuringExecution:
+				nodeSelectorTerms:
+					- matchExpressions:
+						- key: size
+						operator : in
+						values:
+						- Large
+와 같이 표기
+--------------------------------------------------------------------------------------
+
+(although:비록 ~하지만)
+although both does exactly the same thing plays the pod on the large node
+비록  POD 가 Large 노드에 할당되는 것으로 둘다 동일한 작업을 하지만
+
+let us look at it a bit closer 
+해당 내용을 조금 더 자세히 살펴 봅시다.
+
+under spec you have affinity and then node affinity under that and then you have a property that looks like a sentence
+spec 속성 아해 affinity 속성을 가지고 있습니다. 그리고 nodeAffinity 아래에 다음과 같은 문자의 속성을 가지고 있습니다.
+
+called "requiredDuringSchedulingIgnoredDuringExecution" 
+스케쥴링동안필요한것실행중인무시하는것
+
+no description needed for that 
+별도의 설명은 필요없을 것입니다.
+
+and then you have the node selector terms that is an array and that is where you will specify the key and value pairs
+그런 다음 nodeSelectorTerms 항목이 있습니다. 저 항목은 배열입니다. 그리고 저기가 키-벨류 쌍으로 값을 정의할 곳입니다.
+
+the key value pairs are in the form key, operator and value. 
+이 폼안에 키-벨류쌍이 있습니다. KEY, OPERATOR, VALUE
+
+where the operator is IN. the IN operator ensures that the pod will be placed on a node whose label size has any value in the list of VALUES specified
+operator 에는 IN이 있습니다. IN연산자는 VALUES에 지정한 값 목록에 있는 모든 사이즈의 노드에 POD를 할당 가능하도록 보장합니다.
+
+here in this case it is just one called large.
+여기 이 경우에 우리는 라지 하나로 부릅니다.
+
+If you think your POD could be placed on a large or a medium node you could simply add the value to the list of values like this.
+만약 당신의 POD 가 LARGE 또는 MEDIUM 일수 있다고 생각된다면, 여기 보이는 것 처럼 리스트 벨류 값을 추가 할 수 있습니다.
+
+you could use the not in operator to say something like size not in small
+또한 SMALL 이 아닌 사이즈를 말하기 위해서 NOT IN 연산자를 사용할 수 있습니다.
+
+where node affinity will match the node with a size not set to small.
+노드 선호도는 사이즈가 SMALL 이 아닌 노드들을 매칭 하게 됩니다.
+
+We know that we have only set the labels size ti large and medium nodes.
+우리는 압니다. 우리가 지정가능 레이블은 오직 라지와 스몰노드 뿐이라는걸.
+
+the smaller nodes don't even have the labels set.
+smaller 노드에는 레이블이 설정되어 있지도 않습니다.
+
+So we don't really have to even check the value of the label 
+그래서 우린 레이블의 값을 검증할 필요조차 없습니다.
+
+(as long as:~하는 한)
+as long as we are sure we don't set a label size to the smaller nodes using the exists operator will give us the same result.
+레이블 사이즈를 더 작은 노드로 설정하지 않는한 EXISTS 연산자사용은 동일한 결과를 돌려 줄 것입니다.
+
+The exists the operator will simply check if the label size exists on the nodes 
+EXISTS 연산자는 간단한 체크를 할 것입니다. 노드의 레이블 사이즈가 존재하는지.
+
+and you don't need the values section for that 
+그리고 EXISTS연산자 사용시 VALUE 섹션은 필요하지 않습니다.
+
+as it does not compare the values.
+이건 값과 비교하지 않기 떄문입니다.
+
+There are a number of other operators as well.
+다수의 연산자가 마찬가지로 더 있습니다.
+
+Check the documentation for specific details.
+상세 특징에 대한 도큐멘테이션을 확인하세요.
+
+------------------------------------------------------------------
+Now we understand all of this and we're comfortable with creating a pod with specific affinity rules
+이제 우린 모든것을 이해했습니다. 그리고 선호도 규칙을 사용하여 POD를 간편하게 생성 할 수 있습니다.
+
+when the pods are created.
+POD가 생성되었을때
+
+(considered:고려되었다)
+These rules are considered and the pods are placed onto the right nodes.
+이 룰은 고려되었습니다. 그리고 POD 는 정상적인 노드위에 올려졌습니다.
+
+But what if node affinity could not match a node with a given expression.
+하지만 주어진 표현식의 NODE 선호도에 매칭되는 노드가 없다면?
+
+
+In this case what if there are no nodes with a label called size 
+이 경우 사이즈라 불리는 레이블이 없다면?
+
+(say:가정하다)
+say we had the labels and the pods are scheduled.
+우리에겐 레이블과 POD 가 예약되어 있다고 가정해 보겠습니다.
+
+What if someone changes the label on the node at a future point in time.
+만약 누군가가 미래 시점에 노드의 레이블을 변경했다면?
+
+Will the pod continue to stay on the Node?
+POD는 그대로 NODE 에 머물러 있을까요?
+
+All of this is answered by the long sentence like property under node affinity which happens to be the
+이 모든 것은 대답이 되어집니다. 그 긴문장을 통해. nodeAfiinity 속성  아래의 속성. nodeAffinity 유형에서 일어납니다.
+type of node affinity 
+
+the type of node affinity defines the behaviour of the scheduler with respect to node affinity and the stages in the lifecycle of the pod.
+nodeAffinity 유형은 노드 선호도 및 POD 라이프 사이클의 스테이지에 관한. 스케쥴러의 행동을 정의합니다. 
+
+
+[문장처럼 긴 속성의 비밀]
+
+There are currently two types of node affinity available "requiredDuringSchedulingIgnoredDuringExecution" and "preferredDuringSchedulingIgnoredDuringExecution" and there are additional types of node affinity planed.
+현재 두 가지 유형의 nodeAffinity 타입이 가능합니다. "requiredDuringSchedulingIgnoredDuringExecution"과 "preferredDuringSchedulingIgnoredDuringExecution" 입니다. 그리고 또 다른 노드 유형을 추가할 계획을 가지고 있습니다.
+
+(As of this recording:이녹음을 계기로
+As of this recording "requiredDuringSchedulingRequiredDuringExecution" we will now break this down to understand further.
+이 녹음을 계기로 "requiredDuringSchedulingRequiredDuringExecution" 을 더 자세히 이해하기 위해 이를 분해할 것입니다.
+
+We will start by looking at the two available affinity types.
+우린 두개의 이용가능한 affinity 유형부터 출발할 것입니다.
+
+There are two states in the lifecycle of a pod when considering node affinity 
+노드 선호도를 고려할때 POD 생명주기에는 두가지 상태가 존재합니다.
+
+[노드선호도 상태 2개 -> POD 라이프사이클]
+[문장으로된 속성에 대해 설명하는중]
+- requiredDuringSchedulingIgnoredDuringExecution
+	스케쥴링하는동안 필요한것 / 실행하는동안 무시하는 것
+- preferredDuringSchedulingIgnoredDuringExecution
+	스케쥴링하는동안 선호하는것/ 실행하는동안 무시하는 것
+- 하나는 강제하는 거고 하나는 옵션의 성격인듯
+
+[during scheduling] and [during execution]
+옵션 성격은 두 가지 맥락이 존재합니다. 스케쥴링 동안과 실행하는 동안 입니다.
+
+
+during scheduling is the state where a pod does not exist and is created for the first time.
+"스케쥴링하는동안"은 pod 가 존재하지 않고, 최초로 생성되어진 것을 말합니다.
+
+(doubt:의심)
+We have no doubt that when a pod is first created the affinity rules specified are considered to place the pods on the right node.
+POD 가 처음 생성될때 지정된 선호도 규칙은 POD가 올바른 NODE 에 위치되도록 고려한다는 사실은 의심의 여지가 없습니다.
+
+Now what if the nodes with matching labels are not available.
+헌데 만약 매칭되는 레이블이 존재하지 않는다면???
+
+For example we forgot to label the node as large.
+예를 들어 Large 같은 레이블 노드를 잃어버렸다면
+
+That is where the type of node affinity used comes into play.
+이곳이 노드선호도 유형이 사용되어지는 곳 입니다. (커다란 두개의 유형을 말하는 듯)
+
+If you select the "required" type which is the first one the scheduler will mandate that the pod be placed on a node with a given affinity Rules.
+만약 required 타입을 선택했다면, 스케쥴러가 주어진 노드 선호도규칙에 해당하는 NODE에 POD를  올리는걸 필수로 할 것입니다.
+
+if it cannot find one the pod will not be scheduled.
+만약 그런 경우를 찾지 못한다면, POD 는 스케쥴 되지 않을 것입니다.
+
+(crucial:중대한, 어려은, 결정적인)
+This type will be used in cases where the placement of the pod is crucial.
+이 유형은 교체하는 POD가 매우 중요한 경우 사용되어 집니다.
+
+If a matching node does not exist the pod will not be scheduled.
+만약 일치되는 NODE 가 존재하지 않는 경우 POD 는 스케쥴 되지 않습니다.
+
+But let's say the pod placement is less important than running the worker Node itself.
+하지만 POD 교체가 워커 노드를 실행하는 것보다 중요하지 않다고 가정 해 봅시다.
+
+In that case you could set it to "preferred" and in cases where a matching node is not found.
+이런 경우 당신은 preferred 를 설정 할 수 있습니다. 그리고 이 경우 일치하는 노드를 찾지 못하면
+
+The scheduler will simply ignore node affinity rules and place the card on any available node.
+스케쥴러는 노드 선호도 규칙을 가볍게 무시하고 적합한 다른 노드로 교체하게 됩니다.
+
+This is a way of telling the scheduler.
+이게 스케쥴러에게 동작 방식을 알리는 방법 입니다.
+
+hey try your best to place the pod on matching node 
+POD에 일치하는 NODE 를 찾는 가장 좋은 방법을 찾으세요.
+
+but if you really cannot find one just plays it anywhere.
+하지만 정말 원하는 방식이 어디에도 없는 경우
+
+
+The second part of the property or the other state is "during execution".
+속성값의 두번째 단락 또는 나머지는 "during execution"입니다.
+
+
+during execution is the state where a pod has been running and a change is made in the environment that affects node affinity
+ 
+duringExecution 은 POD의 실행과 노드 선호도에 영향을 미치는 환경과 안에서 만들어 지는 변화에 대응하는 상태입니다.
+
+[선호도 규칙의 변화에 대응 하는 방법을 정의 - ingnoreDuringExecution 실행하는 동안에는 모두 무시한다.]
+such as a change in the label of a node.
+노드의 레이블 변경과 같은 것들 말입니다.
+
+For example say an administrator removed the label 
+we said earlier called "size equals large" from the node.
+예를들어 관리자가 레이블을 제거했다고 가정해 봅시다.
+이전에 우린 size 는 Large 하고 했었는데요.
+
+Now what would happen to the pods that are running on the Node.
+그럼 현재 NODE에서 동작중인 POD에는 어떤 일이 생길까요
+
+As you can see the two types of node affinity available 
+보시는바와 같이 두가지 유형의 노드 선호도가 이용 가능합니다.
+
+today has this value set to ignored which means pods will continue to run  
+오늘날 이 값은 설정 불가능 하게 되었습니다. 이 의미는 POD가 계속해서 실행 가능해진다는 것을 의미합니다.
+
+and any changes in node affinity will not impact them once they are scheduled.
+그리고 노드선호도에 대한 어떤 변경사항도 스케쥴링 된 것에 영향을 미치지 않을 것입니다.
+
+The new types expected in the future only have a difference in the "during execution" phase a new option called "required during execution" is introduced which will evict any pods that are running on nodes that do not meet affinity rules.
+새로운 유형이 장차 미래에 기대하는건 절차를 실행하는 동안에 requireDruingExecution 이라고 불리는 새로운 옵션이 소개되는것(선호도 규칙에 적용되지 않고 모든 노드를 퇴소시키는 옵션)의 차이 뿐입니다.
+
+In the earlier example, a pod running on the large node will be evicted or terminated if the label large is removed from the node.
+이전의 예제에서, 노드에 Large 레이블을 제거한다면 POD는 Large노드에서 동작하는 것은 퇴소 또는 제거 될 것입니다.
+
+
+Well that's it for this lecture.
+
+Head over to the coding exercises and practice working with node affinity rules in the next lecture.
+
+We will compare taints and toleration and node affinity.
+노드 선호도와 오염과 항체에 대해 비교해 보도록 하겠습니다.

@@ -1,0 +1,497 @@
+------------------------------------------------------------------------
+## 모든 스페이스에 POD 조회하기.
+>> kubectl get po -A
+
+## ingress 조회하기
+>> kubectl get ingress --all-namespaces
+
+## 도메인 + /watch 등 서비스 파라미터 없을시
+>> ingres describe 에서 Default backend 가 수행된다.
+
+## ingress rule 생성하기
+
+
+------------------------------------------------------------------------
+Hello and welcome to this lecture.
+안녕하세요.
+
+And in this lecture we will discuss about ingress in kubernetes.
+이번 강의에서는 ingress 에 대해 다뤄 볼 것입니다.
+
+One of the common questions that students reach out about usually is regarding services and ingress.
+학생들이 일반적으로 접하는 질문 중 하나는 서비스 및 ingres에 관한 것입니다.
+
+What's the difference between the two and when to use what.
+이 둘 사이에 차이점은 무엇이고 언제 쓰는것일까요?
+
+So we're going to briefly revisit services and work our way towards ingress.
+우리는 이것을 확인하기 위해 서비스에 재진입 할것입니다. 그리고 인그래스를 향한 길을 갈 것입니다.
+
+We will start with a simple scenario. 
+여기 간단한 시나리오로 시작 할 것입니다.
+
+You are deploying an application on Kubernetes for a company
+당신은 어플리케이션을 배포 했씁니다.
+
+that has an online store selling products. 
+이것은 제품을 파는 온라인 스토러 입니다.
+
+Your application would be available at say my-online-store.com.
+당신의 어플리케이션은 my-online.store.com 으로 이용가능 했습니다.
+
+You build the application into a Docker Image and deploy it on the kubernetes cluster as a POD in a Deployment. 
+당신의 어플리케이션은 도커 이미지로 빌드 되어 졌고, POD 로 배포 되어 졌습니다.
+
+Your application needs a database so you deploy a MySQL database as a POD and create a service of type ClusterIP called mysql-service to make it accessible to your application.
+당신의 어플리케이션은 데이터베이스가 필요합니다. 그래서 mysql 데이터베이스를 POD 로 배포 하였습니다. 그리고 클러스터 IP 타입의 서비스를 생성하고 mysql-service 라고 명명 했습니다. 이제 당신의 어플리케이션은 접근이 가능해졌습니다.
+
+[APP]<->[SVC]-외부에서 접근 가능
+
+Your application is now working. 
+당신의 어플리케이션은 이제 작동합니다.
+
+To make the application accessible to the outside world, you create another service, 
+우리의 어플리케이션이 외부에서 접근 가능 하게 하려면 당신은 또다른 서비스를 만들어야 합니다.
+
+this time of type NodePort and make your application available on a high-port on the nodes in the cluster.
+이번시간에는 노드 포트 입니다. 그리고 당신의 어플리케이션을 하이 포트에서 이용가능하도록 만들 것 입니다.
+
+In this example a port 38080 is allocated for the service. 
+이번 예제에서 포트 38080 은 서비스에게 허락된 포트 입니다.
+
+The users can now access your application using the URL: http: // IP of any of your nodes followed by port 38080. 
+사용자는 이제 당신의 어플리케이션을 다음 URL 을 사용하여 접근 할 수 있습니다. URL:38080
+
+That setup works and users are able to access the application. Whenever traffic increases, we increase the number of replicas of the pod to handle the additional traffic and the service takes care of splitting traffic between the pods 
+저 설정은 작동 합니다. 그리고 이용자는 어플리케이션에 접근이 가능 해 집니다.
+트래픽 유입이 증가할때에도 우리는 추가적인 트래픽을 조절 하기 위해 POD 레플리카의 숫자를 늘립니다. 그리고 서비스가 POD 별로 트래픽을 분산 처리합니다.
+
+however if you have deployed a production grade application before you know that there are many more things involved in addition to simply splitting the traffic between the pods.
+하지만 당신이 어플리케이션을 배포 했는데 POD 간에 트래픽을 단순 분할 하는것 외에 더 많은 것들이 관련되어 있다는 것을 알기전에 제품을 배포 했다면.?
+
+For example we do not want the users to have to type in IP address every time 
+예를 들어 우리는 사용자가 매번 IP를 입력 하는 것을 우리는 원치 않습니다.
+
+you configure your DNS server to point to the IP of the nodes 
+당신은 당신의 DNS 서버에 노드의 IP 를 가리키도록 설정 했습니다.
+
+your users can now access your application using the URL my-online-store.com and port 38080.
+이제 사용자들은 어플리케이션에 접속 할때 URL 과 포트를 이용하여 접근할 수 있습니다.
+
+Now you don't want your users to have to remember port number either.
+이제 당신은 당신의 사용자가 포트 넘버 마저 기억하는것을 원하지 않게 되었습니다.
+
+However service node ports can only allocate high numbered ports which are greater than 30000
+하지만 서비스 노드 포트는 오직 3000이상의 숫자만 허용할 수 있습니다.
+
+so you then bring in an additional layer between the DNS server and your cluster like a proxy server
+그래서 당신은 추가적인 레이어 속에 가져왔습니다. DNS 서버와 프록시 서버 사이에요.
+
+that proxies requests on port 80 to port 38080 on your nodes. 
+이 프록시가 80번 포트에서 요청을 받으면 38080 노드로 향합니다.
+
+You then point your DNS to this server and users can now access your application by simply visiting my-online-store.com.
+그리고 나서는 당신의 DNS 는 해당 서버를 가리킵니다. 그리고 유저는 이제 당신의 어플리케이션을 오직 도메인으로만 간단하게 접근 가능 해집니다.
+
+Now this is if your application is hosted on prem in your data center.
+이제 애플리케이션이 데이터 센터의 온프레미스에서 호스팅 되는 경우입니다.
+
+Let's take a step back and see what you could do if you were on a public cloud environment like Google Cloud Platform.
+다시 스탭 백 해 봅시다. 그리고 무엇을 했ㄴ느지 봅시다. 만약 우리가 공공 퍼블릭 환경에 있다면, 구글 클라우드 플랫폼 같은것.
+
+In that case, instead of creating a service of type NodePort for your wear application, you could set it to type load balancer.
+이런 케이스는 당신의 어플리케이션을 위해 노드포트 형태의 서비스를 생성하는 대신에 당신은 로드 밸랜서를 설치할 수 있습니다.
+
+When you do that Kubernetes would still do everything that it has to do for a NodePort, which is to provision a high port for the service.
+로드밸런서를 설치했을떄, 쿠버네티스는 여전히 모든 작업이 가능 합니다. 이것은 NodePort 의 기능을 포함하고 있습니다. 
+
+
+but in addition to that kubernetes also sends a request to Google Cloud Platform to provision a network load balancer for the service 
+하지만 추가적인 이것은 쿠버네티스가 구글 클라우드 플랫폼에 프로비저닝 하기 위해 요청을 보냅니다.
+
+on receiving the request GCP would then automatically deploy a load balancer configured to route traffic to the service ports on all the nodes and return its information to kubernetes.
+요청을 받은 구글은 자동으로 로드 밸런서 설정을 라우터에 배포 합니다. 트래픽을 모든 노드의 서비스 포트로 라우팅 하고 해당 정보를 쿠버네티스에 반환하도록 구성된 로드 밸런서.
+
+The LoadBalancer has an external IP that can be provided to users to access the application.
+로드 밸런서는 외부 IP 를 가지고 있습니다. 사용자가 어플리케이션에 접근 하는데사용가능한 IP 를 제공합니다.
+
+In this case we set the DNS to point to this IP and users access the application using the URL my-online-store.com.
+이 경우에 우리는 DNS 서버를 해당 IP 로 향하도록 설정 합니다. 그리고 유저는 기존처럼 도메인을 이용하여 어플리케이션에 접근 합니다.
+
+Perfect.
+완벽합니다,
+
+your company's business grows and you now have new services for your customers.
+당신의 비즈니스는 성장하고 이제 고객들을 위한 새로운 서비스까지 생겨났습니다.
+
+For example a video streaming service 
+예를 들어 비디오 스트리밍 서비스 입니다.
+
+you want your users to be able to access your new video streaming service by going to my-online-store.com/watch.
+당신의 당신의 사용자가 새로운 비디오 스트리밍 서비스를 my-online-store.com/watch 로 가서 접근 할 수 있기를 원합니다.
+
+You’d like to make your old application accessible at my-online.store.com/wear. 
+당신은 이전 어플리케이션들을 아래 경로로 엑세스 가능하게 만들고 싶어합니다.
+my-online.store.com/wear
+
+Your developers developed the new video streaming application as a completely different application as it has nothing to do with the existing one.
+당신의 개발자는 새로운 빋오 스트리밍을 개발 했습니다. 기존에 있는것으로는 아무것도 할 수 없는 것 처럼 완전 다른 어플리케이션을 개발 했습니다.
+
+However in order to share the same cluster resources you deploy the new application as a separate deployment within the same cluster. 
+하지만, 동일 클러스터 리소스를 공유하기 위한 동일한 클러스터 내에서 별도의 배포로 새 어플리케이션을 배포 합니다.
+
+You create a service called video-service of type LoadBalancer. 
+당신은 로드 밸런서 형식의 서비스를 생성 합니다.
+
+Kubernetes provisions port 38282 for this service and also provisions a Network LoadBalancer on the cloud. 
+쿠버네티스는 38282 포트로 서비스를 위해 프로비저닝 합니다. 그리고 또한 클라우드에 네트워크 로드 발라서를 프로비저닝 합니다.
+
+The new load balancer has a new IP 
+새로운 로드 밸런서는 새로운 IP 를 가집니다.
+
+remember you must pay for each of these load balancers and having many such load balancers can inversely affect your cloud build.
+기억하세요. 이 각 로드 밸런서를 위해 반듯이 지불해야 합니다. 그리고 로드밸런서 만큼 돈을 가지고 있어야 합니다.
+
+So how do you direct traffic between each of these load balancers.
+그래서 당신은 어떻게 이 두 로드밸런스 사이에서 직접적인 트래픽을 할수 있나요?
+
+Based on the URL that the users type in you need yet another proxy or load balancer that can redirect traffic based on URLs to the different services. 
+URL 에 기초하여, 사용자 유형 또는 로드 밸런서는 트래픽을URL을 기반으로 트래픽을 다른 서비스로 리다이렉션 할 수 있습니다.
+
+Every time you introduce a new service You have to reconfigure the load balancer and finally you also need to enable SSL for your applications
+새로운 서비스를 제공하는 순간 마다, 당신은 로드 밸런서를 재구성 할 수 있습니다. 그리고 마지막으로 당신 역시 SSL 활성화가 필요합니다.
+
+so your users can access your application using https.
+그래서 당신의 사용자는 당신의 어플리케이션을 https 를 사용하여 접근 할 수 있습니다.
+
+Where do you configure that?
+이건 어디서 설정하는 걸까요?
+
+It can be done at different levels either at the application level itself or at the load balancer or proxy server level but which one 
+이것은 레벨에서 가능 합니다. 어플리케이션 레벨 자체에서 가능합니다. 또는 로브밸런서 또는 프록시 서버 레벨. 하지만
+
+you don't want your developers to implement it in their application as they would do it in different ways.
+당신은 개발자가 그것을 구현하는것 원치 않습니다. 그들의 어플리케이션에 다른 방식으로 
+
+You want it to be configured in one place with minimal maintenance.
+당신은 하나의 장소에서 최소한의 유지관리를 통해 이것들을 구성하길 원합니다.
+
+Now that's a lot of different configuration and all of this becomes difficult to manage when your application scales.
+이제 이것은 아주 많은 다양한 설정들이 있습니다. 그리고 이 모든것들은 당신의 어플리케이션이 스케일 될때 관리하기가 까다롭니다.
+
+It requires involving different individuals in different teams.
+이것은 다른 팀에 다른 개인들을 포함시키기를 요청 합니다.?????????????
+
+You need to configure your firewall rules for each new service and it's expensive as well as for each service in you cloud native load balancer needs to be provision 
+매 새로운 서비스마다 당신의 방화벽 규칙을 설정 하길 원합니다. 그리고 각각의 서비스 만큼의 클라우드 네이티브 로드 밸런서가 프로비저닝 하기 위해 필요한 비용이 비싸집니다.
+
+wouldn't it be nice if you could manage all of that within the Kubernetes cluster, and have all that configuration as just another kubernetes definition file that lives along with the rest of your application deployment files 
+쿠버네티스 클러스터 내에서 이 모든것을 관리할 수 있다면 좋지 않을까요? 그리고 모든 정의파일을 다른 쿠버네티스 정의파일로 사용하세요.
+
+that's where ingress comes in 
+저기가 인그레스가 필요한 장소입니다.
+
+ingress helps your users access your application using a single Externally accessible URL, that you can configure to route to different services within your cluster based on the URL path.
+인그레스는 당신의 사용자가 당신의 어플리케이션에 단일 URL 을 이용하여 접근가능 하도록 도와줍니다. URL 경로를 기초로 하여 클러스터 내에 있는 다른 서비스로 가는 경로를 설정 할 수 있습니다.
+
+At the same time implement SSL security as well.
+같은 시간에 SSL 보안도 구현 하십시오.
+
+Simply put.
+간단히 넣습니다.
+
+think of ingress as a layer 7 load balancer built-in to the kubernetes cluster that can be configured using native kubernetes primitives just like any other object in kubernetes.
+인그렛를 쿠버네티스 클러스터에 내장된 레이어 7 로드 밸런서로 생각하십시오. 이것은 쿠버네티스의 다른 객체와 마찬가지로 네이티브 쿠버네티스 프리미티브를 사용하여 구성 할 수 있습니다.
+
+
+Now remember, even with Ingress you still need to expose it
+이제 인그레스를 사용하더라도 여전히 노출 해야 함을 기억하세요.
+
+To make it accessible outside the cluster so you still have to either publish it as a node port or with a cloud native load balancer.
+클러스터 외부에서 엑세스 가능 하도록 하려면 여전히 노드 포트로 게시하거나 클라우드 네이티브 로드 밸런서를 사용하여 게시해야 합니다.
+
+But that is just a one time configuration.
+하지만 이것은 한번만 설정 하면 됩니다.
+
+Going forward you are going to perform all your load balancing, Auth, SSL and URL based routing configurations on the Ingress controller.
+계속 진행해서. 당신은 당신의 로드 밸런싱이 Auth, SSL, 그리고 URL 기반 라우팅 설정까지 ingress 컨트롤러 에서 수행 하려고 합니다.
+
+So how does it work.
+어떻게 작동 할까요?
+
+What is it.
+이것은 무엇일까요?
+
+Where is it.
+어디에 있을까요?
+
+How can you see it.
+
+How can you configure it
+
+How does it load balance.
+
+How does it implement SSL? 
+
+Without ingress, how would YOU do all of these? 
+인그레스를 제외하고 이 모든걸 당신이 어떻게 할 수 있을까요?
+
+I would use a reverse-proxy or a load balancing solution like NGINX or HAProxy or Traefik. 
+저는 리버스 프록시나 로드밸런싱 솔루션 가령 nginx 또는 HAProxy 또는 Traefik 을 사용합니다.
+
+I would deploy them on my kubernetes cluster and configure them to route traffic to other services.
+저는 이것들을 저의 쿠버네티스 클러스터에 배포 합니다. 그리고 다른 서비스로 가는 트래픽 경로를 구성합니다.
+
+The configuration involves defining URL Routes, configuring SSL certificates etc. 
+이 구성은 URL 라우터를 정의하고 SSL을 설정 하고 인증서 등등을 해결합니다.
+
+Ingress is implemented by Kubernetes in kind of the same way. 
+Ingress 는 쿠버네티스에의해 동일한 방식으로 구현됩니다.
+
+You first deploy a supported solution, which happens to be any of these listed here and then specify a set of rules to configure ingress.
+처음으로 지원 솔루션을 배포 하고, 
+
+The solution you deploy is called as an ingress controller and the set of rules you configure are called as ingress resources 
+
+ingress resources are created using definition files like the ones we use to create pods deployments and services earlier in this course.
+
+Now remember a kubernetes cluster does NOT come with an Ingress Controller by default.
+
+If you setup a cluster following the demos in this course, you won’t have an ingress controller built into it.
+
+So if you simply create ingress resources and expect them to work they won't 
+
+let us look at each of these in a bit more detail.
+
+As I mentioned you do not have an Ingress Controller on Kubernetes by default. 
+
+So you MUST deploy one. What do you deploy?
+
+There are a number of solutions available for ingress.
+
+a few of them being GCE - which is Googles Layer 7 HTTP Load Balancer. NGINX, Contour, HAPROXY, TRAFIK and Istio. 
+
+Out of this, GCE and NGINX are currently being supported and maintained by the Kubernetes project.
+
+And in this lecture we will use NGINX as an example. 
+
+These Ingress Controllers are not just another load balancer or nginx server. 
+
+The load balancer components are just a part of it.
+
+The Ingress controllers have additional intelligence built into them to monitor the kubernetes cluster for new definitions or ingress resources and configure the nginx server accordingly. 
+
+An NGINX Controller is deployed as just another deployment in Kubernetes.
+
+So we start with a deployment file definition, named nginx-ingress-controller With 1 replica and a simple pod definition template.
+
+We will label it nginx-ingress and the image used is nginx-ingress-controller with the right version.
+
+Now this is a special build of NGINX built specifically to be used as an ingress controller in kubernetes.
+
+So it has its own set of requirements. Within the image the nginx program is stored at location /nginx-ingress-controller.
+
+So you must pass that as the command to start the nginx-controller-service.
+
+If you have worked with NGINX before, you know that it has a set of configuration options such as the path to store the logs, keep-alive threshold, ssl settings, session timeout etc. 
+
+In order to decouple these configuration data from the nginx-controller image, you must create a ConfigMap object and pass that in.
+
+Now remember the ConfigMap object need not have any entries at this point. A blank object will do.
+
+But creating one makes it easy for you to modify a configuration setting in the future.
+
+You will just have to add it in to this ConfigMap and not have to worry about modifying the nginx configuration files.
+
+You must also pass in two environment variables that carry the POD’s name and namespace it is deployed to. 
+
+The nginx service requires these to read the configuration data from within the POD. 
+
+And finally specify the ports used by the ingress controller which happens to be 80 and 443.
+
+We then need a service to expose the ingress controller to the external world.
+
+So we create a service of type NodePort with the nginx-ingress label selector to link the service to the deployment. 
+
+As mentioned before, the Ingress controllers have additional intelligence built into them to monitor the kubernetes cluster for ingress resources and configure the underlying nginx server when something is changed 
+
+but for the ingress controller to do this it requires a service account with a right set of permissions 
+
+for that we create a service account with the correct roles and roles bindings.
+
+So to summarize, with a deployment of the nginx-ingress image, a service to expose it, a ConfigMap to feed nginx configuration data, and a service account with the right permissions to access all of these objects.
+
+We should be ready with an increase controller in its simplest form
+
+now on onto the next part of creating ingress resources an increase resource is a set of rules and configurations applied on the ingress controller.
+
+You can configure rules to say simply forward all incoming traffic to a single application or route traffic to different applications Based on the URL.
+
+So if user goes to my-online-store.com/wear, then route to one app, 
+
+or if the user visits the /watch URL then route to the video app. 
+
+Or you could route user based on the domain name itself.
+
+For example, if the user visits wear.my-online-store.com, the route to the wear app or else route to the video app. 
+
+Let us look at how to configure these in a bit more detail. 
+
+The Ingress Resource is created with a Kubernetes Definition file.
+
+In this case, ingress-wear.yaml. As with any other object,
+
+we have apiVersion, kind, metadata and spec. 
+
+The apiVersion is extensions/v1beta1, kind is Ingress,
+
+we will name it ingress-wear. 
+
+And under spec we have backend. 
+
+So the traffic is, of course, routed to the application services and not PODs directly.
+
+As you might know already the back end section defines where the traffic will be routed to.
+
+So if it's a single backend then you don't really have any rules.
+
+You can simply specify the service name and port of the backend wear service. 
+
+Create the ingress resource by running the kubectl create command.
+
+View the created ingress by running the kubectl get ingress command.
+
+The new ingress is now created and routes all incoming traffic directly to the wear-service.
+
+You use rules, when you want to route traffic based on different conditions.
+
+For example you create one rule for traffic originating from each domain or hostname.
+
+That means when users reach your cluster using the domain name, my-online-store.com, you can handle that traffic using rule1. 
+
+When users reach your cluster using domain name wear.my-online-store.com, you can handle that traffic using a separate Rule2. 
+
+Use Rule3 to handle traffic from watch.my-online-store.com. And say use a 4th rule to handle everything else. 
+
+Now within each rule you can handle different paths. For example, within Rule 1 you can handle the wear path to route that traffic to the clothes application. 
+
+And a watch path to route traffic to the video streaming application.
+
+And a third path that routes
+
+anything other than the first two to a 404 not found page.
+
+Similarly, the second rule handles all traffic from wear.my-online-store.com.
+
+You can have path definition within this rule, to route traffic based on different paths. For example, say you have different applications and services within the apparel section for shopping, or returns, or support, 
+
+when a user goes to wear.my-online.store.com/, by default
+
+they reach the shopping page.
+
+But if they go to exchange or support URL, they reach different backend services.
+
+The same goes for Rule 3, where you route traffic to watch.my-online-store.com to the video streaming application. 
+
+But you can have additional paths in it such as movies or tv. 
+
+And finally anything other than the ones listed here will go to the fourth rule.
+
+that would simply show a 404 Not Found Error page.
+
+So remember you have rules at the top for each host or domain name and within each rule you have different paths to route traffic based on the URL.
+
+Now, let’s look at how we configure ingress resources in Kubernetes.
+
+We will start where we left off.
+
+We start with a similar definition file. This time under spec,
+
+We start with a set of rules.
+
+Now our requirement here is to handle all traffic coming to my-online-store.com and route them based on the URL path.
+
+So we just need a single rules for this.
+
+since we are only handling traffic to a single domain name, which is my-online-store.com. 
+
+Under rules we have one item, which is an http rule in which we specify different paths. 
+
+So paths is an array of multiple items.
+
+One path for each url. 
+
+Then we move the backend we used in the first example under the first path. 
+
+The backend specification remains the same, It has a service name and service port.
+
+Similarly we create a similar backend entry to the second URL path, for the watch-service to route
+
+all traffic coming in through the /watch url to the watch-service. 
+
+Create the ingress resource using the kubectl create command.
+
+Once created, view additional details about the ingress resource by running the kubectl Describe ingress command.
+
+You now see two backend URLs under the rules, and the backend service they are pointing to.
+
+Just as we created it.
+
+Now if you look closely in the output of this command you see that there is something about a default Back end. Hmmm.
+
+What might that be? If a user tries to access a URL that does not match any of these rules,
+
+Then the user is directed to the service specified as the default backend.
+
+In this case it happens to be a service named default-http-backend. 
+
+So you must remember to deploy such a service 
+
+back in your application say a user visits the URL my-online-store.com/listen or /eat and you don’t have an audio streaming or a food delivery service.
+
+You might want to show them a nice message.
+
+You can do this by configuring a default backend service to display this 404
+
+Not found error page.
+
+The third type of configuration is using domain names or host names.
+
+We start by creating a similar definition file for ingress.
+
+Now that we have two domain names we create two rules.
+
+one for each domain.
+
+Display traffic by domain name.
+
+We use the host field the host field in each rule matches the specified value with the domain name used in the request URL and routes traffic to the appropriate backend.
+
+Now remember in the previous case we did not specify the host field.
+
+If you don't specify the host field it will simply consider it as a star or accept all the incoming traffic through that particular rule without matching the hostname 
+
+in this case, Note that we only have a single back and path for each rule which is fine.
+
+All traffic from these domain names will be routed to the appropriate backend irrespective of the URL path.
+
+You can still have multiple path specifications in each of these to handle different URL paths as we saw in the example earlier 
+
+so let's compare the two. Splitting traffic by URL had just one rule and we split the traffic with two paths Display traffic by hostname. We used two rules and one path specification in each rule.
+
+
+
+
+Well that's it for this lecture.
+
+Let us now head over to the practice test section and practice working on ingress.
+
+Now there are two types of labs in this section.
+
+The first one is where an ingress controller resources and applications are already deployed and you basically view and walk through the environment gather data and answer questions 
+
+towards the end.
+
+You would create or modify ingress resources based on the needs in the second practice test which is a bit more challenging and that is where you will be deploying an ingress controller and resources from scratch.
+
+Well good luck and I hope you enjoy the labs and I will see you in the next lecture.

@@ -1,0 +1,231 @@
+------------------------------------------------------------------------
+# 프로세스 파라미터 보기 - 큐블렛내 네트워크 설정 정보 확인
+>> ps -aux | grep kubelet | grep network
+
+[Kubelet.service]
+ExecStart=/usr/local/bin/kubelet
+	--..
+	--network-plugin=cni
+	--cni-bin-dir=/opt/cni/bin
+	--cni-conf-dir=/etc/cni/net.d
+	--..
+
+## WEAVE 플러그인 설정
+$ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')&env.WEAVE_MTU=1337"
+------------------------------------------------------------------------
+
+
+Hello and welcome to this lecture 
+안녕하세요.
+
+in this lecture We will discuss about one solution based on CNI 
+이번 강의에서 우리는 CNI 솔루션중 하나를 다루어 보겠습니다.
+
+in particular WeaveWorks. 
+weaveWorks 라는 특정 범주 안에서.
+
+The WeaveWorks weave CNI plugin. 
+위브웤스의 위브 CNI 플러그인
+
+In the previous practice test, We saw how it is configured.
+이전 연습 문제에서 우리는 이것을 어떻게 구성하는지를 보았씁니다.
+
+Now we will see more details about how it works.
+이제 우리는 이것이 어떻게 동작하는지에 대한 좀 더 상세한 내용을 보겠습니다.
+
+We will start where we left off in the POD Networking Concepts section. 
+우리는 POD 네트워크 컨셉 센션을 떠나간 장소에서 시작합니다.
+
+We had our own custom CNI script that we built and integrated into kubelet through CNI. 
+우리는 커스텀 CNI 스크립트를 가지고 있습니다. CNI를 통해 우리가 큐블릿안에 빌드하고 통합시킨 CNI 스크립트
+
+In the previous lecture we saw how, instead of our custom script, we can integrate the weave plugin. 
+이전 강의에서 우리는 보았습니다. 어떻게 우리의 커스텀 스크립트 대신에 위브 플러그인을 통합 할 수 있는지를 요.
+
+(least one:적어도 하나), ()
+Let us now see how the weave solution works, as it is important to understand at least one solution well. 
+이제 위브 솔루션이 어떻게 동작하는지 봅시다.
+적어도 하나의 솔루션을 잘 이해하는 것이 중요하기 때문입니다.
+
+You should then be able to relate this to other solutions as well.
+그런다음 이를 다른 솔루션과도 연관 시킬 수 있어야 합니다.
+
+So the networking solution we set up manually had a routing table which mapped what networks are on what hosts.
+그럼 우리가 수작업으로 설정한 네트워킹 솔루션이 라우팅 테이블이 있습니다. 어떤 네트워크가 어떤 호스트에 연결 되어 있는지를 정의한.
+
+So when a packet is sent from one pod to the other, it goes out to the network, to the router and finds its way to the node that hosts that pod.
+때문에 패킷이 하나의 POD 에서 다른 POD 로 전송될때, 이것이 네트워크 밖 라우터로 갑니다. 그리고 POD 를 호스팅 중인 노드로 가는 길을 찾습니다.
+
+Now that works for a small environment and in a simple network. But in larger environments with 100s of nodes in a cluster and 100s of PODs on each node, This is not practical.
+이건 소규모 환경, 간단한 환경 에서 작동 합니다. 하지만 클러스터에 100개의 노드가 있는 거대한 환경 그리고 100개의 POD 가 각 노드마다 있는 환경에서는 현실적인 방법이 아닙니다.
+
+The routing table may not support so many entries and that is where you need to get creative and look for other solutions.
+라우팅 테이블은 너무많은 지원하지 않을 수도 있으므로 창의력을 발휘하고 다른 솔루션을 찾아야 합니다.
+
+Think of the kubernetes cluster as our company. And the nodes as different office sites. With each site,
+쿠버네티스 클러스터를 우리의 회사라 생각하고 노드들은 다른 오피스 사이트라고 생각합니다.
+
+We have different departments and within each department we have different offices.
+우리는 다른 부서들을 가지고 있고, 각 부서 마다 우리는 다른 오피스들을 가지고 있습니다.
+
+Someone in office-1 wants to send a packet to office-3 and hands it over to the office boy. 
+사무실1의 누군가는 패킷을 사무실3에 보내길 원합니다. 그리고 이걸 오피스 보이에게 건내줍니다.
+
+All he knows is it needs to go to office 3 and he doesn’t care who or how it is transported. 
+그가 아는 전부는 이게 오피스3으로 가야 한다는 것입니다. 그리고 누가 어떻게 보내는지는 전혀 상관하지 않습니다.
+
+The office boy takes the package, gets in his car, looks up address for the target office in GPS, uses directions on the street and finds his way to the destination site. 
+오피스 보이는 패키지를 가지고 그의 차를 타서, 목적지 사무실을 GPS 로 찾습니다. 도로방향과 목적지로 가는 길을 이용하여.
+
+Delivers the package to Payroll department who in turn forwards the package to office 3. 
+패키지를 급여 부서로 전달하면 급여 부서에서 오피스3으로 패키지를 전달합니다.
+(부서 내 오피스가 있으므로)
+
+This works just fine for now. We soon expect do different regions and countries and this process no longer works 
+이런 작업은 지금까지는 순조롭습니다. 우리는 곧 다른 지역과 국가를 수행할 것으로 예상하며 이 프로세스는 더이상 작동하지 않습니다.
+
+it's hard for the office boy to keep track of so many routes to these large number of offices across different countries and of course he can’t drive to these offices by himself. 
+오피스 보이에게 이 여러 나라에 걸쳐 있는 많은 사무실로 가는 수많은 경로를 추적하는 것은 어렵습니다. 물론 그는 혼자서 이 사무실들을 운전해 갈수도 없습니다.
+
+That’s where we decide to outsource all mailing and shipping activities to a company who does it best.
+이 부분이 아웃쇵을 결정 하게 된 곳입니다. 메일링과 결재 같은 행동
+
+(engaged:결혼, 바쁜, 약속된)
+Once the shipping company is engaged.
+하나의 운송 회사가 바쁘게 되면
+
+The first thing that they do is place their agents in each of our company's sites.
+첫번째로 그들은 그들의 에이젼트를 각각의 컴퍼니 사이트로 배치 시킵니다.
+
+These agents are responsible for managing all shipping activities between sites.
+그 요원들은 사이트간의 모든 결재 행동을 관리하는것을 담당 하고 있습니다.
+
+They also keep talking to each other and are well connected 
+그 들은 또한 요원들 끼리 소통을 유지하고 긴밀히 협력 합니다.
+
+so they all know about each other's sites.
+그래서 그들은 각 사이트에 대해 잘 압니다.
+
+The departments in them and the offices in them.
+그 안의 부서와 그 안의 오피스들을.
+
+And so when a package is sent from say office 10 to office 3 
+그리고 패키지가 보내졌을때, 가령 오피스 10에서 오피스 3으로
+
+the shipping agent in that site intercepts the package, and looks at the target office name,
+해당 사이트의 배송 요원은 패키지를 가로채고 대상 오피스 명을 확인합니다.
+
+(peers:동료)
+He knows exactly in which site and department that office is in through his little internal network with his peers on the other sites.
+요원은 다른 사이트에 있는 동료와의 내부 네트워크를 통해 부서의 위치를 정확히 압니다. 
+
+He then places this package into his own new package with the destination address set to the target sites location and then sends the package through.
+그는 그런 다음 패키지를 목적지 주소와 함께 새로운 패키지에 옮겨 담습니다. 그리고 패키지를 보냅니다.
+
+Once the package arrives at the destination it is again intercepted by the agent on that site.
+패키지가 목적이로 떠나면 해당 사이트에서 패키지를 인터쳅터 하여 일을 다시 시작합니다
+
+He opens the packet retrieves the original packet and delivers it to the right department. 
+사이트의 요원은 원본 패키지를 열어 패킷을 조회합니다. 그리고 올바른 부서에 이를 이동시킵니다.
+
+
+---------------------------------------------------------------------
+Back to a world, when the weave CNI plugin is deployed on a cluster,
+다시 돌아오, weave CNI 플러그인이 클러스터에 배포 되어 있다면.
+
+it deploys an agent or service on each node. 
+위브 플러그인은 에이젼트 또는 서비스를 각 노드에 배포 합니다.
+
+They communicate with each other to exchange information regarding the nodes and networks and PODs within them.
+그들은 각자 노드와 네트워크 POD 의 변화사항을 주고 받습니다.
+
+Each agent or peer stores a topology of the entire setup, that way they know the pods and their IPs on the other nodes.
+각 에이젼트 또는 동료는 전체 설정의 토폴로지를 저장 합니다. 이 방법으로 그들은 POD 와 다른 노드에 있는 IP 를 알 수 있습니다.
+
+Weave creates its own bridge on the nodes and names it weave. 
+위브는 노드와 네트워크 네임스페이스에 위브라는 그들만의 브릿지를 생성합니다.
+
+Then assigns IP address to each network. 
+그런다음 각 네트워크에 IP 를 부여하고
+
+The Ips shown here are examples. 
+여기 보이는 IP 는 예제입니다.
+
+In the upcoming practice test.
+다가오는 연습 문제에서
+
+(exact:정확한) (figure out:알아내다)
+test you will figure out the exact range of IP addresses weave assigns on each node.
+각 노드에 할당된 정확한 IP 주소 위브를 알아 낼 것입니다.
+
+
+
+(are handed out:나누어진다)
+We will talk about IPAM and how IP addresses are handed out to PODs and containers in the next lecture.
+우리는 IPAM 에 대해 이야기 할 것입니다. 그리고 어떻게 IP 주소가 POD와 컨테이너에 나누어 지는지를 다음 강의에서 이야기 할 것입니다.
+
+Remember that a single POD may be attached to multiple bridge networks.
+기억하세요. 싱글 POD 은 멀티 브릿지 네트워크에 연결 될 수도 있습니다.
+
+For example you could have a pod attached to the weave bridge as well as the docker bridge created by Docker.
+예를 들어, 당신이 POD 를 위브 브릿지를 도커 브릿지 처럼 잘 연결 할 수도 있습니다.
+
+What pod a packet takes to reach destination depends on the route configured on the container. 
+POD 패킷이 목적지에 닿는 것은 컨테이너의 라우터의 설정에 달렸습니다.
+
+Weave makes sure that PODs get the correct route configured to reach the agent. 
+위브는 POD 가 에이젼트에 닿도록 정확한 라우터 설정을 갖고 있는지를 점검 합니다.
+
+And the agent then takes care of other PODs.
+그리고 에이젼트는 다른 POD 를 처리합니다.
+
+now when a packet is sent from one pod to another on another node weave intercepts the packet and identifies that it's on a separate network.
+이제 패킷이 하나의 POD 에서 또다른 노드의 위브에 패킷이 차단되거나 이것이 분리된 네트워크라는게 확인회면
+
+It then encapsulates this packet into a new one with new source and destination and sends it across the network.
+그럼 해당 패킷을 역 캡슐화 하고 새로운 소스와 목적지를 가진 새로운 패킷으로 옮겨 답습니다. 그리고 네트워크를 통해 전송 합니다.
+
+Once on the other side, the other weave agent retrieves the packet, decapsulates and routes the packet to the right POD.
+반대 편에서는 또다른 에이젼트가 패킷을 받습니다. 역 캡슐화 하고 패킷을 올바른 POD 로 위치시킵니다.
+
+So how do we deploy weave on a kubernetes cluster?
+그럼 어떻게 위브를 클러스터에 배포 할 수 있을까요?
+
+Weave and weave peers can be deployed as services or daemons on each node in the cluster manually or if kubernetes is setup already Then an easier way to do that is to deploy it as pods in the cluster.
+위브와 위브 피어는 서비스나 데몬으로 각 노드에 수동으로 배포 할 수 있습니다. 또는 쿠버네티스가 이미 셋업이 되어 있다면 위브는 클러스터의 POD 처럼 손쉬운 방법으로 배포 할 수 있습니다.
+
+Once the base kubernetes system is ready with nodes and networking configured correctly between the nodes and the basic control plan components are deployed, weave can be deployed in the cluster with a single kubectl apply command.
+쿠버네티스 시스템이 노드와 노드간 네트워킹 설정이 올바르게 준비되면 그리고 기본 컨트롤 플레인이 배포되어 있으면, 위브는 kubectl apply 명령으로 클러스터에 배포할 수 있습니다. 
+
+>> kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n\)"
+
+This deploys all the necessary components required for weave in the cluster.
+이걸로 클러스터에 위브가 필요로 하는 모든 필수 컴포넌트들이 배포 됩니다.
+
+Most importantly the weave peers are deployed as a daemonset. A daemonset ensures that one pod of the given kind is deployed on all nodes in the cluster.
+제일 중요한것은 위브 피어는 데몬 셋으로 배포 되는 것입니다. 데몬셋은 지정된 종류의 하나의 POD 가 모든 노드에 배포되는것을 보장해 줍니다.
+
+This works perfectly for the weave peers.
+이걸로 위브 피어에 대한 작업을 마쳤습니다.
+
+If you deployed your cluster with the kubeadm tool and weave plugin, 
+만약 클러스터에 배포를 kubeadm 도구를 이용하여 배포 하거나 위브 플러그인을 사용한다면
+
+you can see the weave peers as pods deployed on each node. 
+pod 처럼 배포되는 위브 피어를 볼 수 있습니다.
+
+For troubleshooting purpose
+트러블 슈팅이 목적 이면 
+
+view the logs using the kubectl logs Command. 
+>> kubectl logs weave-net-5gcmb weave -n kube-system
+로 로그를 볼 수 있습니다.
+
+
+
+
+
+
+Well that's it for this lecture.
+
+I will see you in the next.

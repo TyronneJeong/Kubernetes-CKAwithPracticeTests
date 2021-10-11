@@ -1,0 +1,129 @@
+Hello and welcome to this lecture in this lecture
+
+[노드 포트, 포트, 타겟 포트]
+[서비스 3대장, 클러스터 IP, 노드 포트, 로드 밸런서]
+
+we will discuss about the Kubernetes Service -ClusterIP. 
+이번강의에서는 쿠버네티스 서비스중 클러스터 IP에 대해 다뤄보겠씁니다.
+(지난시간에는 노드포트를 함)
+
+A full stack web application typically has different kinds of pods hosting different parts of an application.
+풀 스택 웹 어플리케이션의 경우 일반적으로 어플리케이션의 다른 파츠를 호스팅 하는  다른 종류의 pod 를 가지고 있습니다.
+
+(persistent:지속성있는, 고집하는, 차지하는)
+You may have a number of pods running a front end web server another set of pods running a back end server, a set of PODs running a key-value store like Redis, another set of PODs running a persistent database like MySQL.
+당신은 아마도 몇 개의 POD 를 가지고 있을것입니다.
+프론트 엔드 웹서버를 구동중인 POD나, 백엔드를 구동중인 POD 집합, 키-벨류 저장소인 REIDS 같은 POD집합, MySQL 같은 데이터 베이스를 구동중인 POD 집합.
+
+
+
+The web front end server needs to communicate to the back end servers.
+웹 프론트엔드 서버는 백엔드와 통신을 할 필요가 있습니다.
+
+and the backend-servers need to communicate to database as well as the redis services etc..
+그리고 백엔드 서버는 데이터 베이스와 마찬가지로 통신을 해야할 필요가 있습니다. 그외 레디스 등등.
+
+(establish:설립하다, 구축하다)
+So what is the right way to establish connectivity between these services or tiers of my application.
+그럼, 이런 서비스들과 어플리케이션 티어같 연결을 구축하기 위한 올바른 길은 무엇일까요?
+
+The pods all have an IP address assigned to them as we can see on the screen 
+우리가 보는바와 같이 모든 POD 들은 모두 IP주소가 할당되어있습니다. 
+
+but these IP as we know are not static.
+아시다 시피 IP는 고정적인게 아닙니다.
+
+These pods can go down any time and new pods are created all the time.
+이 PODS 들은 항시 다운 가능하고, 새 POD들은 항시 새로 생성 가능합니다.
+
+(rely:의존하다)
+And so you cannot rely on these IP addresses for internal communication between the application.
+그러니 어플리케이션과 내부 통신을 위해서 IP주소에 의존할 필요는 없습니다.
+
+Also what if the first front-end POD at 10.244.0.3 need to connect to a backend service?
+또 만약 첫번째 프론트엔드 POD 가 백엔드 서비스에 연락하길 원한다면?
+
+Which of the three would it go to and who makes that decision.
+셋중 누가 갈 것이며, 누가 결정을 내릴 것 입니까?
+
+A kubernetes service can help us group these PODs together and provide a single interface to access the PODs in a group.
+쿠버네티스 서비스는 이들 POD를 하나의 그룹으로 만들고 단일 인터페이스를 제공도록 도와 줍니다.
+
+For example a service created for the backend PODs will help group all the backend PODs together 
+예를 들어 백엔드 POD들을 위핸 생성된 서비스는 모든 백엔드 POD 들을 함께 그룹화 하는걸 돕기 위해 생성되었습니다.
+
+and provide a single interface for other PODs to access this service.
+다른 POD 들이 해당 서비스에 접근하기 위한 싱글 인터페이스를 제공합니다.
+
+[서비스란 1:1 응대가 아닌 개별 tier 대 tier 의 인터페이스 역할이구나. - 클러스터 IP??]
+
+The requests are forwarded to one of the PODs under the service randomly.
+리퀘스트는 서비스 아래에 POD 들중 랜덤하게 전달됩니다.
+
+Similarly create additional services for Redis and allow the backend parts to access the redis systems through the service.
+유사하게 REDIS 를 위한 추가가능한 서비스를 생성하세요. 그리고 서비스를 통해 레디스 시스템에 접근하할 수 있도록 백엔드 파츠를 허락합니다.
+
+This enables us to easily and effectively deploy a microservices based application on kubernetes cluster.
+이건 우릴 쿠버네티스 클러스터의 어플리케이션에 기초하여 쉽고 효과적으로 마이크로 서비스를 디플로이 할 수 있게 합니다.
+
+(impacting:영향을 미치는)
+Each layer can now scale or move as required without impacting communication between the various services.
+각각의 레이어는 요청에 따라 스케일을 늘리거나 줄일 수 있습니다. 다양한 서비스 사이에 임팩트 있는 커뮤니케이션 없이도.
+
+Each service gets an IP name assigned to it inside the cluster and that is the name that should be used by other pods to access the service.
+각각의 서비스는 클러스터 내부에 할당받은 IP 네임을 가지고 있습니다. 그리고 그 다른 POD 들이 엑세스 하기 위해서는 그 이름으로 호출 되어져야만 합니다.
+
+This type of service is known as cluster IP 
+이런 유형의 서비스가 클러스터 IP입니다.
+
+to create such a service as always use a definition file.
+이러한 서비스를 생성할때는 항상 정의파일을 사용합니다.
+
+in the service definition file first used to default template which has API version kind Metadata and spec.
+기본적인 템플릿을 적용합니다. apiversion, kind, metadata, spec
+
+the API version is V1, kind is a service and we will give a name to our service.
+apiVersion :v1, kind : service 그리고 서비스 명을 붙여줄겁니다.
+
+We will call it backend.
+우린 백엔드라고 붙여줄겁니다.
+
+under specification we have type and ports. 
+스펙 아래에는 type 과 ports 를 가집니다.
+
+the type is cluster IP in fact cluster IP is the default type.
+type 은 ClusterIP 입니다. 사실 클러스터IP는 기본 유형입니다.
+
+[서비스 3대장, 클러스터IP:이름으로부름, 노드포트:외부에서접근함, 로드밸런서]
+
+So even if you didn't specify it. it will automatically assume the type to be cluster IP.
+그러니 이걸 정의하지 않아도, 자동으로 클러스터IP라고 가정됩니다.
+
+under ports, We have a target port and port.
+PORTS아래에는 타겟 포트와 포트가 있씁니다.
+
+the target port is the port where the backend is exposed which in this case is 80
+타겟 포트는 백엔드가 노출되는 포트 번호 입니다. 이 경우 80번입니다.
+
+and the port is where the service is exposed which is 80 as well.
+그리고 그냥 포트 역시 서비스가 노출되는 포트 번호로 80번 동일합니다.
+
+To link the service to a set of pods we use selector.
+POD셋을 서비스에 연결 시키기 위해 우린 SELECTOR 를 씁니다.
+
+we will refer to the pod definition file and copy the labels from it and remove it under selector.
+pod 정의파일을 참고합니다. 그리고 레이블을 그곳에서 복사하고 셀렉터 아래로 그것들을 옮깁니다. 그리고 
+
+and that should be it.
+그리고 그건 되어야만 합니다.
+
+>> kubectl create -f service-definition.yaml
+>> kubectl get services
+We can now create the service using the "kubectl create" command and then check its status using the "kubectl get services" command.
+이제 우린 kubectl create 커맨드를 사용하여 서비스를 만들 수 있습니다.
+그리고 kubetl get service 커맨드를 통해 대상들의 상태를 체크할 수 있씁니다.
+
+The service can be accessed by other PODs using the ClusterIP or the service name.
+서비스는 다른 POD 들이 ClusterIP나 Name을 사용해 엑세스 될 수 있씁니다.
+
+That's it for this lecture and I will see you in the next lecture.

@@ -1,0 +1,111 @@
+1. 노드 선호도는 POD 의 입장이다.
+2. NODE 에서는 레이블 값만 설정 되어 있다.
+
+고로
+3. NODE 에는 TAINTS 를 설정하여 입장가능한 PODS 를 식별한다.
+4. POD 에는 톨러런스와 함께 노드 선호도를 지정하여 입장가능한 NODE를 식별한다.
+
+이렇게 하여
+5. NODE 와 POD 사이에서는 입장 가능한 NODE 와 설정가능한 POD 가 식별될 수 있다.
+
+
+Hello and welcome to this lecture.
+
+Now that we have learned about taints and toleration and node affinity, 
+이제 우리는 노드 선호도와 taints 톨러런스에 대해 알아 보겠습니다.
+
+(tie:묶다)
+let us tie together the two concepts through a fun exercise.
+재미있는 연습을 통해 두가지 컨셉을 묶어 봅시다. 
+
+We have three nodes and three pods, each in three colors, blue, red and green.
+우리는 3개의 노드와 3개의 POD 가 있습니다. 3개 각각 컬러가 있는데 blue, red, green 입니다.
+
+The ultimate aim is to place the blue pod in the blue node, the red pod in the red node.
+지금 가장 포커싱 하고 있는것은 블루노드에 블루 POD 를 할당하고 레드NODE 에 레드POD를 할당하는  것입니다.
+
+
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+(likewise:비슷하게)
+And likewise for Green, we are sharing the same Kubernetes cluster with other teams.
+유사하게 그린에 대해서는 다른팀과 함께 동일한 쿠버네티스 클러스터를 공유 중입니다.
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+
+
+So there are other pods in the cluster as well as other nodes.
+저기 클러스터에는 다른 NODE에 있는 것과 같이 다른 PODS 들이 있습니다.
+
+We do not want any other pod to be placed on our node.
+우린 다른 POD 들이 우리 NODE 에 들어오는걸 원치 않습니다.
+
+Neither do we want our pods to be placed on their nodes.
+또한 우리의 POD가 다른 노드에 배치되는것도 원치않습니다.
+
+Let us first try to solve this problem using taints and toleration.
+TAINTS와 톨러런스를 사용하여 이문제를 해결하기 위해 첫 걸음을 시작해 봅시다.
+
+as we apply a taint to the nodes, marking them with their colours blue, red and green.
+NODE 에 TAINTS 를 적용하면, 그들 컬러에는 레드 블루 그린의 마킹이 생성됩니다.
+
+(respective:허용하다)
+And we then set a toleration on the pod to tolerate the respective colours.
+그런다음 각 색상을 허용하도록 POD들에 톨러런스를 설정을 합니다.
+
+When the pods are now created, the nodes ensure they only accept the pods with the right toleration.
+POD 들이 지금 생성되었을때, NODE 는 POD들이 가진 톨러런스가 적합한 것만 수용하도록 보장합니다.
+
+So the green pod ends up on the green node and the blue pod ends up on the blue node.
+그린 POD 는 그린 NODE 에 그리고 블루 POD 는 블루 NODE 에
+
+However, taints and toleration does not guarantee that the pods will only prefer these nodes.
+하지만 TAINTS 와 톨러런스는 POD 가 해당 NODE 에만 가는걸 보장해주진 않습니다.
+
+So the red node(?) ends up on one of the other nodes that do not have a taint or toleration set.
+결국 레드 노드는 TAINT 나 톨러런스가 없는 다른 NODE 에 할당 하게 됩니다. POD를 잘 못 말한듯?
+
+This is not desired.
+이건 원치 않았던 것입니다.
+
+[with 의 고찰]
+- ~ 없이 with no affinity
+- ~ 있이 with gurantees.
+- ~ 있이 with colour
+
+Let us try to solve the same problem with node affinity, 
+이 문제를 해결하기 위해 노드선호도를 사용해 봅시다.
+
+with node affinity, we first labeled the nodes
+노드선호도를 사용하는 경우, 우린 처음으로 노드에 레이블을 설정 합니다.
+
+with their respective colors blue, red and green.
+기대하는 컬러는 블루 레드 그린 입니다.
+
+We then set node selectors on the pod to tie the pod to the nodes.
+그런 다음. nodeSelector를 POD에 설정합니다. NODE로 향할 POD들을 묶기 위해.. 
+
+(As such:이와같이)
+As such, the pods end up on the right node.
+이렇게 하여, POD는 올바른 노드위에 올려집니다.
+
+However, that does not guarantee that other pods are not placed on these nodes.
+하지만 노드 선호도는 다른 POD 가 대상 노드에 올라가지 않는걸 보장하지 않습니다.
+
+In this case, there is a chance that one of the other pods may end up on our nodes.
+이번 경우, 하나이상의 다른 POD가 우리의 NODE 에 올라올 기회가 있습니다.
+
+This is not something we desired 
+이것은 TAINTS와 톨러런스 셋 그리고 노드선호도 규칙과 같이 우리가 원하던 것이 아닙니다.
+
+as such a combination of taints and toleration and node affiniity rules can be used together to completely dedicate nodes for specific pods.
+이와같이 taints 톨러런스 조합과 노드 선호도 규칙은 특정 POD 가 NODE 에 전속 될수 있도록 함께 사용될 수 있습니다.
+
+
+[콤비네이션]
+We first used taints and tolerations to prevent other pods from being placed on our nodes, 
+첫번째로 taints 와 톨러런스 사용으로 다른 POD 들이 우리 node 에 접근 하는것을 막기위해 사용합니다.
+
+and then we use node affinity to prevent our pods from being placed on their nodes.
+그런다음. 노드 선도호를 이용하여 우리가 원하는 pods 들이 node 에 올라가도록 할 수 있씁니다.
+
+Well, that's it for this lecture.

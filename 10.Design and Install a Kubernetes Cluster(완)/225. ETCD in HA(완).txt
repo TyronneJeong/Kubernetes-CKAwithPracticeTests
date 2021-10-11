@@ -1,0 +1,494 @@
+Hello and welcome to this lecture. 
+안녕하세요.
+
+In this lecture we'll talk about ETCD in a high availability setup.
+이번 강의에서우리는 ETCD HA 설정에 대해 이야기 해 보겠습니다.
+
+So this is really a prerequisite lecture for the next lecture where we talk about configuring Kubernetes in a highly available mode.
+이것은 다음 강의 이전에 선수 강의입니다. 다음강의라 하면 쿠버네티스 HA 모드 구성에 대한 것 입니다.
+
+Well one portion of that deals with configuring ETCD in HA mode.
+그중 한 부분은 HA 모드에서 ETCD 를 구성하는 방법을 다룹니다.
+
+So in this lecture we will discuss about ETCD in HA mode in the beginning of this course we took a quick look at ETCD.
+그래서 이번 강의에서 우리는 ETCD in HA 모드를 강의 초반에 다루고 빠르게 살펴 보겠씁니다.
+
+
+
+
+We will now recap real quick and more importantly focus on the cluster configuration on ETCD.
+우리는 ETCD 클러스터 설정에 대해 빠르고 중요한 부분만 요약 해보겠씁니다.
+
+So let’s recap real quick and look at the number of nodes in the cluster, what RAFT protocol is etc.
+그러니 빠르게 요약 해 봅시다. 그리고 클러스터의 숫자들을 살펴 봅니다. RAFT 프로토콜이 무엇인지 등등.
+
+
+
+
+
+So what is ETCD?
+ETCD란 무엇입니까?
+
+(reliable:신뢰할수 있는)
+It's a distributed reliable key value store that is simple secure and fast.
+이것은 신뢰할 수 있는 안전하고 빠른 키-벨류 분산 저장소 입니다. 
+
+So let's break it up.
+자세히 들여다 봅시다.
+
+Traditionally data was organized and stored in tables like this.
+전통적으로 데이터는 아래와 같이 테이블로 구성되고 저장되어 왔습니다.
+
+For example to store details about a number of individuals. A key value store stores information in the form of documents or pages.
+예를 들어 각 개인에 대한 상세 정보를 저장하려고 할때, 키-벨루 저장소는 문서 또는 종이 형태로 정보를 저장합니다.
+[Docuement ex]
+--------------------
+KEY		|VALUE
+Name	|John Doe
+Age		|45
+Location|New York
+Salary	|5000
+--------------------
+So each individual gets a document and all information about that individual is stored within that file.
+그래서 각 개인은 서류를 가집니다. 그리고 각 개인에 대한 모든 정보들은 파일 안에 저장됩니다.
+
+These files can be in any format or structure and changes to one file does not affect the others.
+이 파일은 모든 포맷이나 구조로건 변환할 수 있씁니다. 그리고 하나의 파일을 변경해도 다른 파일에 영향을 미치지 않습니다.
+
+In this case the working individuals can have their files with salary fields. 
+이 경우 일하는 개인의 경우 셀러리 필드를 포함한 파일을 가질 수 있습니다.
+
+
+------------------------------------------------------------------------
+While you could store and retrieve simple key and values when your data gets complex you typically end up transacting in data formats like JSON or YAML.
+당신이 간단한 키-벨류 를 저장하고 조회하는 동안, 당신의 데이터는 복잡해집니다. 일반적으로 JSON, YAML 과 같은 데이터 형식으로 거래 하게 됩니다.
+
+So that’s what etcd is and how you quickly get started with it.
+이것이 ETCD 이며 어떻게 빨리 시작 할수 있는지 입니다.??????????????????????????????
+------------------------------------------------------------------------
+
+
+We also said that ETCD is distributed.
+우리는 ETCD 가 분산되었다고 말했습니다.
+
+So what does that mean.
+이게 무슨 의미일까요?
+
+And that is what we're going to focus in this lecture.
+그리고 이것이 우리가 이 강의에서 주목 하려는 것입니다.
+
+We had ETCD on a single server. But it’s a database and may be storing critical data.
+우리는 싱글 서버 ETCD 를 가지고 있습니다. 하지만 데이터 베이스는 크리티컬한 데이터가 저장되어 있을수도 있습니다.
+
+[단일ETCD + 중요한 데이터]
+
+So it is possible to have your datastore across multiple servers.
+따라서 ETCD 서버는 여러 서버에 걸쳐 데이터 저장소를 가질수도 있습니다.
+
+Now you have 3 servers, all running etcd, and all maintaining an identical copy of the database.
+이제 3개의 서버가 있습니다. 모두 ETCD 가 실행 중이며, 모두 동일한 데이터 베이스 복사본을 관리합니다.
+
+So if you lose one 
+만약에 당신이 하나의 파일을 잃어버린다면?
+
+you still have two copies of your data. Perfect.
+당신은 여전히 2개의 복사본을 가지고 있습니다. 완벽합니다.
+
+But how does it ensure the data on all the nodes are consistent.
+하지만 어떻게 모든 노드에 데이터가 있다고 보장 할 수 있을까요?
+
+You can write to any instance and read your data from any instance.
+당신은 모든 인스턴스로 부터 데이터를 쓰고 읽을 수 있습니다.
+
+ETCD ensures that the same consistent copy of the data is available on all instances at the same time.
+ETCD 는 같은 시간에 모든 인스턴스에서 이용가능한 데이터 사본을 구성하는 것을 보장합니다.
+
+So how does it do that? 
+그럼 어떻게 이것이 이루어 질까?
+
+With reads, its easy. Since the same data is available across all nodes,
+읽기를 사용하면 쉽습니다. 동일 데이터가 모든 노드에 이용이 가능 하기 때문입니다.
+
+you can easily read it from any nodes. But that is not the case with writes.
+당신은 손쉽게 모든노드들을 읽을 수 있습니다. 하지만 쓰기의 경우는 예외입니다.
+
+What if two write requests come in on two different instances? 
+만약 두개의 쓰기 요청이 두개의 다른 인스턴스에 요청된다면?
+
+Which one goes through?
+둘중 어느것이 진행될까요?
+
+For example I have writes coming in for name set to john on one and with the name joe on the other.
+예를 들어 여기 이름이 설정된 쓰기요청이 있습니다. 하나는 존이고 나머지 하나는 조 입니다.
+
+Of course we cannot have two different data on two different nodes.
+당연하게도 우리는 두개의 다른 데이터를 노드에 가지고 있지 않습니다.
+
+When I said ETCD can write through any instance, I wasn’t a 100% right.
+제가 ETCD 가 어느 어느 인스턴스를 통해 쓰기를 할 수 있을까 라고 한것은 100%올바른 말이 아닙니다.
+
+ETCD does not process the writes on each node.
+ETCD 는 각 노드에 쓰기 작업을 할 수 없습니다.
+
+Instead, only one of the instances is responsible for processing the writes. 
+대신에 오직 하나의 인스턴스가 쓰기를 담당 합니다.
+
+Internally the two nodes elect a leader among them. Of the total instances one node becomes the leader and the other node becomes the followers.
+내부적으로 그들 사이에 두개의 노드는 리더를 선출 합니다. 총 인스턴스중 하나의 노드가 리더가 됩니다. 그리고 다른 노드는 팔로워가 됩니다.
+
+[리더 / 팔로워]
+
+If the writes came in through the leader node, then the leader processes the write. 
+쓰기가 리더 노드를 통해 들어온 경우 리더는 쓰기를 처리합니다.
+
+The leader makes sure that the other nodes are sent a copy of the data.
+그 리더는 다른 노드들에 데이터 사본이 전송되는지 확인 합니다.
+
+If the writes come in through any of the other follower nodes, then they forward the writes to the leader internally and then the leader processes the writes. 
+만약 쓰기가 여타 팔로워 노드에게 할당 된다면 팔로워 노드들은 쓰기를 내부적으로 리더에게 전달합니다. 그리고 난 다음 리더가 쓰기를 실행합니다(그리고 사본이 보내지는지 확인하겠지)
+
+Again when the writes are processed, the leader ensures that copies of the write and distributed to other instances in the cluster.
+다시한번 쓰기가 성공했을때, 리더는 쓰기의 복사본이 클러스터의 다른 인스턴스에 배포되도록 합니다.
+
+Thus a write is only considered complete, if the leader gets consent from other members in the cluster.
+따라서 쓰기는 완료된 것으로만 간주 됩니다. 만약 리더가 클러스터의 다른 멤버로부터 동의를 얻는 경우.
+
+So how do they elect the leader among themselves? And how do they ensure a write is propogated across all instances? 
+어떻게 그들 사이에서 리더를 뽑을 수 있을까요? 그리고 쓰기가 모든 인스턴스에세 전파되어진것을 어떻게 보장합니다.
+
+------------------------------------------------------------------------
+(consensus:의견일치)
+ETCD implements distributed consensus using RAFT protocol.
+ETCD는 RAFT 프로토콜을 사용하여 분산 합의를 구현 합니다.
+
+Let's see how that works in a three node cluster.
+3개의 노드 클러스터에서 RAFT 프로토콜이 어떻게 작동하는지 봅시다.
+
+
+
+[Leader Election - RAFT]
+
+When the cluster is setup we have 3 nodes that do not have a leader elected. 
+클러스터가 셋업되었을때 우리는 리더 선출을 하지 않은 3개의 노드가 있습니다. 
+
+RAFT algorithm uses random timers for initiating requests.
+RAFT 알고리즘은 요청을 초기화 하기 위하여 랜덤 타이머를 이용합니다.
+
+For example a random timer is kicked off on the three managers 
+예를 들어 랜덤 타이머는 3명의 관리자에게 시작 됩니다.
+
+the first one to finish the timer sends out a request to the other node requesting permission to be the leader. 
+타이머가 종료된 첫번째는 나머지 노드들에게 리더 승인 요청을 보냅니다.
+
+The other managers on receiving the request responds with their vote and the node assumes the Leader role. 
+요청을 받은 다른 매니저들은 투표로 응답하고 노드는 리더 역할을 맡습니다.
+
+Now that it is elected the leader it sends out notification at regular intervals to other masters informing them that it is continuing to assume the role of the leader. 
+리더로 선출 되었음을 알리면 다른 마스터 들에게도 알림을 보내 리더 역할을 계속 수행하는 걸로 가정 됩니다.
+
+In case the other nodes do not receive a notification from the leader at some point in time which could either be due to the leader going down or losing network connectivity
+갑자기 다른 노드들이 리더로 부터 통지를 받지 못한 경우는 리더가 다운되었거나 네트워크 연결이 끊겼을수 있습니다.
+
+the nodes initiate a re-election process among themselves and a new leader is identified 
+노드들은 재투표과정을 진행합니다. 그리고 새로운 리더를 정합니다.
+
+going back to our previous example where a right come seen 
+이전 예제로 돌아가 보겠씁니다.
+
+it is processed by the leader and is replicated to other nodes in the cluster 
+이것은 리더에 의해 진행됩니다. 그리고 다른 노드들에 의해 복구 됩니다.
+
+the right is considered to be complete only once it is replicated to the other instances in the cluster.
+권한은 다른 인스턴스에 복제된 후에 완료된것으로 간주 됩니다.
+
+We set that the ETCD cluster is highly available. 
+우리는 ETCD 클러스터를 HA 로 설정 했씁니다.
+
+So even if we lose a node it should still function.
+우리가 노드 하나를 잃어버렸음에도 불구하고 여전히 동작 합니다.
+
+Say for example a new write comes in but one of the node is not responding. 
+예를 들어, 새로운 쓰기가 들어오면 노드중 하나는 응답 하지않는다고 가정해 보겠씁니다.
+
+And hence the leader is onlyable to write to 2 nodes in the cluster.
+따라서 리더는 클러스터 내 2개의 노드에만 쓸수가 있습니다.
+
+Is the write considered to be complete? 
+그럼 쓰기는 완료 되었다고 봐야 할까요?
+
+Does it wait for the third node to be up? 
+세번째 노드가 일어날때 까지 기다려야 할까요?
+
+Or does it fail? 
+하지만 실패라면?
+
+(majority:다수, 과반수, 다수당, 성년, 득표자) (considered:간주되다, 고려되다)
+A write is considered to be complete, if it can be written on the majority of the nodes in the cluster. 
+클러스터내 노드들 과반수에 쓰여질수 있다면 쓰기는 완료로 인정 됩니다.
+
+For example, in this case of the 3 nodes,
+예를 들어 이 경우 3개의 노드가 있습니다.
+
+the majority is 2.
+과반은 2입니다.
+
+So if the data can be written on two of the nodes then the right is considered to be complete.
+그래서 데이터가 2개의 노드에만 쓰여질수 있다면 완료로 간주 됩니다.
+
+If the third node was to come on line then the data is copied to that as well.
+만약 세번쨰 노드가 정상 상태가 된다면 데이터도 마찬가지로 복사될 것입니다.
+
+So what is the majority.
+그럼 과반수는 무엇일까요?
+
+Well a more appropriate term to use would be Quorum. Quorum is the minimum number of nodes that must be available for the cluster to function properly or make a successful right 
+좀더 적당한 단어를 쓰면 Quorum 이 되겠습니다. 쿼럼은 클러스터가 제기능을 하기 위한 최소한의 노드 수 입니다. 또는 성공을 만들 수 있는 최소한의 수 입니다.
+
+in case of 3.
+3의 경우
+
+we know its 2. For any given number of nodes, the quorum is the total number of nodes divided by 2 + 1.
+우리는 쿼럼이 2라는걸 압니다. 어떤 숫자의 노드를 대더라도. 쿼럼은 총합을 2로 나눈 값에 + 1입니다.
+
+So Quorum of 3 nodes is 3/2 which is 1.5 + 1 equals 2.5.
+그래서 3노드의 쿼럼은 1.5+1 = 2.5 입니다.
+
+If there is a .5 consider the whole number only so that's 2.
+0.5 가 있다면 정수부만 간주함으로 이것은 2가 됩니다.
+
+Similarly quorum of 5 nodes is 3.
+동일하게 5 노드의 쿼럼은 3입니다.
+
+So here is a table that shows the quorum of clusters of size 1 to 7.
+여기 1에서 7까지의 쿼럼을 보여주는 테이블이 있습니다. 
+
+Quorum of 3 and 5 are what we calculated. 
+3 그리고 5의 쿼럼은 우리가 계산할수 있는 것이빈다.
+
+Quorum of 1 is 1 itself.
+쿼럼이 1 자체이면
+
+Meaning if you have a single non cluster none of these really apply.
+만약 당신이 단일 클러스터를 가지고 있지 않다면 실ㅈ 적용할 것도 없습니다.
+
+If you lose that node everything's gone 
+이 단일 노드를 잃어버린다면 모든게 끝이납니다. 
+
+if you look at 2 and apply the same formula the quorum is 2 itself. 2/2 is 1 and 1 + 1 is 2.
+2를 동일한 형태로 적용하려 한다면 쿼럼은 2 자신이 됩니다.
+
+So even if you have 2 instances in the cluster the majority is still 2. 
+떄문에 2개의 인스턴스를 가지고 있음에도 불구하고 과반수는 여전히 2가 됩니다.
+
+If one fails, There is no quorum.
+만약 하나라도 실패하면 쿼럼은 없습니다.
+
+[2개 까지는 과반이 없이 무조건 만족이다,]
+
+So rates won't be processed.
+그래서 쿼럼은 동작 하지 않습니다.
+
+So having two instances is like having one instance 
+두개의 인스턴스를 가지는 것은 하나의 인스턴스를 가지는 것과 같습니다.
+
+it doesn't offer you any real value as quorum cannot be met.
+이것은 정족수를 충족할 수 없으므로 실제 가치를 제공하지 않습니다.
+
+Which is why it is recommended to have a minimum of 3 instances in an ETCD cluster. 
+이것이 왜 ETCD 클러스터에 3개의 인스턴스를 최소한으로 추천하는지에 대한 이유 입니다.
+
+(fault tolerance:결함허용)
+That way it offers a fault tolerance of at least 1 node.
+그렇게 하면 최소한 1개의 노드의 내결함성을 제공합니다.
+
+If you lose one, you can still have quorum and the cluster will continue to function.
+하나의 인스턴스를 잃으면 여전히 쿼럼을 가질 수 있고 클러스터가 계속 기능을 할 수 있습니다.
+
+So the first column minus the second column gives you the fault tolerance. 
+[그림-표]첫번째 컬럼과 두번째 컬럼을 빼주면 fault rolerance 가 나옵니다.(실패해도 되는 노드의 개수)
+
+The number of nodes that you can afford to lose while keeping the cluster alive.
+클러스터가 생존한 상태로 손실을 감당 할 수 있는 노드의 숫자 입니다.
+
+So we have 1 to 7 nodes here. 1 and 2 are out of consideration.
+그래서 우리는 1에서 7까지의 노드가 있습니다. 1와 2는 고려 대상에서 제외합니다.
+
+So from 3 to 7 what do we consider?
+그래서 3부터 7까지 중 무엇을 고려할까요?
+
+As you can see 3 and 4 have the same fault tolerance of 1.
+보시는바와 같이 3과 4는 동일한 실패허용치로 1을 가지고 있씁니다.
+
+5 and 6 have the same fault tolerance of 2. 
+5와 6은 동일한 실패허용치 2를 가지고 있습니다.
+
+When deciding on the number of master nodes, it is recommended to select an odd number as highlighted in the table 3 or 5 or 7. 
+마스터 노드의 수를 결정 할때, 하이라이트 된 홀수 숫자를 선택하기를 권장합니다. 3, 5, 7
+
+
+------------------------------------------------------------------------
+Say we have a 6 node cluster.
+우리가 6노드 클러스터를 가졌다고 가정 합시다.
+
+So for example due to a disruption in the network it fails and causes the network to partition.
+예를 들어, 네트워크중단으로 인해 실패하고 네트워크가 분할 됩니다.
+
+We have 4 nodes on one and 2 on the other.
+4개의 노드 그룹 하나와 2개의 노드가 그룹핑되어 있는 다른 하나가 있습니다.
+
+In this case the group with 4 nodes have quorum and continues to operate normally. 
+이 경우에 4개의 노드를 묶은 그룹은 쿼럼을 갖습니다. 그리고 계속해서 평범하게 운영을 진행합니다.
+
+However if the network got partitioned in a different way resulting in nodes being distributed equally between the two,
+하지만 만약 네트워크가 다른 방법으로 분할 되었다면? 결과적으로 노드가 동일하게 두개로 쪼개졌다면
+
+each group now has 3 nodes only.
+각 그룹은 3개의 노드만을 갖게 됩니다.
+
+But since we originally had 6 manager nodes, the quorum for the cluster to stay alive is 4
+하지만 우리는 6개의 매니터 노드를 가졌었기 때문에. 클러스터가 생존 상태로 유지되는 쿼럼 수는 4가 됩니다.
+
+But if you look at the groups here neither of these groups have four managers to meet the quorum 
+하지만 이 그룹을 보면 쿼럼을 만족시키지 못한데 4명의 관리자가 그룹에 있습니다.
+
+so it results in a failed cluster.
+그래서 결과적으로 실패한 클러스터가 됩니다.
+
+
+[하나의 노드가 실패전 가지고 있던 Manager 는 6 -> 하나의 노드가 실패하여 Majority 4는 넘기나 네트워크가 분리됨 -> 3:3으로 분리된 네트워크에 4ㅐ의 Majority를 요구 받음. -> 결과론적으로 두 네트워크는 모두 과반수를 만족하지 못하여 실패함.]
+
+So with even number of nodes there is possibility of the cluster failing during a network segmentation.
+그래서 짝수늬 노드를 사용하면 네트워크를 분할 하는 동안 클러스터가 실패할 가능성이 있습니다.
+
+In case we had odd number of managers originally, say 7,
+이 경우에 7명의 홀수 매니저가 있습니다. 7로 가정 합니다.
+
+then after the network segmentation we have 4 on one segmented network and 3 on the other,
+그 다음 네트워크 분할이 된 이후 우리는 4의 분리된 네트워크 그리고 3의 나머지가 있습니다.
+
+and so our cluster still lives on the group with 4 managers as it meets the quorum of 4.
+그리고 우리의 클러스터가 여전히 4명의 매니저 들과 함께 그룹에 살아 있습니다. 여기서 정족수는 4가 됩니다.
+
+No matter how the network segments there are better chances for your cluster to stay alive in case of network segmentation with odd number of nodes.
+네트워크 분할이 어떻게 되었는가는 아무문제가 되지 않습니다. 이걸로 클러스터에는 더 나은 기회가 생깁니다.
+
+So an odd number of nodes is preferred over even number having 5 is preferred over 6 and having more than 5 nodes is really not necessary as 5 gives you enough for tolerance. 
+이로써 홀수 의 노드가 짝수 보다 선호되어 집니다. 5는 6보다 선호됩니다. 그리고 5보다 많은 노드를 가지는 것은 실제 필요하지가 않습니다. 5로 충분한 톨러런스를 제공할 수 있씁니다.
+(어차피 네트워크가 쪼개져서 정족수를 채울수 있는 기회는 한번 뿐이므로)
+
+To install ETCD on a server.
+ETCD 를 설치하는 것은.
+
+download the latest supported binary. Extract it,
+최종 버전의 바이너리를 다운로드 받고 압축을 해제합니다.
+
+create the required directory structure. 
+필요한 디렉토리 구조를 생성하고
+
+Copy over the certificate files generated for ETCD. 
+ETCD용으로 생성된 인증서 파일을 복사합니다.
+
+We discussed how to generate these certificates in detail in the TLS Certificates section. 
+우리는 인증서 파일을 생성하는 방법을 다루었습니다. TLS 인증 섹션에서.
+
+Then configure the ETCD service.
+그 다음 ETCD 서비스를 구성합니다.
+
+What's important here is to note that the initial cluster option where we passing the peer's information
+여기서 중요한 것은 클러스터 초기화 옵션 주목 하는 것입니다.
+
+That’s how each etcd service knows that it is part of a cluster and where its peers are. 
+이것이 각 ETCD 서비스가 클러스터의 일부이고 피어가 어디있는지 아는 방법 입니다.
+
+Once installed and configured use the etcdctl utility to store and retrieve data. 
+설치가 완료되면 etcdctl 유틸리티를 이용하여 저장과 데이터 조회를 설정 합니다.
+
+ETCDCTL utility has two API versions.
+etcdctl 유틸리티는 두개의 api 버전이 존재합니다.
+
+V2 and V3. So the commands work different in each version.
+v2 와 v3 입니다. 그래서 각 버전별로 명령어가 다르게 동작합니다.
+
+Version 2 is default.
+버전2가 default 입니다.
+
+However we will use version 3. So set an environment variable
+하지만 우리는 버전3을 사용합니다. 그래서 환경 변수에 버전을 설정 합니다.
+
+(otherwise:그렇지 않으면)
+ETCDCTL_API to 3, otherwise the below commands won’t work.
+ETCDCTL_API 를 3으로. 그렇지 않으면 아래 명령이 작동 하지 않습니다.
+
+>> export ETCDCTL_API=3
+
+Run the etcdctl put command and specify the key as name and value as john. 
+etcdctl put 명령을 실행합니다. 그리고 이름과 값을 지정 합니다.
+>> etcdctl put name john
+
+To retrieve data from the etcdctl get command with the key / name and it returns the value john.
+etcdctl get 명령어를 통해 데이터를 조회합니다. key-name 를 이용합니다. 그러면 값으로 john 이 리턴 됩니다.
+
+To get all keys run the etcdctl get –keys-only command. 
+모든 키를 얻기 위해서는 etcdctl get -keys-only 명령어를 실행합니다.
+>> etcdctl get -keys-only
+
+Going back to our design,
+우리의 설계로 돌아가서.
+
+how many nodes, should our cluster have? 
+얼마나 많은 노드들이 클러스터에 있어야 합니까?
+
+In an HA environment as you can see having 1 or 2 instances doesn’t really make any sense. 
+HA 환경에서 당신이 봐온것처럼 1 또는 2개의 인스턴스는 상식에 맞지 않습니다.
+
+As losing 1 node, in either case will leave you without quorum and thus render the cluster not functional. 
+1개의 노드를 잃으면 정족수를 만족하지 못하여 클러스터가 작동 하지 않게 됩니다.
+
+(Hence:따라서)
+Hence the minimum required nodes in an HA setup is 3.
+따라서 HA 설정에서의 최소 요구 노드 수는 3입니다.
+
+We also discussed why we prefer odd number of instances over even number. 
+우리는 또한 왜 짝수보다 혹수 번호를 선호하는지에 대한 이유도 다뤘습니다.
+
+Having even number of instances can leave the cluster without quorum in certain network partition scenarios.
+짝수 의 인스턴스를 가지는 것은 클러스터가 쿼럼 없이 분리될 수 있씁니다.
+
+So all that even number of nodes is out of scope. So we are left with 3 5 and 7 or any odd number above that 3 is a good start 
+그래서 모든 짝수의 노드는 범위 제외입니다. 그래서 우리는 3, 5, 7 같은 홀수와 함께 떠납니다. 위 3 은 좋은 출발입니다.
+
+but if you prefer a higher level of full tolerance then 5 is better. 
+하지만 만약 당신이 좀더 높은 레벨의 정족수를 갖길 원한다면 5가 낫습니다.
+
+But anything beyond that is just unnecessary.
+하지만 그 이상의 수는 필요하지 않습니다.
+
+So considering your environment the fault tolerance requirements and the cost that you can bear you should be able to choose one number from this list.
+그래서 환경을 고려할때. 폴드 톨러런스 요구사항과 당신이 감당 할 수 있는 비용은 이 리스트중 하나로 선택해야합니다.
+
+In our case we go with 3.
+이 경우에 우리는 3으로 갑니다.
+
+So how does our design look now? 
+이제 우리의 설계가 어떤가요?
+
+With HA, the minimum required number of nodes for fault tolerance is 3.
+HA 사용할때. 실패 임계치를 위한 최소한의 요구 노드수는 3입니다. (그보다 큰건 5)
+
+Now while it would be great to have 3 master nodes we are limited by our capacity of our laptop. 
+3개의 마스터 노드가 있으면 좋겠지만 렙탑이 이제 한계에 도달했습니다.
+
+So we will just go with 2.
+그러니 우리는 그냥 2로 합니다.
+
+But if you're deploying the setup in another environment and have sufficient capacity feel free to go with 3.
+하지만 당신이 다른 환경에서 배포하고 충분한 용량이 있으면 3으로 가세요.
+
+We also chose to go with the stacked topology where we will have the ETCD servers on the master nodes itself.
+우리 또한 마스터 노드 자체에 ETCD 서버가 있는 스택 토폴로지로 선택합니다.
+
+Well that's it for this lecture.
+
+Thank you for listening.
+
+I will see you in the next.

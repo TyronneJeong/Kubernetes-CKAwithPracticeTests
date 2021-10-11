@@ -1,0 +1,91 @@
+Hello and welcome to this lecture. 
+
+In this lecture we look at the different ways of manually scheduling a POD on a node.
+이번 강의에서는 수동 POD 스케쥴링의 다른 방법에 대해 배워보겠씁니다.
+
+
+What do you do when you do not have a scheduler in your cluster?
+당신의 클러스터에 스케쥴러가 없다면 무엇을 할 수 있을까요?
+
+You, probably do not want to rely on the built in scheduler and instead want to schedule the PODs yourself.
+당신은 아마 스케쥴러에 의존하여 구축하는걸 원지 않을수도 있습니다. 그리고 대신 직접 POD 를 스케쥴 하길 원할수도 있습니다.
+
+So how exactly does a scheduler work in the backend.
+그럼 스케쥴러는 정확히 어떻게 백엔드에서 작동하는 걸까요.
+
+Let's start with a simple pod definition file.
+여기 간략히 POD 정의파일로부터 시작해봅시다.
+
+
+
+Every POD has a field called NodeName that, by default, is not set.
+모든 POD 들은 따로 설정하지 않더라도 기본적으로 노드네임이라 불리는 필드들을 가지고 있습니다.
+
+(typically:일반적으로)
+You don’t typically specify this field when you create the manifest file, Kubernetes adds it automtically.
+일반적으로 당신이 오브젝트 생성의 manifest 파일에 해당 필드를 정의하지 않더라도 쿠버네티스는 자동으로 해당 필드를 추가합니다.
+
+The scheduler goes through all the pods and looks for those that do not have this property set.
+스케쥴러는 모든 POD 들을 둘러보고, 이 프로퍼티 셋이 없는 녀석을 찾아 냅니다.
+
+Those are the candidates for scheduling.
+이것은 스케쥴링 후보입니다.
+
+[스케쥴러는 candidates for scheduling 이라는 스케쥴링 대기상태인 녀석을 찾아낸다.]
+
+It then identifies the right node for the POD, by running the scheduling algorithm.
+스케쥴링 알고리즘에 의해 스케쥴러는 POD위한 올바른 노드를 식별합니다.
+
+Once identified it schedules the POD on the Node by setting the node Name property to the name of the node by creating a binding object.
+바인딩 객체를 만들어 노드네임 프로퍼티에 이름을 설정함으로써 POD를 노드에 스케쥴링하는걸로 식별 합니다.
+
+So if there is no scheduler to monitor and schedule nodes what happens?
+만약 모니터링 하기 위한 스케쥴러도 스케쥴 노드도 없으면 무슨일이 생길까요?
+
+(pending:보류중)
+The pods continue to be in a pending state.
+POD 계속해서 보류상태로 남게됩니다.
+
+So what can you do about it.
+이것에 관해 무엇을 할 수 있을까요?
+
+You can manually assign pods to node yourself. Well without a scheduler,
+이때 스케쥴러 없이 수동으로 POD를 NODE 에 할당해줄수 있습니다. 
+
+the easiest way to schedule a pod is to simply set the node name field to the name of the node in your pod specification while creating the POD.
+POD를 스케쥴링하는 가장 쉬운 방법은 POD를 생성하는 동안 노드네임 필드에 노드이름을 설정하는 것입니다.
+
+The pod then gets assigned to the specified node. You can only specify the node name at creation time.
+그럼 POD 는 정의된 노드에 할당되게 됩니다. POD 생성시간에 오직 노드이름만 지정가능합니다.
+
+What if the pod is already created and you want to assign the pod to a node? 
+만약 POD 가 이미 생성된 뒤에 POD를 노드에 할당 하고 싶다면?
+
+Kubernetes won’t allow you to modify the node Name property of a pod.
+쿠버네티스는 POD의 노드네임을 변경하는 것을 허용하지 않습니다.
+
+So another way to assign a node to an existing pod is to create a binding object 
+그래서 기존에 존재하는 POD를 NODE 할당하기 위한 다른 방법은 바인딩 오브젝트를 생성하고
+
+and send a post request to the pod binding API 
+포트 바인딩 API 에 게시 요청을 보내는 것입니다.
+
+thus mimicking what the actual scheduler does. 
+이렇게 실제 스케쥴러가 하는 것을 모방합니다.
+
+
+In the binding object you specify a target node with the name of the node.
+바인딩 오브젝트에서 노드의 이름을 이용해 당신은 타겟 노드를 특정합니다.
+
+Then send a post request to the pods binding API with the data set to the binding object in a JSON format.
+그리고 난 다음 pods 바인딩 API 에 바인딩 오브젝트에 전달할 JSON포맷으로 된 데이터셋 게시 요청을 보냅니다.
+
+(equivalent:동등한, 상응하는, 상당하는, 대응하는)
+So you must convert the YAML file into its equivalent JSON format.
+그러면 당신은 YAML파일을 JSON 포맷으로 변환해야 합니다.
+
+Well that's it for this lecture.
+이게 이강의 전부입니다.
+
+Head over to the practice test and practice manually scheduling pods on nodes.
+연습문제로 들이대십시오, 그리고 node 에 pod 수동 설정을 연습하십시오.

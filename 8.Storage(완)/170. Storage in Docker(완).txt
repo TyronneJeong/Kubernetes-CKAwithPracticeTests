@@ -1,0 +1,376 @@
+(advanced:고급의 고수준의)
+Hello and welcome to this lecture, and we are learning advanced docker concepts 
+안녕하세요. 이번 강의에서는 고수준의 도커 컨셉에 대해 알아보겠습니다.
+
+in this lecture We are going to talk about Docker's storage drivers and filesystems.
+이번 강의에서 우리는 도커 스토리지 드라이버와 파일 시스템에 대해 이야기 해 보겠습니다.
+
+We're going to see where and how Docker stores data and how it manages filesystems after containers.
+우리는 장소를 보러 갈 것입니다. 그리고 어떻게 도커가 데이터를 저장하는지 그리고 파일 시스템을 관리하는지.
+
+Let us start with how docker stores data on the local filesystem.
+도커가 어떻게 데이터를 로컬 파일 시스템에 저장하는지부터 시작 해 봅시다.
+
+When you install docker on a system, it creates this folder structure at their /var/lib/docker, 
+당신의 시스템에 도커를 인스톨 하면, 도커는 /var/lib/docker 라는 폴더 구조를 생성합니다.
+
+you have multiple folders under it called a aufs, containers, image, volumes, etc. This is where docker stores all its data by default.
+해당 폴더 아래 다수의 폴더들이 생성됩니다. aufs, containers, image, volumes 등등. 이곳이 도커가 기본적으로 모든 데이터를 저장하는 폴더들입니다.
+
+When I say data, I mean files related to images and containers running on the docker host.
+제가 말한 데이터란, 이미지와 도커 호스트에서 동작되는 컨테이너 와 관련된 파일들을 말합니다.
+
+For example, all files related to containers are stored under the containers folder and the files related to images are stored under the image folder.
+예를 들어, 컨테이너와 관련된 모든 파일들은 containers 라는 폴더 아래에 모두 저장됩니다. 그리고 image와 관련된 파일은 image 폴더 아래에 저장됩니다.
+
+Any volumes created by the docker containers are created under the volumes folder.
+docker 컨테이너에 의해 생성된 모든 볼륨은 volumes 폴더 아래에 생성됩니다.
+
+여기서 말하는 볼륨이란?
+
+Well, don't worry about that for now.
+좋습니다. 이것들에 대해서는 당장 걱정 하지 마세요.
+
+We will come back to that in a bit.
+잠시 뒤 다시 볼 것입니다.
+
+For now, let's just understand where Docker stores its files and in what format.
+지금은 이 파일들을 어디에 저장하고 어떤 포맷으로 저장하는지를 이해합시다.
+
+So how exactly does docker store the files of an image and a container 
+그럼, 도커는 어떻게 이미지 파일과 컨테이너 파일을 정확하게 저장할 수 있을까요?
+----------------------------------------------------------------
+[Docker Layered Archtecture]
+
+understand that we need to understand Docker's layered architecture.
+저것들 이해해야 합니다. 우리는 도커의 레이어드 아키텍처를 이해해야 할 필요가 있습니다.
+
+(recap:요약)
+Let's quickly recap something we learned when Docker Builds images It builds these in a layered architecture.
+빠르게 요약 해 봅시다. 우리가 배웠던 도커 빌드 이미지를 이 이 레이어드 아키텍처가 만들었다는 것을.
+
+Each line of instruction in the Docker file creates a new layer in the Docker image with just the changes from the previous layer.
+도커 파일내에 있는 각각의 명령들은 도커 이미지에 
+이전 레이어의 변경 사항과 함께 새로운 레이어를 생성 합니다.
+---------------------------------------------------------------
+[Dockerfile]
+FROM Ubuntu
+RUN apt-get update && apt-get -y install python
+RUN pip install flask flask-mysql
+COPY ./opt/source-code
+ENTRYPOINT FLASK_APP=/opt/source-code/app/py flask run
+>> docker build Do
+---------------------------------------------------------------
+For example, the first layer is a base Ubuntu operating system, followed by the second instruction that creates a second layer which installs all the apt packages.
+예를 들어 첫번째 레이어는 우분투 OS 레이어 입니다. 
+뒤 따르는 두번째 명령은 모든 APT 패키지를 인스톨하는 두번째 레이어를 만드는 명령입니다.
+
+And then the third instruction creates a third layer, which with the Python packages 
+그리고 세번째 명령은 파이썬 패키지와 함께 세번째 레이어를 생성합니다.
+
+followed by the fourth layer that copies the source code over.
+뒤따르는 네번째 레이어는 소스코드를 복사 하고
+
+And then finally, the fifth layer that updates the entry point of the image.
+그리고 마지막으로 다섯번쨰 레이어는 이미지 엔트리포인트(접점)을 업데이트 하는 것입니다.
+
+Since each layer only stores the changes from the previous layer, it is reflected in the size as well.
+각각의 레이터는 이전 레이어에 변경사항만 저장하고 있기 때문에, 이것들은 크기에도 반영이 됩니다.
+
+If you look at the base ubuntu image, it is around 120 megabytes in size.
+베이스 우분투 이미지를 보게 되면, 이것은 대략 120메가 바이트 정도의 크기 입니다.
+
+The apt packages that are installed is around three hundred M.B, and then the remaining layers are small.
+설치된 APT 패키지는 대략 300MB 정도 됩니다. 그리고 남은 레이어는 작습니다.
+
+---------------------------------------------------------------
+To understand the advantages of this layered architecture, let's consider a second application.
+레이어 아키텍처의 이점을 이해하기 위해, 세컨드 어플리케이션을 고려해 봅시다.
+
+This application has a different docker file, but it's very similar to our first application 
+이 어플리케이션은 다른 도커 파일을 가지고 있습니다. 하지만 우리의 첫번째 Dockerfile 어플리케이션과 매우 유사 합니다.
+
+it uses the same basic image as Ubuntu uses the same python and flasks dependencies, but uses a different source code to create a different application.
+두번째 어플리케이션은 동일한 기본 이미지 우분투를 사용하고 있고, 동일하게 파이썬과 플라스크 디펜던시를 사용하고 있습니다. 하지만 다른 어플리케이션을 생성하기 위한 다른 소스 코드를 사용하고 있습니다.
+
+And so a different entry point as well.
+그리고 마찬가지로 다르 엔트리 포인트가 있습니다.
+
+When I run the Docker build command to build a new image for this application, 
+이 어플리케이션을 위한 새 이미지를 생성하기 위해서 docker build 명령을 실행하면
+
+since the first three layers of both the applications are the same, Docker is not going to build the first three layers.
+첫번째 3개의 레이어는 동일 하기 때문에. 도커는 첫 3개의 레이어는 생성하지 않습니다.
+
+Instead, it uses the same three layers it built for the first application from the cache 
+대신에 첫번째 어플리케이션을 위해 생성한 케싱된 동일한 3개의 레이어를 이용합니다.
+
+and only creates the last two layers with the new sources and the new entry point.
+그리고 오직 새로운 리소스와 엔트리 포인트가 있는 마지막 두개의 레이어 만들 생성합니다.
+
+This way, Docker builds images faster and efficiently, saves disk space.
+이 방법으로 도커는 이미지를 빠르고 효과적으로 생성하며 디스크 공간도 절약 합니다.
+
+This is also applicable if you were to update your application code 
+이 방법은 또한 당신의 어플리케이션에 코드를 업데이트 할때에도 이용가능 합니다.
+
+whenever you update your application code, such as the app.py In this case.
+당신의 어플리케이션 코드를 업데이트 할 때 마다, 이 케이스의 경우 app.py 파일.
+
+Docker simply reuses all the previous layers from cache and quickly rebuilds the application image by updating the latest source code.
+도커는 간단하게 케시로 부터 모든 이전 레이어를 재사용하고 변경된 소스 코드를 업데이트 하여 어플리케이션 이미지를 빠르게 재 빌드 하는데 사용합니다.
+
+thus saving us a lot of time during rebuilds and updates.
+이것들은 우리가 재빌드 하고 업데이트 하는 동안 많은 시간을 절약 시켜 줍니다.
+----------------------------------------------------------------
+Let's rearrange the layers bottom up so we can understand it better.
+이제 레이어를 바닥에서 부터 재구성 해 봅시다. 그럼 우리는 이것을 좀 더 잘 이해할 수 있을 것입니다.
+
+at the bottom, we have the base ubuntu layer, then the packages, then the dependencies, and then the source code of the application and then the entry point.
+[레이어5:엔트리포인트 변경]
+[레이어4:소스코드]
+[레이어3:PIP 패키지-파이썬]
+[레이어2:APT패키지]
+[레이어1:우분투 이미지]
+
+All of these layers are created when we run the docker build command to form the final docker image.
+이 모든 레이어는 우리가 최종 도커 이미지로부터 docker build 명령을 실행할때 생성됩니다.
+
+So all of these are the docker image layers.
+그래서 이 모든 레이어는 도커 이미지 레이어 입니다.
+
+Once the build is complete, you cannot modify the contents of these layers.
+한번 빌드가 완료되면, 이 레이어의 컨텐츠는 수정 할수가 없습니다.
+
+And so they are read only and you can only modify them by initiating a new build.
+그리고 이것들은 읽기전용이 되고 새로운 빌드로 초기화 할때에만 수정 할 수 있습니다.
+
+(based off:기반으로 하다, 기지를 내렸다라고 보면 될듯)
+When you run a container based off of this image using the docker run command, 
+당신이 이 이미지를 기반으로 docker run 명령을 실행하면
+
+Docker creates a container based off of these layers and creates a new writable layer on top of the image layer.
+도커는 해당 레이어를 기반으로 컨테이너를 생성합니다. 그리고 새로운 쓰기가능한 레이어가 이미지 레이어 상단에 올라가게 됩니다.
+
+[컨테이너 레이어 - 읽고 쓰기가 가능한 레이어]
+[이미지 레이어 -앞서 언급한5개레이어]
+
+The writable layer is used to store data created by the container, such as log files, by the applications, any temporary files generated by the container or just any file modified by the user on that container.
+이 쓰기가능한 레이어는 컨테이너로부터 데이터를 저장하는데 사용됩니다. 가령, 어플리케이션이 생성한 로그라던가, 컨테이너 생성한 여타 임시파일이라던가 또는 컨테이너내 사용자가 수정한 모든 파일들.
+
+The life of this layer though is only as long as the container is alive, 
+이 레이어의 수명은 오직 컨테이너가 살아 있는 동안만 생존 가능합니다.
+
+when the container is destroyed, this layer and all of the changes stored in it are also destroyed.
+컨테이너가 파괴되면, 이 수정가능 레이어의 모든 변경사항의 저장정보 역시 파괴 됩니다.
+
+Remember that the same image layer is shared by all containers created using this image.
+기억하세요, 동일 이미지 레이어는 이 이미지를 사용하여 생성된 모든 컨테이너에 공유됩니다.
+
+If I were to log into the newly created container and say create a new file called temp.txt, 
+만약 새롭게 생성된 컨테이너에 로그를 생성했고, 이 파일 이름을 temp.txt 라고 가정해 봅시다.
+
+it would create that file in the container layer, which is read and write.
+이 파일은 읽고 쓰기가 가능한 컨테이너 레이어에 생성됩니다.
+
+[컨테이너 레이어는 읽고 쓰기가 가능하다.]
+
+We just said that the files in the image layer are read-only, meaning you cannot edit anything in those layers.
+우리가 방금 이야기 했던 이미지 레이어 있던 파일들은 읽기 전용 입니다. 이 의미는 대상 레이어는 어떠한 것도 수정이 불가능 하다는 의미입니다.
+
+Let's take an example of our application code.
+우리의 어플리케이션 코드의 예제를 하나 가져 봅시다.
+
+Since we bake our code into the image.
+우리의 코드를 이미지로 굽기 시작 한때부터
+
+The code is part of the image layer and as such is read only
+코드는 이미지 레이어의 일부 입니다. 그리고 읽기전용 입니다.
+
+after running a container. What if I wish to modify the source code (to say test to change)?
+컨테이너를 구동 후, 만약 소스코드를 수정 하고 싶을 경우 어떻게 할까요?
+
+Remember, the same image layer may be shared between multiple containers created from this image.
+기억하세요. 해당 이미지에서 동일한 이미지 레이어는 다수의 컨테이너에 공유될수 있습니다.
+
+So does it mean that I cannot modify this file inside the container?
+그럼 컨테이너 안의 파일들은 수정 할 수 없다는 의미일까요?
+
+No. I can still modify this file, but before I save the modified file, Docker automatically creates a copy of the file in the read right layer and I will then be modifying a different version of the file in the read write layer.
+아닙니다. 저는 여전히 이 파일을 수정 할 수 있습니다. 하지만 수정된 파일을 저장하지 전에, 도커는 자동으로 컨테이너 레이어에 복사본을 생성 합니다. 그리고 저장이 완료되면, 또다른 버전의 파일을 이 레이어에 생성하게 됩니다. (이미지레이어의 app.py -> 컨테이너 레이어의 app.py 새버전으로 대체)
+
+All future modifications will be done on this copy of the file in the read write layer.
+향후 미래의 모든 수정 사항들은 컨테이너 레이어에 복사본이 생성 됩니다.
+
+
+[Copy on Write Mechanism]
+
+This is called Copy on Write mechanism.
+이것을 Copy on Write Mechanism 이라고 부릅니다.
+
+The image layer being read only just means that the files in these layers will not be modified in the image itself.
+이 이미지 레이어는 오직 읽기만 가능 합니다. 이 의미는 저 레이어에 있는 파일들은 이미지 자체에 수정이 불가능 하다는 의미입니다.
+
+So the image will remain the same all the time until you rebuild the image using the docker build command.
+그래서 이미지는 당신이 docker build 명령으로 이미지를 재 빌드 하기 까지는 항상 동일한 상태로 남아 있게 됩니다.
+
+What happens when we get rid of the container? all of the data that was stored in the container layer also gets deleted.
+만약 우리가 컨테이너를 제거 하면 어떻게 될까요?
+컨테이너 레이어에 저장되어 있던 모든 데이터 역시 삭제됩니다.
+
+The change we made to the app.py and the new temp file we created will also get removed.
+우리가 app.py 파일에 만들었던 변경 사항과 temp.txt 또한 삭제 됩니다.
+
+(persist:지속하다, 영구적으로)
+So what if we wish to persist this data, for example, if we were working with a database and we would like to preserve the data created by the container, we could add a persistent volume to the container.
+때문에. 이 데이터가 잔존하길 바란다면 어떻게 해야 할까요? 예를들어, 우리가 데이터 베이스를 이용하여 작업을 했다면? 그리고 데이터를 컨테이너에 저장하여 보존 하길 원한다면? 우리는 영구적인 볼륨을 컨테이너에 수가 할 수도 있습니다.
+
+[읽고 쓰기가 가능한 Persistent Volume 영구 볼륨]
+
+To do this first create a volume using the Docker volume create command.
+이걸 위해 첫번째로, docker volume create 명령으로 볼륨을 생성 해야 합니다.
+
+So when I run the "docker volume create data_volume" command.
+ 그래서 아래 명령을 실행 하면,
+>> docker volume create data_volume
+
+It creates a folder called data_volume under the /var/lib/docker/volumes/ directory.
+이 명령은 data_volume 이라는 폴더를 아래 디렉토리 아래에 생성합니다.
+
+Then when I run the docker container using the Docker Run command, I could mount this volume inside the docker containers read write layer using the -v option like this.
+다음 docker run 명령을 통해 컨테이너를 실행 하면, 이 볼륨을 도커 컨테이너에 마운드 할 수 있습니다. -v 옵션을 붙여 이 볼륨을 읽고/쓰기 가능한 레이어로 도커 컨테이너에 마운트 할 수 있습니다.
+
+>> docker run -v data_volume:/var/lib/mysql mysql
+
+So I would do a docker run -v then specify my newly created volume name, followed by a colon and the location inside my container, which is the default location where mysql store data.
+그래서, -v 옵션을 지정하여 새로운 볼륨을 생성 했습니다. : 을 따라 mysql 데이터가 지정된 컨테이내 위치를 지정 합니다.
+
+And that is /var/lib/mysql.
+그리고 dnlclsms /var/lib/mysql입니다.
+
+And then the image name mysql
+그리고 마운트 이미지 이름은 mysql 입니다.
+
+This will create a new container and mount the data volume we created into /var/lib/mysql folder inside the container, 
+이 명령으로 새로운 컨테이너를 생성하고 data 볼륨을 생성할 수 있습니다.
+
+so all data are written by the database is in fact stored on the volume created on the docker host.
+그래서 데이터 베이스에 생성된 모든 데이터는 사실 도커 호스트내 생성된 볼륨에 저장되게 됩니다.
+----------------------------------------------------------------
+Even if the container is destroyed, the data is still active.
+컨테이너가 파괴되더라고 데이터는 여전히 존재하게 됩니다.
+
+Now, what if you didn't run the Docker volume create command to create the volume before the Docker Run command.
+만약 도커를 실행하기 전에 볼륨 생성을 위해 dcoker volume create 명령을 실행 하지 않는다면?? 
+
+For example, if I run the Docker Run command to create a new instance of mysql container with the volume data_volume2, which I have not created yet, 
+예를들어, 새로운 mysql 컨테이너 인스턴스 생성을 위해 도커 실행 명령을 내렸는데, 영구 저장소가 아직 만들어 지지 않았다면??
+
+>> docker run -v data_volume2:/var/lib/mysql mysql
+
+Docker will automatically create a volume named data_volume2 and mounded to the container.
+도커는 자동으로 볼륨을 생성해 줍니다. 그리고 컨테이너에 마운트 해줍니다.
+
+You should be able to see all these volumes if you list the contents of the /var/lib/docker/volumes/ folder.
+이를 가능하게 하기 위해 3개의 볼륨 모두를 보아야 합니다. /var/lib/docker/volumes 폴더 아래의 컨텐츠를 나열하게 되면.
+
+(as:때문에)
+This is called volume mounting as we are mounting a volume created by docker under the /var/lib/docker/volumes/ folder.
+도커가 생성한 볼륨을 우리가 마운팅 하기 때문에. 이를 볼륨 마운팅 이라고 부릅니다.
+
+But what if we had our data already at another location, for example, let's say we have some external storage on the docker host at our data 
+하지만 만약 우리의 데이터가 다른 위치에 존재하고 있다면? 예를 들어, 우리가 외장 스토리지를 도커에 사용하고 있었는데.
+
+and we would like to store database data on that volume and not in the default /var/lib/docker/volumes folder.
+그리고 데이터 베이스 데이터를 그 외장 드라이브에 저장하기를 원하고 있고 /var/lib/docker/volumes 폴더가 기본이 아닌..
+
+In that case, we would run a container using the command to docker run -v, but in this case we will provide the complete part to the folder we would like to mount.
+이런 경우에는 우리는 컨테이너를 실행 할 수 있습니다. docker run -v 명령으로.
+하지만 이 경우에 우리는 우리가 마운트 하길 원하는 완전한 부분을 제공해야 합니다.
+
+>> docker run -v /data/mysql:/var/lib/mysql mysql
+data_volume 이라는 별칭 ↑ 대신 풀 패스를 입력
+-----------------------------------------------------------------
+That is /data/mysql and so it will create a container and mount the folder to the container.
+외장 주소가 바로 /data/mysql 입니다. 그리고 이것으로 컨테이너를 생성하고 마운트 할것입니다.
+
+[Bind Mounting]
+
+This is called bind mounding, so there are two types of mounts, a volume mounting and a bind Mount.
+이것을 바인드 마운팅이라고 합니다. 여기에는 2가지 유형의 마운팅이 있습니다. 볼륨 마운팅과 바인드 마운팅 입니다.
+---------------------------------------------------------------
+[Volume Mounting] && [Bind Mounting]
+---------------------------------------------------------------
+Volume Mount mounts a volume from the volumes directly and bind Mount mounts and directly from any location on the Docker host.
+볼륨 마운트는 볼륨으로부터 직접적으로 볼륨을 마운트 합니다. 그리고 바인드 마운트는 도커 호스트의 위치로부터 볼륨을 직접 마운트 합니다.
+
+One final point to note before I let you go, using the -v is an old style.
+마지막으로 알려주고가 하는 건 -v 옵션은 올드 스타일 이라는 점 입니다.
+
+The new way is to use --mount option.
+새로운 방식은 --mount 를 옵션으로 쓰는 것입니다.
+
+(verbose:말수가 많은?, 좀더 상세한, 좀더 많은 단어들로)
+The --mount is the preferred way as it is more verbose.
+--mount 는 좀더 상세하게 설명하므로 선호되는 방식입니다.
+
+So you have to specify each parameter in a key equals value format.
+그래서 이제 당신은 각각의 파라미터를 키-벨류 형식으로 지정 해야 합니다.
+
+For example, the previous command can be written with the dash mount option as this using the type source and target options. 
+예를 들어 이전의 명령을 --mount 옵션으로 소스와 타겟으로 이용할 수 있습니다.
+
+>> docker run --mount type=bind,source=/data/mysql,target=/var/lib/mysql mysql
+[모드:볼륨&바인드][실제 물리위치][컨테이너가 동작하면 인식되는 위치]
+
+The type in this case is bind.
+타입은 이 경우 바인드 입니다.(로케이션 지정)
+
+The source is the location on my host and target is the location on my container.
+소스는 호스트의 위치를 말합니다. 그리고 타겟은 컨테이너에서의 위치를 말합니다.
+
+So who is responsible for doing all of these operations, 
+그래서 누가 이 모든 작업의 동작을 잭임지고 있을까요?
+[마운트 하는거]
+
+maintaining the layered architecture, creating a writable layer, moving files across layers to enable copy and write, et cetera?
+레이어 아키텍처를 관리하고, 새로운 레이어를 생성하고, 파일을 레이어 넘어로 옮기고 등등을?
+
+----------------------------------------------------------------
+[스토리지 드라이버]
+
+It's the storage driver.
+그건 바로 스토리지 드라이버 입니다.
+
+So docker uses storage drivers to enable layered architecture.
+도커는 레이어드 아키텍처를 사용가능 하게 하기위해 스토리지 드라이버를 이용합니다. 
+
+Some of the common storage drivers are AUFS, BTRFS, ZFS, Device Mapper, overlay and overlay2.
+흔히 알려진 스토리지 드라이버로는 AUFS< BTRFS, ZFS, DEviceMapper, 오버레이, 오버레읻2가 있습니다.
+
+The selection of the storage driver depends on the underlying OS being used, for example, with Ubuntu,
+선택된 이 스토리지 드라이버들은 OS 사용에 의존성이 있습니다. 예를 들어 우분투는
+
+(whereas:반면)
+the default storage driver is a AUFS, whereas this storage driver is not available on other operating systems like Fedora or CentOS
+기본 스토리지 드라이버가 AUFS 입니다. 반면 이 스토리지 드라이버는 다른 OS 에서는 사용이 불가능 합니다. 페도라나 CentOS같은.
+
+In that case, Device Mapper may be a better option.
+이경우 Device Mapper 가 좀 더 나은 옵션 일 수도 있습니다.
+
+Docker will choose the best storage driver available automatically based on the operating system, 
+도커는 OS 를 기본으로 자동으로 가장 좋은 스토리지 드라이버를 선택 할 것입니다.
+
+the different storage drivers also provide different performance and stability characteristics.
+그 다른 스토리지 드라이버 들 역시 다른 동작을 제공 합니다. 그리고 다른 안정성 특성을 제공합니다.
+
+So you may want to choose one that fits the needs of your application and your organization.
+그래서 당신은 당신의 조직이나 어플리케이션과 딱맞는 하나를 선택 하길 원할 수도 있습니다.
+
+If you would like to read more on any of these storage drivers, please refer to the links in the attached documentation.
+만약 스토리지 드라이버에 대한 모든것을 조금 더 읽기를 원한다면, 다음 첨부된 문서의 링크를 참고 하세요.
+
+For now, that is all from the docker architecture concepts.
+지금은 이것이 도커 아키텍처 주제에 대한 모든 것들이비낟.
+
+See you in the next lecture.

@@ -1,0 +1,103 @@
+Hello and welcome to this lecture.
+안녕하세요.
+
+In this lecture we look at the security primitives in Kubernetes. 
+이번강의에서는 쿠버네티스 보안 기초에 대해 알아보겠습니다.
+
+Kubernetes being the goto platform for hosting production grid applications.
+쿠버네티스는 그리드 어플리케이션을 호스팅 하기 위한 고투 플랫폼입니다.
+
+security is of prime concern. 
+보안이 최우선 입니다.
+
+In this lecture we look at the various security primitives in Kubernetes at a high level before diving deeper into those in the upcoming lectures.
+이번 강의에서 우리는 하이레벨로 깊이 들어가기에 앞서 쿠버네티스의 다양한 보안 기초에 대해 알아 볼것입니다.
+
+Let's begin with the host that formed the cluster itself.
+클러스터 자체를 구성한 호스트 부터 시작하겠습니다.
+
+Of course all access to these hosts must be secured, root access disabled, password based authentication disabled, and only SSH key based authentication to be made available.
+당연하게요 이 호스트로 접근하는 모든 접근은 보안되어 있습니다. 루트 엑세스는 비활성화 되어 있고, 패스워드 기반의 인증도 비활성화 되어있습니다. 그리고 오직 SSH 키 기반의 인증 만이 이용가능하게 되어 있습니다.
+
+(measure:법안, 조치, 척도, 치수, 규준)
+And of course any other measures you need to take to secure your physical or virtual infrastructure that hosts kubernetes. 
+그리고 당연하게도 당신의 물리적 또는 가상의 인프라 스트럭쳐를 보안하기 위해 필요한 모든 종류의 규정.
+
+Of course if that is compromised, everything is compromised.
+당연하게도 이것이 손상되면 모든것들이 손상됩니다.
+
+Our focus in this lecture is more on Kubernetes related security.
+이 강의에서 우리가 주목해야 할 것은, 쿠버네티스 보안에 조금 더 보안에 밀접한 것입니다.
+
+What are the risks and what measures do you need to take to secure the cluster. 
+클러스터에 보안을 하기 위해 필요한 조치들과 리스크는 무엇이 있을까요?
+
+As we have seen already, the kube-api server is at the center of all operations within kubernetes. 
+우리가 이미 본바와 같이 KubeAPI 서버는 쿠버네티스내 모든 동작의 중심에 있습니다.
+
+[Kube API Server 는 중심이다.]
+
+We interact with it through the kubectl utility or by accessing the API directly and through that you can perform almost any operation on the cluster.
+우리는 kubectl 유틸리티를 통해 API 서버와 상호작용 하고 있습니다. 또는 API 서버에 직접 적으로 접근하여, 그리고 이걸 통해 클러스터내 거의 모든 동작을 지휘할 수 있습니다.
+
+So that’s the first line of defense. Controlling access to the API server itself.
+바로 여기가 첫번째 방어선 입니다. API 서버 제어 접근 자체입니다.
+
+We need to make two types of decisions who can access the cluster and what can they do.
+우리는 두가지 종류의 결정이 필요합니다. 누가 클러스터에 접근 할 수 있는지와 무엇을 하려고 하는지 입니다.
+
+------------------------------------------------------------
+
+Who can access the API server is defined by the Authentication mechanisms.
+누가 API 서버에 접근 할 수 있는지는 인증 매커니즘에 의해 정의됩니다.
+
+There are different ways that you can authenticate to the API server. Starting with user IDs and passwords stored in a static file, to tokens, certificates or even integration with external authentication providers like LDAP.
+인증 매커니즘에는 API 서버에 인증 할 수 있는 다른 방법이 있습니다. 정적 파일이나 토큰에 저장된 UserID와 PW 에서 시작 합니다. 인증서 또는 회부의 인증 제공자 LDAP 같은 것과의 통합입니다.
+
+- certificates:인증서
+- authentication:입증
+
+Finally for machines we create service accounts.
+마지막으로 머신을 위해 서비스 계정을 만들어 줍니다.
+
+We will look at these in more detail in the upcoming lectures.
+해당 사항에 대해서는 향후 과정에서 더 자세히 살펴 볼 것 입니다.
+
+Once they gain access to the cluster, What can they do is defined by authorization mechanisms.
+클러스터에 엑세스 권한을 가지면, 그들이 무엇을 할 수 있는지는 인증 매커니즘에 의해 결정 됩니다.
+
+(associated:관련된)
+Authorization is implemented using Role Based Access Control, where users are associated to groups with specific permissions.
+인증은 롤 베이스 업근 제어 기능에 의해 구현되어 집니다.  규칙기반 접근제어는 특정권한별로 관련 사용자를 그룹지어 줍니다.
+
+(In addition:게다가 = as well as)
+In addition there are other authorization modules like Attribute based access control, Node Authorizers, webhooks etc.
+그들은 다른 인증 모듈이 있습니다. 속성 기반 접근 제어, 노드 인증, 웹훅 등등.
+
+Again we look at these in more detail in the upcoming lectures.
+다시한번 이 부분에 대한 상세는 다가오는 강의에서 보겠습니다.
+
+All communication with the cluster, between the various components such as the ETCD cluster, kube controller manager, scheduler, api server, as well as those running on the worker nodes such as the kubelet and and kubeproxy is secured using TLS Encryption.
+클러스터과 다양한 컴포넌트간 모든 커뮤니케이션은 (ETCD, 컨트롤배니져, 스케쥴러, API 서버, 등등등등)은 TLS 암호화로 보호 되어 있습니다.
+
+We have a section entirely for this where we discuss and practice how to setup the certificates between the various components.
+TLS 관련된 통 섹션이 있습니다. 이를 위해 우리는 다양한 컴포넌트들과의 인증서를 어떻게 설정하는지를 논의하고 배워야 합니다.
+
+What about communication between applications within the cluster.
+클러스터와 어플리케이션 사이의 통신에 관한 것은
+
+By default all PODs can access all other PODs within the cluster.
+기본적으로 모든 POD 는 클러스터내 모든 다른 POD 에 접근이 가능 합니다.
+
+(restrict:얽매다)
+You can restrict access between them using Network Policies.
+POD간 통신에 네트워크 정책을 이용하여 그들을 얽맬수도 있습니다.
+
+We will look at how exactly that is done. Later in the network policy section.
+네트워크 정책 섹션 다음으로 어떻게 이것이 정확히 이뤄지는지 보겠습니다.
+
+
+So that was a high level overview of the various security primitives in kubernetes.
+이걸로 다양한 보안의 기초에 대한 개괄적인 오벼뷰 였습니다.
+
+We will now look at these in much more detail going forward.

@@ -1,0 +1,75 @@
+(Bootstrapping : 부트스트래핑 - 현재상황에서 어떻게든 한다)
+- 어원은 장화 끈을 잡고 자신을 끌어 올리다에서 유래.
+- 자력으로 해내다 라는 표현.
+- 복잡한 도구를 만들 수 있도록 도와주는 단순 도구를 만들거나 적재함으로써 복잡한 소프트웨어를 만들기 위한 준비를 하는 것을 말한다.
+
+In this lecture, we will look at the Kube admin tool, which can be used to bootstrap a kubernetes cluster, 
+이번 강의에서 우리는 kube ADM 도구를 살펴 볼 것 입니다. 이것은 쿠버네티스 부트스트래핑 하기 위해 사용가능한 도구 입니다.
+
+the Kube admin tool helps us set up a multi node cluster following the kubernetes best practices.
+KubeADM는 멀티노드 클러스터를 모범 사례에 맞게 셋업 할 수 있도록 도와주는 도구 입니다.
+
+As we discussed, the kubernetes cluster consists of various components, such as the kube API server,ETCD controllers, etc., 
+우리가 논의했던것 처럼. 쿠버네티스 클러스터는 다양한 컴포넌트들로 구성 되어 있습니다. API 서버나 ETCD 컨트롤러나 등등..
+
+and we've seen some of the requirements are on security and certificates to enable communication between these components, 
+그리고 우리는 몇가지 필수사항을 보았습니다. 보안이나 인증서와 컴포넌트간 커뮤니케이션 활성화 같은것들요.
+
+installing all of these various components individually on different nodes and modifying the configuration files to make sure these components point to each other.
+이 모든 다양한 컴포넌트들을 각 다른 노드들에 설치하고 설정 파일을 변경하여 서로를 가리킬수 있게 만듭니다.
+
+And setting up certificates to make it work is a tedious task.
+그리고 인증서를 설정하여 동작하도록 만듭니다.
+
+The Kube admin tool helps us by taking care of all of those tasks.
+KubeADM 도구는 이 모든 작업들을 수행할수 있도록 우리를 돕습니다.
+
+Let's go through the steps to set up a kubernetes cluster using the Kube admin tool at a high level.
+그럼 kubeADMIN 도구를 활용한 쿠버네티스 클러스터 셋업으로 고급 레벨로 가 봅시다.
+
+------------------------------------------------------------------------
+First, you must have multiple systems or virtual machines provisioned for configuring a cluster.
+첫번째로 멀티플 시스템을 가지고 있거나 클러스터가 설정된 가상 머신이 준비되어 있어야 합니다.
+
+We will see how to set up your laptop to do just that.
+우리는 이걸 어떻게 설정 하는지 알아 볼것입니다.
+
+That's if you're not familiar with it.
+이것이 익숙치 않은 경우.
+
+(designate:가리키다, 나타내다, 지명하다, ~을... 이라고부르다.)
+Once the systems are created, designate one node as master and others as worker notes.
+하나의 시스템을 생성 합니다. 하나의 노드를 마스터로 그리고 나머지를 워커 노드로 디자인 합니다.
+
+The next step is to install a container runtime on the hosts.
+다음 단계는 호스트에 컨테이너 런타임 엔진을 설치합니다.
+
+We will be using Docker.
+우리는 도커를 사용할 것입니다.
+
+So we must install Docker on all the nodes.
+모든 노드에 도커를 설치해야만 합니다.
+
+The next step is to install Kube admin tool on all the nodes, the Kube admin tool helps us bootstrap the kubernetes solution by installing and configuring all the required components in the right nodes in the right order.
+다음 단계로 모든 노드에 kubeADM 도구를 설치합니다. kubeADM 도구는 쿠버네티스 솔루션을 부트스트래핑 하는걸 도와줍니다. 필요한 모든 컴포넌트들을 설치하고 설정하고 올바른 노드와 위치에 배치합니다.
+
+The next step is to initialize the master server during this process.
+다음 단계는 이 프로세스를 처리하는 동안 마스터 서버를 초기화 하는 것입니다.
+
+All the required components are installed and configured on the master server.
+모든 필요 컴포넌트들은 마스터 서버에 설치되었고 설정되었습니다.
+
+Once the master is initialized and before joining the worker nodes to the master. you must ensure that the network prerequisites are met.
+마스터 노드가 초기화 되고 워커 노드가 마스터 노드에 합류하기 전에. 네트워크 전제조건이 충족 되었는지 확인해야 합니다.
+
+and normal network connectivity between the systems is not sufficient for this kubernetes requires a special networking solution between the master and worker nodes, which is called as the pod network.
+시스템 간의 정상적인 네트워크 연결은 쿠버네티스 만으로는 충분하지 않기 때문에 POD 네트워크 라는 마스터 노드와 작업자 노드 사이의 특별한 네트워킹 솔루션이 필요합니다.
+
+The last step is to join the worker Node to the master node.
+마지막 단계는 워커 노드를 마스터 노드에 합류 시키는 것입니다.
+
+Well, then all set to launch our application in the kubernetes environment.
+이걸로 어플리케이션을 런칭 하기 위한 모든 작업을 설정을 마쳤습니다.
+
+We will now see a demo of setting up kubernetes using the Kube admin tool in our local environment.
+우리는 이제 kubeADM 도구를 활용한 쿠버네티스 셋업 데모를 볼 것입니다.

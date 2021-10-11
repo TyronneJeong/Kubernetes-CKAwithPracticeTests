@@ -1,0 +1,177 @@
+[쿠버네티스 POD 컨테이너에게 명령을 전달 하기]
+>> kubectl exec webapp -- cat /log/app.log
+
+------------------------------------------------------------------
+[POD 정의파일에 PVC 지정 하는 방법]
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+  containers:
+    - name: myfrontend
+      image: nginx
+      volumeMounts:
+      - mountPath: "/var/www/html"
+        name: mypd
+  volumes:
+    - name: mypd
+      persistentVolumeClaim:
+        claimName: myclaim
+------------------------------------------------------------------
+[pvc-definition.yaml]
+- Persistent Volume Claims <-- PV 에 변경 스펙을 관리하는 객체
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+	name: myclaim
+spec:
+	accessModes:
+		- ReadWriteOnce
+	
+	resources:
+		requests:
+			storage: 500Mi
+------------------------------------------------------------------
+[pv-definition.yaml]
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+	name: pv-vol1
+spec:
+	accessModes:
+		-ReadWriteOnce
+	capacity:
+		storage: 1Gi
+	hostPath:
+		path: /tmp/data
+	또는
+	awsElasticBlockStore:
+		volumeID: <volume-id>
+		fsType: ext4
+------------------------------------------------------------------
+
+Hello and welcome to this lecture on Persistent Volumes Claims in Kubernetes. 
+안녕하세요 이번 강의에서는 영구볼륨주장에 대해 알아 보겠습니다.
+
+In the previous lecture. We created a persistent volume.
+이전 강의에서 우리는 영구 볼륨을 생성 했씁니다.
+
+Now we will try to create a Persistent Volume Claim to make the storage available to a node. 
+이제 우리는 영구 볼륨 주장을 생성해보려 합니다. 노드에 이용가능한 스토리지를 만들기 위해서.
+
+Persistent Volumes and Persistent Volume Claims are two separate objects in the Kubernetes namespace.
+영구 볼륨과 영구볼륨 주장은 쿠버네티스 네임스페이스에 각각 분리된 객체입니다.
+
+An Administrator creates a set of Persistent Volumes and a user creates Persistent Volume Claims to use to storage.
+관리자는 영구 볼륨 집합을 생성 합니다. 그리고 유저는 스토리지에 사용하기 위해 영구 볼륨 클레인을 생성합니다.
+
+Once the Persistent Volume Claims are created, Kubernetes binds the Persistent Volumes to Claims based on the request and properties set on the volume. 
+영구 볼륨 주장이 생성되면, 쿠버네티스는 영구 볼륨을 클레인에 바인드 시킵니다. 볼륨에 설정된 요청 미 속성을 기반하여.
+
+Every Persistent Volume Claims is bound to single Persistent volume 
+모든 영구 볼륨 주장은 단일 영구 볼륨에 바인딩 됩니다.
+
+during the binding process Kubernetes tries to find a persistent volume that has sufficient capacity as requested by the claim.
+바인딩 프로세스가 진행되는 동안에 클레임의 요청대로 충분한 용량을 가지고 있는 영구볼륨을 찾는 작업이 진행됩니다.
+
+and any other request properties such as access modes, volume modes, storage class etc.
+그리고 여타 다른 요청 속성. 가령 엑세스 모드라던가 볼륨 모드라던가 스토리지 클래스 등등에 맞는.
+
+However if there are multiple possible matches for a single claim and you would like to specifically use a particular volume you could still use labels and selectors to bind to the right volumes.
+하지만 단일 클레임에 대해 일치 가능한 볼륨이 여러개 있고, 당신은 특정 영구볼륨을 사용하고자 하는 경우. 당신은 레이블과 셀렉터를 이용하여 올바른 볼륨을 연결 시켜 줄 수 있씁니다.
+
+Finally note that a smaller claim may get bound to a larger volume if all the other criteria matches and there are no better options.
+최종적으로 보다 작은 클레임은 큰 볼륨에 바인딩 할 수도 있습니다. 만약 모든 다른 요소가 일치하고 보다 나은 옵션이 없다면요.
+
+There is a one to one relationship between claims and volumes so no other claims can utilize the remaining capacity in the volume.
+저기에 볼륨과 클레임은 1:1 관계가 있습니다. 때문에. 다른 클레임이 다른 볼륨의 남은 용량을 이용할 수는 없습니다.
+
+If there are no volumes available the persistent volume claim will remain in a pending state until newer volumes are made available to the cluster 
+만약 볼륨에 이용가능하지 않을 경우. 영구볼륨 클레임은 새로운 볼륨이 만들어져 이용가능하게되는 동안 팬딩 상태로 남게 됩니다.
+
+once newer volumes are available The claim would automatically be bound to the newly available volume 
+새로운 볼륨이 이용가능해지면, 클레임은 이용가능한 새로운 볼륨에 자동으로 바인딩 됩니다.
+
+let us now create a persistent volume claim.
+이제 영구볼륨주장을 만들어 봅시다.
+
+We start with a blank template said the API version to V1 and kind to persistent volume claim.
+우리는 빈 템플릿으로 시작 합니다.
+
+We will name it myclaim. Under specification set the accessModes to ReadWriteOnce. And set resources to request a storage of 500 mega bytes. 
+우리는 myclaim 으로 이름을 짓겠습니다. spec 섹션 아래에 acessModes 를 지정하고 ReadWriteOnce 로 지정 합니다. 그리고 resource 를 설정합니다. 500Mb로.
+
+Create the claim using kubectl create command. 
+kubectl create 명령을 통해 claim 을 생성 합니다.
+
+>> kubectl create -f pvc-definition.yaml
+
+To view the created claim run the kubectl get persistentvolumeclaim command. 
+생성된 클레임 보기 위해 kubectl get 명령을 실행 합니다.
+
+>> kubectl get persistentvolumeclaim
+
+We see the claim in a pending state.
+팬딩 상태의 클레임이 보입니다.
+
+When the claim is created, kubernetes looks at the volume created previously. 
+클레임이 생성되었을때, 쿠버네티스는 볼륨이 생성되어 있는지를 먼저 확인 합니다.
+
+The access Modes match. The capacity requested is 500 Megabytes but the volume is configured with 1 GB of storage. 
+엑세스 모드는 일치하고 저장용량은 500Mi 요청되었지만 볼륨은 1Gi 로 지정되었습니다.
+
+Since there are no other volumes available.
+저기에 더이상의 이용가능한 볼륨이 없기 때문에.
+
+The persistent volume claim is bound to persistent volume 
+영구 볼륨 요청은 영구 볼륨에 바인딩 됩니다.
+
+when we run to get volumes command again.
+우리가 kubectl get persistentvolumeclaim 명령을 다시 실행하면.
+
+>> kubectl get persistentevolumeclaim
+
+We see the claim is bound to the persistent volume we created 
+클레임이 우리가 생성한 영구볼륨에 바인딩 된 것이 보입니다.
+
+perfect. 
+완벽합니다.
+
+To delete a PVC run the kubectl delete persistent volume claim command 
+PVC 를 삭제하기 위해서 kubectl delete persistentevolumeclaim 명령을 실행합니다.
+
+>> kubectl delete persistentvolumeclaim
+
+but what happens to the underlying persistent volume when the claim is deleted.
+하지만 클레임이 삭제되면 기본 영구 볼륨은 어떻게 될까요?
+
+You can choose what is to happen to the volume  
+볼륨에 무엇이 발생할지는 당신이 선택할수 있습니다.
+
+by default.
+기본적으로
+
+It is set to retain meaning the persistent volume will remain until it is manually deleted by the administrator.
+영구볼륨은 기존 설정을 유지합니다. 이 의미는. 영구 볼륨은 관리자가 수동으로 삭제하지 않는이상 계속 유지된다는 의미입니다.
+
+It is not available for reuse by any other claims or it can be deleted automatically.
+이것은 여타 다른 클레임에 의한 재사용이 불가능 합니다. 또는 자동으로 삭제하도록 할 수 있습니다.
+
+This way as soon as the claim is deleted the volume will be deleted as well 
+이 방법은 클레임이 삭제되자 마자 볼륨또한 삭제가 됩니다.
+
+thus freeing up storage on the end storage device or a third option is to recycle.
+따라서 최종 저장 장치의 저장 공간을 확보하거나 또는 세번째 옵션은 재사용을 합니다.
+
+In this case the data in the data volume will be scrubbed before making it available to other claims
+재사용의 경우, 데이터 볼륨에 있는 데이터는 또다른 클레임이 이용하도록 만들기 전에 스크럽(청소)됩니다.
+
+
+
+
+well that's it for this lecture.
+
+Head over to the coding exercises section and practice configuring and troubleshooting persistent volumes and volume claims in Kubernetes.

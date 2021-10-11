@@ -1,0 +1,206 @@
+Roll out steps----------------------------------
+1. kubectl create -f deploymeny-definition.yaml
+
+2. kubectl get deployments
+
+3  kubectl apply -f deployment-definition.yaml
+
+4. kubectl set image deployment/myapp-deployment nginx=nginx:1.9.1
+
+5. kubectl rollout status deployment/myapp-deployment
+
+6. kubectl rollout history deployment/myapp-deployment
+
+7. kubectl rollout undo deployment/myapp-deployment
+-----------------------------------------------------
+
+Hello and welcome to this lecture.
+
+In this lecture, we will talk about updates and rollbacks in a deployment.
+안녕하세요 이번 강의에서는 디플로이먼트의 롤링업데이트와 롤백에 대해 다뤄 보겠습니다.
+
+Before we look at how we upgrade our application, 
+전에 우리는 어플리케이션을 어떻게 업그레이드 하는지 보았습니다.
+
+let's try to understand rollouts and versioning in a deployment.
+디플로이먼트의 롤아웃과 버져닝에 대해 알아 봅시다.
+
+(trigger:계기가되다, 방아쇠, 쏘나, 일으키다)
+When you first create a deployment, it triggers a rollout, 
+디플로이먼트를 처음 생성할때, 롤아웃을 일으킵니다.
+
+a new rollout creates a new deployment revision, 
+새로운 롤아웃은 새로운 디플로이먼트 리비전을 생성합니다.
+
+let's call it revision one.
+이를 리비전 1이라고 부릅시다.
+
+In the future, when the application is upgraded, meaning when the container version is updated to a new one,
+미래에. 어플리케이션이 업그레이드 되었을때, 컨테이너 버전이 새 버전으로 업데이트 되었을때
+
+a new rollout is triggered and a new deployment revision is created named revision 2
+새로운 롤아웃이 일으켜지고 새 디플로이먼트 리비전은 리비전2라고 이름지어 지게 됩니다.
+
+this helps us keep track of the changes made to our deployment and enables us to roll back to a previous version of deployment if necessary.
+이 디플로이먼트 리비전은 우리를 돕습니다. 우리의 배포에 따른 변경사항을 추적 하고 필요하다면 우리가 배포한 이전 버전으로 롤백할 수 있도록 돕습니다.
+
+You can see the status of your roll out by running the command kubectl rollout status, followed by the name of the deployment to see the revisions and history of rollout from the kubectl rollout history command, followed by the deployment name.
+디플로이먼트 이름을 붙여서 "kubectl rollout status"명령어와 kubectl rollout history"명령어를 통해  당신의 롤아웃 상태를 볼 수 있습니다.
+
+>> kubectl rollout status deployment/myapp-deployment
+>> kubectl rollout history deployment/myapp-deployment
+
+
+And this will show you the revisions and history of our deployment.
+그리고 이것들은 리비전 정보와 이력정보를 보여 줄 것입니다.
+
+
+
+There are two types of deployment strategies, 
+여기 두 가지 유형의 디플로이먼트 전략있습니다.
+
+
+say, for example, you have five replicas of your Web application instance deployed, 
+예를 들어 당신은 5개의 복제된 웹 어플리케이션이 배포되어 있다고 가정 합니다.
+
+one way to upgrade these to a newer version is to destroy all of these and then create newer versions of application instances,
+이들을 새 버전으로 업그레이드 하기 위한 첫번째 방법은 모두 제거 한 다음 새 버전으로 다시 생성 하는 것입니다.
+
+meaning first destroy the five running instances and then deploy five new instances of the new application version.
+이것은 첫번째로 5개의 동작중인 인스턴스를 종료하고 5개의 새로운 버전의 인스턴스를 배포한다는 의미입니다.
+
+The problem with this, as you can imagine, is that during the period after the older versions are down and before any newer version is up, the application is down and inaccessible to users.
+문제는 여기에 있습니다. 당신이 상상한것 처럼. 오래된 버전이 종료되고 새로운 버전이 올라가는 그 기간 동안 어플리케이션은 다운되어있습니다. 그리고 사용자들의 접근이 불가능 합니다.
+
+This strategy is known as the recreate strategy and thankfully this is not the default deployment strategy.
+이 전략은 재생성 전략이라고 합니다. 그리고 해당 전략은 감사하게도 기본 디플로이먼트 전략이 아닙니다.
+
+The second strategy is where we did not destroy all of them at once. Instead, we take down the older version and bring up a newer version, one by one.
+두번째 전략은 장소입니다.
+우리는 모든 인스턴스를 한번에 종료하지 않는 것입니다. 대신에 오래된 버전을 내리고 새 버전을 올리는것을 하나씩 하는 것입니다.
+
+This way, the application never goes down and the upgrade is seamless.
+이 방법은 어플리케이션이 다운되지 않습니다. 그리고 업그레이드는 원활하게 가능합니다.
+
+Remember, if you do not specify a strategy while creating the deployment, it will assume it to be rolling Update.
+기억하세요. 만약 당신이 디플로이먼트가 생성되는 동안 전략을 지정하지 않았다면, 기본적으로 롤링 업데이트로 가정된다는 것을
+
+In other words, rolling update is the default deployment strategy.
+다른 말로 롤링 업데이트는 기본 디플로이먼트 전략 입니다.
+
+So we talked about upgrades.
+그럼 업그레이드에 대해 말해 봅시다.
+
+How exactly do you update your deployment.
+디플로이 먼트를 정확히 어떻게 업데이트 합니까?
+
+when I say update, it could be different things, such as updating your application version by updating the version of docker containers used, updating their labels or updating the number of replicas, etc..
+업데이트 라고 하는건 다른 의미가 될 수도 있습니다. 가령, 도커 컨테이너가 업데이트된 버전에 따라 당신의 어플리케이션 버전을 업데이트 한다던가. 레이블 정보를 갱신 한다던가 또는 레플리카의 수를 변경한다던가 등등..
+
+Since we already have a deployment definition file, it is easy for us to modify this file.
+디플로이먼트 정의파일을 가지고 있을 때부터, 이것을수정하는건 쉬운 일입니다.
+
+Once we make the necessary changes, we run the kubectl apply command to apply the changes.
+필요한 변경사항을 만들면, kubectl apply 명령어를 통해 변경사항을 적용할 수 있습니다.
+
+
+
+
+
+---------------------------------------------------------------
+A new rollout is triggered and a new revision of the deployment is created, 
+[롤아웃 시작]새로운 롤아웃이 시작되었습니다. 그리고 디플로이먼트의 새로운 리비전 정보도 생성되었습니다.
+
+but there is another way to do the same thing 
+하지만 여기 동일한 작업을 하는 또하는 방법이 ㅣㅆ습니다.
+
+you could use to "kubectl set image" command to update the image of your application.
+당신의 어플리케이션 이미지를 업데이트 하기 위해 kubectl set image 명령어를 사용할 수 있습니다.
+
+But remember, doing it this way will result in the deployment definition file having a different configuration.
+하지만 기억하세요. 이방법을 사용할 경우 디플로이먼트 정의파일에는 다른 설정값을 가지게 되는 결과가 발생한다는 것을.(단발성이라 파일에 변경사항 업데이트는 안된다는 의미)
+
+So you must be careful when using the same definition file to make changes in the future.
+때문에 미래에 변경사항을 생성하기 위해 동일한 정의파일을 사용하는 것에 반듯이 주의해야 합니다.
+
+The difference between the recreate and rolling update strategies can also be seen when you view the deployments in detail
+당신이 디플로이먼트에 대해 자세리 볼때 재생성과 롤링 업데이트 전략의 차이점도 볼 수 있습니다.
+
+around the "kubectl describe deployment" command to see the detailed information regarding the deployments.
+디플로이먼트에 관한 자세한 정보를 보기 위해서 kubectl describe deployment 명령어를 사용하십시오.
+
+You will notice when the "recreated strategy" was used the events indicate that the old Republicaset was scaled down to zero first and then the new replica sets scaled up to five.
+당신은 알수 있습니다. 재생성 전략은 이벤트 인디케이터에 오래된 레플리카셋은 0으로 스케일 다운 시키고 새롭게 생성된 레플리카 셋은 5로 스케일업 하도록 지시된것을.
+
+However, when the rolling update strategy was used, the old replica set was scaled down one at a time,
+하지만 롤링 업데이트 전략을 사용하는 경우 오래된 레플리카 셋은 한번의 시간에 하나씩 스케일 다운 됩니다.
+
+(simultaneously:동시에)
+simultaneously scaling up the new replica set, one at a time.
+동시에 한번에 하나씩 레플리카 셋을 스케일 업합니다.
+
+(under the hood :내부적으로)
+Let's look at how a deployment performs an upgrade under the hood 
+그럼 디플로이먼트가 내부적으로 어떻게 업그레이드하는지 살펴 봅시다.
+
+when a new deployment is created, say, to deploy five replicas, it first creates a replica set automatically, which in turn creates the number of pods required to meet the number of replicas
+새로운 디플로이먼트가 생성되었을때, 5개의 레플리카셋을 배포한다고 가정해봅시다.
+첫번째로, 롤링 업데이트는 레플리카 셋을 자동으로 생성합니다.이것은 레플리카 셋의 수를 충족하는데 필요한 POD 를 생성합니다. 
+
+when you upgrade your application.
+당신의 어플리케이션을 업그레이드 할 때엔
+
+As we saw in the previous slide, the kubernetes deployment object creates a new replica set under the hood and starts deploying the containers there 
+우리가 이전 슬라이드에서 보았듯이. 쿠버네티스 디플로이먼트 오브젝트는 새로운 리플리카셋을 내부적으로 생성합니다. 그리고 컨테이너에 배포를 합니다.
+
+at the same time taking down the pod in the old replica set following a rolling update strategy.
+동시에 롤링 업데이트 전략에 따라, 이전 레플리카셋의 POD 를 중단 합니다.
+
+This can be seen when you try to list the replica sets using the kubectl get replicaset command
+이것은 아래명령어를 통해 레플리카 셋의 목록을 볼 수 있게 할 수 있습니다.
+
+here we see the old replica set with zero pods and the new replica set with five pods.
+여기 오래된 레플리카셋은 0개의 POD, 새로운 레플리카 셋은 5POD가 있는걸 볼 수 있습니다.
+
+Say, for instance, once you upgrade your application, you realize something isn't very right, 
+예를들어 당신이 당신의 어플리케이션을 업그레이드 한다고 가정하면, 당신은 무언가 이상하다는 것을 깨닳을 것입니다.
+
+something's wrong with the new version of build you used to upgrade.
+업그레이드에 사용된 새버전의 빌드가 문제가 있다는 것.
+
+So you would like to roll back your update kubernetes.
+그래서 당신은 쿠버네티스 업데이트를 롤백하기를 원하게 됩니다.
+
+Deployments allow you to roll back to a previous revision to undo a change, 
+디플로이먼드는 당신이 변경한 버전 이전 리비전으로 롤백할 수 있게 허락 합니다.
+
+run the kubectl rollout undo command followed by the name of the deployment.
+>> kubectl rollout undo <deployment-name>
+의 명령어를 통해 원상복구가 가능합니다.
+
+The deployment will then destroy the pod in the new replica set and bring the older ones up in the old replica set.
+디플로이 먼트는 새 버전의 레플리카 셋의 pod 를 제거한 다음 올드 버전의 레플리카 셋의 POD 들을 다시 올립니다.
+
+And your application is back to its older format.
+그리고 당신의 어플리케이션은 이전 버전으로 돌아갑니다.
+
+When you compare the output of the kubectl get replicasets command before and after the roll back, 
+kubectl get replicaset 명령어의 출력을 통해 롤백이전과 이후를 비교하면, 
+
+you will be able to notice the difference before the roll back.
+롤백 이전과 이후의 차이를 알 수 있게 됩니다.
+
+
+The first replica set had zero pods and new replicas that had five pods and this is reversed after the rollback is finished.
+첫번째 레플리카 셋은 0개의 POD 가 설정 됩니다. 그리고 새로운 레플리카셋은 5개의 POD 가 설정 되고 그리고 롤백이 완료 되면 이것들은 반전 됩니다.
+
+To summarize the commands real quick, use the kubectl, create command to create the deployment,
+요약하여, kubectl create 커맨드로 디플로이먼트를 생성합니다.
+
+get DEPLOYMENT'S command to list the deployments, apply and set image commands to update the deployments
+get deployment 커맨드로 디플로이먼트 목록을 받아옵니다. apply 와 set image 명령으로 디플로이먼트 를 업데이트 합니다.
+
+and rollout status commands to see the status of rollout's and roll out undo command to roll back a deployment
+그리고 
+
+operation.

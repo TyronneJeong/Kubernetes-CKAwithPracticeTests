@@ -1,0 +1,398 @@
+
+# 전체 네트워키 정책 보기
+>> kubectl get netpol
+>> kubectl get networkpolicy --all-namespaces
+
+# definition file 은 도큐멘테이션에 복사해서 쓰기
+# 복수개의 pod 는 -from 이나 -to 를 복수개로 생성해서 적용
+-------------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-policy
+spec:
+  podSelector:
+    matchLabels:
+	  role: db
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelectore:				<-- pod 셀렉터 지정 -로 시작 하는건 OR 조건
+	    matchLabels:
+	      name: api-pod
+      namespaceSelector:		<-- 네임스페이스 지정 -가 없는건 AND 조건
+	    matchLabels:
+		  name: prod
+    ports:
+	- protocol: TCP
+	  port: 3306				<-- 허용 PORT 지정
+	
+	egress:				<-- 기본적으로 클러스터내 응답 메세지는 규칙을 지정하지 않아도 됨
+	- to:
+	  - ipBlock:
+	      cidr: 192.168.5.10/32		<-- 외부 서버에만 규칙 적용을 위해 지정
+	  ports:
+	  - protocol: TCP
+	    port: 80
+-------------------------------------------------------------------------------
+In this lecture, we will take a look at network policies in more detail.
+이번 강의에서는 네트워크 정책에 관한 상세한 내용을 다뤄 보겠씁니다.
+
+So here we have the same Web API and database pods that we discussed about in the previous lecture.
+여기 이전 강의에서 논의했던, 동일한 Web API 와 데이터 베이스 POD들을 가지고 있습니다. 
+
+(clear:명확히 하다)
+So first, let's be very clear with our requirements.
+첫번째로, 우리의 요청사항을 명확히 합시다.
+
+Our goal is to protect the database pod. so that it does not allow access from any other pod except the API pod and only on port. 3306
+우리의 목표는 데이터 베이스 POD 를 보호하는 것입니다. 그래서 여기에 다른 POD 로 부터의 접근을 차단 하겠습니다. API POD:3306 포트만 제외하고 말입니다.
+
+(concerned:관심있는)
+So let's assume that we are not concerned about the Web pod or the API pod for those pods We are OK for all traffic to go in and out from anywhere.
+그럼 우리는 웹 POD 와 API POD가 어떤 트래픽이 드나들든 관심이 없다고 가정해 봅시다. 
+
+However, we want to protect the database pod and only allow traffic from the API pod.
+하지만 우리는 데이터 베이스 POD 가 보호되길 원합니다. 그리고 ㅇAPI POD 에게만 트래픽이 허용되기를 원합니다.
+
+So let's get the other things out of our way 
+다른 것들을 방해하지 않도록 합시다.
+
+so we can focus exactly on the required tasks.
+그래서 우리는 필요한 작업에 정확히 집중 할 수 있습니다.
+
+[web server:80]
+So we don't need to worry about the Web pod on its support as we don't want to allow any traffic from any other sources other than the API pod.
+우리는 web pod가 우리가 원하는 않는 트래픽이 API Pod 가 아닌 다른 소스로 부터 허용 되는지에 관해 걱정할 필요가 없습니다. 
+
+[API POD <-> DB POD] 만 집중
+So let's get rid of that.
+그럼 이부분을 제거해 봅시다.
+
+We can also forget about the port on the API pod to which the Web server connects as we don't care about that either.
+우리는 또한 API POD 가 웹서버로 통하는 포트에 관해 서도 신경 쓰지 않아도 됩니다.
+
+As we discussed by default, kubernetes allows all traffic from all pods to all destinations, 
+기본적으로 논의했던것 처럼, 쿠버네티스는 모든 POD 가 모든 목적지에 닿는것을 허용합니다.
+
+so as the first step, we want to block out everything going in and out of the database pod.
+그러므로 가장 먼저, 우리는 들어오는 모든것들과 DB POD 으로 가는 모든것을 막아야 합니다.
+
+So we create a network policy.
+네트워크 정책을 하나 생성합니다.
+
+We will call it DB policy.
+우리는 이걸 DB Policy 라고 부릅니다.
+
+And the first step is to associate this network policy with the pod that we want to protect.
+그리고 첫번째로 이 네트워크 정책과 우리가 보호하길 원하는 POD 를 서로 엮어 줍니다.
+
+And we do that using labels and selectors.
+그리고 레이블과 셀렉터를 이용해 이작업을 합니다.
+
+So we do that by adding a pod selector field with the match labels option and by specifying the label on the DB pod, which happens to be set to roll: db.
+그래서 일치하는 레이블과 함께 POD 셀렉터 추가를 통해 그리고 DB POD 의 레이블 지정을 (roll:db) 통해 작업을 수행합니다. 
+
+And that associates the network policy with the database pod and blocked out all traffic, 
+그리고 데이터 베이스 POD 와 차단된 모든 트래픽을 묶은 네트워크 정책
+
+however, we need the API pod to be able to carry the database on for 3306.
+하지만 우리는 API pod 가 데이터 베이스의 3306 포트를 통해 이용가능해 지기를 원합니다.
+
+So that's what we are going to configure next.
+그렇다면 우리가 다름에 진행할 것은 무엇일까요?
+
+First, we need to figure out what type of policies should be defined on this network policy object to meet our requirements.
+첫번째로, 우리는 어떤 유형의 정책이 지정되어야 하는지를 밝혀 내야 합니다. 이 네트워크 정책 오브젝트가 우리의 요청을 만나기 위해.
+
+So there are two types of policies that we discussed in the previous lecture.
+그래서 여기에는 일전에 논의했던 두가지 유형의 정책이 있습니다.
+
+We have ingress and egress.
+인그레스와 에그레스
+입구와 출구
+
+So do we need ingress or egress here or both?
+그래서 우리는 입구 출구 양쪽 어느게 필요할까요?
+
+So you always look at this from the db pod perspective, from the DB pod perspective, we want to allow incoming traffic from the API pod.
+당신은 항상 여기를 출발점으로 봅니다. DB Pod 관점에서, 우리는 입구 트래픽이 API Pod 에 허용되기를 원합니다.
+
+So that is incoming.
+이것은 들어오는 것입니다.
+
+So that is ingress.
+그래서 이것은 입구입니다.
+
+The API pod makes database queries and the database pods returns the results.
+API pod 는 데이터 베이스 쿼리를 만듭니다. 그리고 데이터 베이스 POD 는 결과를 리턴 합니다.
+
+So what about the results?
+무엇에 관한 결과일까요?
+
+Do you need a separate rule for the results to go back to the API pod?
+당신은 API pod 로 결과를 돌려보낼 분리된 규칙이 필요합니까?
+
+No, because once you allow incoming traffic, the response or reply to that traffic is allowed back automatically.
+아닙니다. 왜냐하면 우리는 입구 트래픽을 허용했기 때문입니다. 응답 또는 대꾸 트래픽은 자동으로 승인 됩니다.
+
+We don't need a separate rule for that.
+우리는 이를 위한 규칙을 분리할 필요가 없습니다.
+
+So in this case, all we need is an ingresed rule to allow traffic from the API pod to the database pod, and that would allow the API POD to connect to the database and run queries and also retrieve the result of the queries.
+그래서 이 경우에 우리가 필요한 것은 API Pod 로 부터 데이터 베이스 POD 로 향하는 트래픽을 허용할 입구 룰 입니다.
+그리고 이 룰은 API pod 가 데이터 베이스 로 연결 하는것을 허용 합니다. 그리고 질의를 실행 하고 결과를 조회합니다.
+
+So when deciding on what type of rule is to be created, you only need to be concerned about the direction in which the request originates and which is denoted by the straight line here.
+그래서 어떤 유형의 규칙을 생성할지 정의할때, 당신은 오직 관심 있는 방향만 필요합니다. (이후생략)
+
+And you don't need to worry about the response, which is denoted by the dotted line.
+그리고 응답에 관해서는 걱정 하지 않아도 됩니다. 점선으로 표시된
+
+However, this rule does not mean that the database pod will be able to connect to the API pod or make calls to the API.
+하지만 이 규칙은 의미하지는 않습니다. 데이터베이스 POD 가 API pod 에 연결 또는 API 를 호출 할 수 있다는 의미는 아닙니다.
+
+See, for example, the database pod tries to make an API call to the API pod, then that would not be allowed because that is now an egress traffic originating from the database pod and would require a specific egress rule to be defined.
+예를 들어, 데이터 베이스 POD 는 API POD 에 API 콜을 생성하길 시도합니다. 다음 이것이 기각 되는데 이유는 이것은 데이터 베이스 POD 로 부터 시작하는 출구 트래픽 이기 때문입니다. 그리고 특정 출구 규칙이 정의되어야 하기 때문입니다.
+
+So I hope you get the difference between the two and are clear about ingress and egress rules.
+그래서 나는 둘간의 차이와 입구와 출구 규칙을 명확히 알기를 희망합니다.
+
+I just wanted to make sure that you're clear on what type of policy is to be selected for the requirement that you have in hand.
+그냥 확인하기를 원합니다. 어떤 유형의 정책이 선택 되어 져야 하는지 명확히 손에 쥐고 있기를 원합니다.
+
+So a single network policy can have an ingress type of role and egress type of rule or both in cases where a pod wants to allow incoming connections as well as wants to make external calls.
+따라서 단일 네트워크 정책은 POD 이 연결을 허용하고 외부 호출을 하려는 경우 역할 유형의 수신 및 송신 유형을 가질 수 있습니다.
+
+So for now, our use case only requires ingresed policy types.
+우리의 사용사례는 오직 입구 정책 유형입니다.
+
+Now that we have decided on the type of policy, the next step is to define the specifics of that policy.
+지금 저기 우리는 정책의 유형을 결정 했씁니다. 다음 단계는 정책의 특징을 정의하는 것입니다.
+
+If it's ingress, we create a section called Ingress within which we can specify multiple rules.
+만약 이것이 입구 정책이라면, 우리는 멀티플 룰을 지정 할 수 있었던 인그레스라 불리는 섹션을 생성합니다. 
+
+Each rule has a from and ports field the from field defines the source of traffic that is allowed to pass through to the database pod.
+각각의 규칙은 from 과 ports 필드를 가집니다. from 필드는 소스가 되는 트래픽을 지정합니다. 이것은 데이터 베이스 POD로 전달이 허용되는 트래픽 소스 입니다.
+
+And here we would use a pod selector and provide the labels of the API pod like this.
+그리고 여기 우리는 pod selector 와 API pod 레이블 제공을 아래와 같이 제공합니다.
+-------------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-policy
+spec:
+  podSelector:
+    matchLabels:
+	  role: db
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelectore:				<-- pod 셀렉터 지정
+	    matchLabels:
+	      name: api-pod
+      namespaceSelector:		<-- 네임스페이스 지정
+	    matchLabels:
+		  name: prod
+    ports:
+	- protocol: TCP
+	  port: 3306				<-- 허용 PORT 지정
+-------------------------------------------------------------------------------
+The port field defines what port on the database pod is the traffic allowed to go to.
+port 필드는 데이터 베이스 POD 의 어떤 포트가 오가는게 허용되었는지를 정의하는 필드입니다.
+
+In this case, it's 3306 with the TCP protocol and that's it.
+이경우에는 3306 TCP 프로토콜입니다. 그리고 이게 끝입니다.
+
+This would create a policy that would block all traffic to the DB pod except for traffic from the API pod.
+이걸로 정책을 생성했습니다. API POD 를 제외한 모든 DB POD 로 향하는 트래픽을 블록 합니다.
+-------------------------------------------------------------------------------
+
+Now, what if there are multiple API pod in the cluster with the same labels but in different name spaces.
+그런데 만약 다수의 API pod 가 각 다른 네임 스페이스에서 동일한 레이블을 갖고 있다면 어떻게 될까요?
+
+
+so say here we have different name spaces for dev test and prod environments, 
+여기 서로 다른 네임스페이스의 개발과 운영 환경이 있다고 가정 합시다.
+
+
+and we have the API pod with the same labels in each of these environments.
+그리고 우리는 동일한 레이블의 API pod 를 가지고 있습니다. 이 각각의 환경에.
+
+The current policy would allow any pod in any namespace with matching labels to reach the database pod.
+현재의 정책은 모든 네임스페이스에 있는 모든 POD 레이블이 일치하는 경우 허용 됩니다. 데이터베이스 POD 에 닿는걸.
+
+We only want to allow the API pod in the prod namespace to reach the database pod.
+우리는 오직 운영환경 네임스페이스에 있는 API pod 에게만 데이터베이스 POD 연결을 허용하기를 원합니다.
+
+So how do we do that?
+이럴경우 어떻게 하면 될까요?
+
+For this we add a new selector called as the namespace selector property and along with the selector property.
+이를 위해 우리는 새로운 셀렉터를 추가 해야 합니다. 네임스페이스 셀렉터라고 불리는 속성을 셀렉터 속성 사이에 추가합니다.
+
+Under this we use match labels again to provide a label set on the namespace.
+그 아래 매치 레이블 속성을 다시 한번 사용합니다. 네임스페이스의 레이블 셋을 제공하기 위해.
+
+And you must remember that you must have this label set on the namespace first for this to work.
+그리고 당신은 기억 해야 합니다. 이 작업이 가장 먼저 동작 하기 위해 해당 네임스페이스에 레이블이 존재해야 합니다.
+
+So that's what the namespace selector does, it helps in defining from what namespace traffic is allowed to reach the database pod.
+그래서 저것이 네임스페이스 셀렉터가 하는 것이다. 이것은 정의하는 걸 돕는다. 어떤 네임스페이스 트래픽을 데이터베이스 POD 에 닿는 걸 허락할지
+
+Now, what if you only have the name space selector and not the pod selector like this, 
+이제 반약 당신이 네임 스페이스 셀렉터만 있고 pod 셀렉터가 없는 경우 어떻게 될까?
+
+in this case,
+이 경우에는
+
+all pods within the specified namespace will be allowed to reach the database pod, such as the Web pod that we had earlier.
+지정한 네임스페이스의 모든 POD 는 데이터 베이스 POD 에 닿는게 허락되게 됩니다.
+
+But pods from outside this namespace won't be allowed to go through.
+하지만 이 네임스페이스 바깥의 POD 들에게는 이를 통해 진힙하는것이 허용되지 않습니다.
+
+Let's look at another use case, say we have a backup server somewhere outside of the kubernetes cluster
+또 다른 사용 케이스를 봅시다. 쿠버네티스 클러스터 바깥 어딘가에 백업 서버가 생겼다고 가정 합시다.
+
+and we want to allow the server to connect to the database pod.
+그리고 우리는 백업 서버가 데이터 베이스 POD 에 연결하는걸 허용하고 싶습니다.
+
+Now, since this backup server is not deployed in our kubernetes cluster, the pod selector and namespace selecter fields that we use to define traffic from won't work 
+이 백업 서버는 우리 현재 클러스터에 배포 되어 있지 않기 때문에, 우리가 트래픽을 정의하기 위해 사용했던 pod selecter 와 네임스페이스 셀렉터 필드는 작동하지 않을 것입니다.
+
+because it's not a pod in the cluster.
+왜냐하면 이것은 클러스터 내 pod 가 아니기 떄문입니다.
+
+However, we know the IP address of the backup server, and that happens to be 190.168.5.10.
+하지만 우리가 백업 서버의 IP 주소를 알고 있다면, 그리고 그 IP 주소가 190.168.5.10 이렇게 생겼다면?
+
+We could configure a network policy to allow traffic originating from certain IP addresses.
+우리는 네트워크 정책을 IP주소로 부터 시작하는 트랙픽을 허용하도록 정책을 구성할수도 있습니다.
+
+For this, we add a new type of from definition known as the IP block definition. 
+이를 위해, 우리는 새로운 유형의 IP 블록 정의를 추가합니다.
+
+IP block allows you to specify a range of IP addresses from which you could allow traffic to hit the database pod.
+ipBlock 은 데이터 베이스 POD 에 접속하기 위한 트래픽으르로 부터 특정 레인지의 IP 주소를 허용합니다.
+
+So those are three separate selectors under the from section and ingress.
+그래서 저 3개의 셀렉터가 ingress 와 from 섹션 아래에 있습니다.
+
+And these are also applicable to the two section in egress.
+그리고 이것들 역시 egress 에 두개의 섹션을 적용할 수 있습니다.
+
+And we'll see that in a few minutes.
+그리고 우리는 그것을 몇분간 볼것입니다.
+
+We have pod selector to select pod by labels.
+우리는 pod 를 레이블로 선택하기 위한 pod selector를 가지고 있습니다.
+
+We have namespace selector to select namespace by labels and we have the IP block selector to select IP address ranges.
+우리는 네임스페이스를 레이블로 선택하기 위한 네임스페이스 셀렉터를 가지고 있습니다. 그리고 ipBlock 셀렉터를 가지고 있습니다. IP 레인지를 선택하기 위한.
+
+These can be parsed in separately as individual rules or together as part of a single rule.
+이들은 각각 분리하여 개별적인 룰로 파싱될수 있습니다. 또는 함께 단일 룰로 파싱될수도 있습니다.
+
+In this example, under the from section we have two elements.
+예를 들어 from 섹션 아래 우리는 두개의 엘레멘트가 있습니다.
+
+So these are two rules.
+그래서 여기 두개의 룰이 있습니다
+
+The first rule has the pod selector and the namespace selector together and the second rule has the IP block selector.
+첫번째 룰은 pod 셀렉터 입니다. 그리고 네임 셀렛터와 함께 입니다. 그리고 두번째 룰은 ipBlock 셀렉터 입니다.
+
+So this works like an OR Operation 
+그래서 이것들은 OR 연산자 처럼 동작합니다.
+
+Traffic from sources meeting Either of these criteria are allowed to pass through.
+이 기준중 하나를 충족하는 소스의 트래픽은 통과 할 수 있습니다. OR 조건이므로.
+
+However, within the first rule we have two selector as part of it.
+하지만 첫번째 규칙 속에서 우리는 두개의 셀렉터가 부분적으로 존재합니다.
+
+(criteria:기준)
+That would mean traffic from sources I must meet Both of these criteria has to pass through.
+이것이 의미하는 건 소스로 부터 발생한 트래픽 두가지 기준을 모두 통과해야만 한다는 것입니다.
+
+So they have to be originating from pods with matching labels of API pod and those pod must be in the prod namespace.
+그래서 API 포드의 레이블이 일치하는 POD 시작해야 하며 해당 포드는 prod 네임스페이스에 있어야 합니다.
+
+So it works like and and operation.
+이것은 AND 연산자 처럼 작동합니다.
+
+Now what if we were to separate them by adding a dash before the namespace selector like this?
+만약 네임스페이스 셀렉터 앞에 -의 추가로 분리되어 있다면 어떻게 될까요?
+-------------------------------------------------------------------------------
+>> - namespaceSelector: <-- 배열이 됨. 작대기가 있으면 AND 조건 없으면 OR 조건이 됨.
+>>		matchLabels:
+>>			name: prod
+-------------------------------------------------------------------------------
+Now they are two separate rules.
+그러면 저기에는 2개의 분리된 규칙이 됩니다.
+
+So this would mean that traffic matching the first rule is allowed, that is from any pod matching the label API pod in any namespace and traffic matching.
+이것의 의미하는 건 첫번째 규칙에 일미하는 것은 승인되고 
+
+The second rule is allowed, which is from any pod within the namespace, and that is either from the pod web and 
+두번째 규칙은 네임스페이스내의 모든 POD 에서 가져오고 POD 
+
+(along:~따라)
+of course, along with the backup server as we have the IP block specification as well.
+물론, 백업서버와 함께 ipBlock 사양도 있습니다.
+
+So now we have three separate rules and almost traffic from anywhere is allowed to be pod.
+이제 우리는 3개의 분리된 룰을 가졌습니다. 그리고 어디에서 오건 대부분의 트래픅은 허용이 됩니다.
+
+So a small change like that can have a big impact.
+이런 작은 변화가 큰 임팩트를 만들어 낼 수 있습니다.
+
+So it's important to understand how you could put together these rules based on your requirements.
+이것은 이해하는데에 중요합니다. 어떻게 이 규칙을 함께 입력할 수 있는지를 이해하는데 중요합니다.
+
+So now let's get rid of all of that and go back to a basic set of rules and will now look at egress,
+이제 이 모든것을 제외해 봅시다. 그리고 규칙 집합의 기본으로 돌아가서 출구 규칙을 봅시다.
+
+so say, for example, instead of the backup server initiating a backup, they we have an agent on the DB pod that pushes back up to the backup server.
+예를 들어 백업서버가 백업을 시작하는 대신에, 그들은 백업 서버로 Push 하는 DB-pod 에이젼트가 이습니다.
+
+In that case, the traffic is originating from the database pod to an external backup server.
+이 경우 트래픽은 데이터 베이스 POD로부터 시작해서 외부 백업 서버로 향합니다.
+
+For this, we need to have egress role defined.
+이를 위해 우리는 출구 규칙을 정의할 필요가 있습니다. (클러스터내는 규칙이 없어도 되지만 외부 서버는 규칙을 정해주어야 적용됨. 특히 IP 주소)
+
+So we first add egress to the policy types and then we add a new egress section to define the specifics of the policy.
+우리는 처음 egress 를 추가합니다. 그런 다음 egress 섹션을 추가합니다. 정책의 세부 특징을 정하기 위해
+
+So instead of from we now have to under egress.
+그래서 우리는 from 대신에 to 를 egress 아래에 넣습니다.
+
+So that's the only difference.
+이것이 유일하게 다른 점입니다.
+
+Under to, we could use any of the selectors, such as a pod namespace or an IP block selector.
+to 아래에 우리는 셀렉터를 지정할 수 있습니다. 
+
+
+
+
+
+
+And in this case, since the database server is external, we use IP block selector and provide the site or block for the server.
+
+The port to which the requests are to be sent to is at. So we specify at the port.
+
+So this rule allows traffic originating from the database part to an external backup server at the specified address.
+
+Well, that's it for now about network policies and rules.
+
+Head over to the lab and practice working with network policies yourself.
+
+I will see you in the next one.

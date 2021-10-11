@@ -1,0 +1,220 @@
+------------------------------------------------------------------
+## 현재 승인 정책 보기
+>> kubectl describe pod kube-apiserver-controlplane -n kube-system | grep -i author
+
+## 롤 갯수 보기
+>> kubectl get roles --all-namespaces --no-headeres | wc -l
+
+## 롤을 할당 받은 유저들을 보기
+>> kubrectl describe rolebinding kube-proxy -n kube-system
+
+## 새로운 롤과 롤 바인딩을 생성하여 유저에게 할당하기.
+>> kubectl create -f devuser-developer-binding.yaml
+------------------------------------------------------------------
+[developer-role.yaml]
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: developer
+rules:
+- apiGroups: [""] <-- 특정 API 그룹만 허용하고자 할 경우 지정
+  resources: ["pods"] <-- API 그룹 속에 리소스 유형
+  resourceNames: [""] <-- POD 이면 POD 명
+  verbs: ["list", "create"] <-- 오퍼레이션 명
+------------------------------------------------------------------
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dev-user-binding
+  namespace: default
+subjects:
+- kind: User
+  name: dev-user <-- 사용자 이름
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: developer <-- Role 이름
+  apiGroup: rbac.authorization.k8s.io
+------------------------------------------------------------------
+
+
+>> kubectl create -f devuser-developer-binding.yaml
+>> kubectl get roles 
+>> kubectl get rolebindings
+>> kubectl describe role <role name>
+
+>> kubectl auth can-i [verb] [target]
+>> kubectl auth can-i create nodes
+
+>> kubectl auth can-i create pods --as dev-user
+>> kubectl auth can-i create pods --as dev-user --namespace test
+------------------------------------------------------------------
+In this lecture, 
+
+we look at role-based access controls in much more detail.
+이번 강의에서는 RBAC 에 대해 더 상세히 다워 보겠습니다.
+
+So how do we create a role.
+그럼 롤은 어떻게 만들까요
+
+We do that by creating a role object.
+우린 이를 위해 롤 오브젝트를 생성함으로써 룰을 만듭니다.
+
+So we create a role definition file with the API version set to rbac.authorization.K8s.io/v1 and kind said to role.
+따라서 우리는 API 버전을 rbac.authorization.K8s. 로 kind 를 role 로 설정하고 롤 정의파일을 생성 합니다.
+
+We name the role developer as we are creating this role for developers and then we specify rules. 
+우리는 우리가 개발자를 위해 생성할 롤을 따 이름을 지정 합니다. 그리고 규칙을 정의합니다.
+
+Each rule has three sections- apiGroups, resources, and verbs.
+각 룰은 3개의 섹션을 가집니다. [apiGroups], [resources], [verbs]
+
+The same things that we talked about in one of the previous lectures.
+우리는 이전 강의들 중 하나에서 동일한 부분에 대해 말을 했었습니다.
+
+for core group You can leave the API group's section as blank
+코어 그룹의 경우 API 그룹의 섹션을 공백으로 둘 수 있습니다.
+
+for any other group you specify the group name
+여타 다른 그룹의 경우 그룹 명을 지정 해야 합니다.
+
+the resources that we want to give developers access to our pods.
+리소스는 우리가 개발자에게 주고 싶은 PODS 엑세스 권한 입니다.
+
+The actions that they can take are list, get, create and delete.
+가질수 있는 동작은 LIST, GET, CREATE, DELETE 입니다.
+
+Similarly, To allow the developers to create configmaps,
+유사하게, 개발자에게 ConfigMap 생성 권한을 허용 하기 위해서는
+
+we add another rule to create ConfigMap.
+우리는 ConfigMap 생성에 관한 다른 룰을 생성 해야 합니다.
+
+We can add multiple rules for a single role like this.
+우리는 단일 롤을 위해 다수의 규칙을 추가 할 수 있습니다.
+
+Create the role using the kubectl create role command.
+롤의 생성에는 kubectl create role 명령을 사용할 수 있습니다.
+
+The next step is to link the user to that role.
+다음 단계는 유저와 롤을 연결하는 것 입니다.
+
+For this we create another object called RoleBinding. 
+이걸 위해 우리는 롤 바인딩이라 불리는 또 다른 오브젝트를 생성 했습니다.
+
+The role binding object links A user object to a role.
+롤 바인딩 오느벡즈는 유저 오브젝트와 롤을 연결 합니다.
+
+We will name it devuser-developer-binding.
+우리는 이것의 이름을 devuser-devloper-binding 이라고 붙입니다.
+
+The kind is RoleBinding.
+KIND 는 RoleBinding
+
+It has two sections.
+여기에도 두가지 섹션이 있습니다.
+
+The subjects is where we specify the user details. 
+서브젝트는 유저의 상세사항을 정의하는 곳입니다.
+
+The roleRef section is where we provide the details of the role we created.
+롤레프 섹션은 우리가 생성한 롤에 대한 정보를 제공하는 곳입니다.
+
+Creat the role binding using the kubectl create command.
+kubectl create 명령을 이용하여 롤을 생성하세요.
+
+>> kubectl create -f devuser-developer-binding.yaml
+
+Also note that the roles and role bindings fall under the scope of namespace.
+또한 역할 및 역할 바인딩은 네임스페이스 영역 아래에 속한다는 것을 참고하세요.
+
+So here the dev-user gets access to pods and configmaps within the default namespace.
+그래서 여기 dev-user 는 기본 네임스페이스의 pods과 configmaps 에 대한 접근권한을 가지게 되었습니다.
+
+If you want to limit the dev user's access within a different namespace then specify the namespace within the metadata of the definition file while creating them
+만약 dev-user 가 다른 네임스페이스에 접근하는 것에 제한을 두길 원한다면 해당 롤을 생성하는 동안  정의파일속 metadata 속에 네임스페이스를 지정 하세요.
+
+to view the created roles. run the kubectl get roles command. 
+롤을 보기 위해서는 아래 명령을 실행하세요.
+>> kubectl get roles 
+
+To list role bindings run the kubectl get rolebindings command.
+롤 바인등을 나열 하고 싶다면 아래 명령을 실행하세요.
+>> kubectl get rolebindings
+
+To view more details about the role, run the kubectl describe role developer command.
+롤에 관한 좀 더 상세한 정보를 보려거든 아래 명령을 실행하세요.
+>> kubectl describe role <role name>
+
+Here you see the details about the resources and permissions for each resource 
+여기 각 리소스와 권한에 대한 상세 정보가 보입니다.
+
+similarly to view details about role bindings run the kubectl describe rolebindings command.
+유사하게 롤 바인딩에 대한 상세 정보를 보려거든 아래 명령을 실행하세요.
+>> kubetl descrive rolebindings
+
+Here you can see details about an existing role binding.
+여기 존재하는 롤 바인딩의 상세 정보를 볼 수 있습니다.
+
+What if you being a user would like to see if you have access to a particular resource in the cluster.
+만약 당신이 클러스터내 특정 리소스에 대한 접근 권한을 가지고 있는지 확인하길 원하는 유저라면?
+
+You can use the kubetl auth can-i command and check.
+아래 명령을 사용하여 당신이 가능한지 여부를 확인 할 수 있습니다.
+>> kubectl auth can-i [verb] [target]
+>> kubectl auth can-i create nodes
+
+if you can, say create deployments. Or say delete nodes. 
+만약 당신이 할 수 있다면, 디플로이먼츠 생성이 가능하다면, 또는 노드 삭제가 가능 하다면?
+
+(impersonate:가장하다) 페르소나
+If you are an administrator then you can even impersonate another use to check their permission.
+만약 당신이 관리자라면 다른 사용자를 대신하여 권한을 확인 할 수도 있습니다.
+
+For instance say you are tasked to create necessary set of permissions for a user to perform a set of operations and you did that
+예를 들어, 사용자가 작업을 수행하기 위해 필요한 권한 세트를 생성하는 업무가 당신에게 부여되었고 그걸 당신이 했다고 가정해 봅시다.
+
+but you would like to test if what you did is working.
+하지만 당신은 어떤것이 동작하는지 테스트 하기를 원합니다.
+
+You don't have to authenticate as the user to test it.
+하지만 사용자를 테스트 하기 위한 권한을 가지지 않아도 됩니다.
+
+Instead you can use the same command with the as user option like this 
+대신에 --as user 옵션을 붙여 동일 명령을 사용할 수 있습니다. 아래와 같이요.
+>> kubectl auth can-i create pods --as dev-user
+
+since we did not grant the developer permissions to create deployments it returns no.
+배포를 생성 할 수 있는 개발자 권한을 부여 하지 않았기 때문에. 위 명령어는 아무것도 리턴 하지 않습니다.
+
+The dev user has access to creating pods though.
+dev-user 는 POD 를 생성할 권한은 가지고 있습니다.
+
+You can also specify the namespace in the command like this.
+또한 특정 네임스페이스를 지정 할 수도 있습니다.
+>> kubectl auth can-i create pods --as dev-user --namespace test
+
+The dev-user does not have permission to create a pod in the test namespace.
+데브유저는 test 네임스페이스에 POD 생성관 관련 어떤 권한도 없습니다.
+
+Well a quick note on resource names we just saw how you can provide access to users for resources like pods within the namespace.
+좋습니다. 리소스 이름에 따르게 요약하자면
+우리는 방금 어떻게 사용자에게 네임스페이스 공간에 POD 같은 리소스에 대한 권한을 제공할 수 있는지를 보았습니다.
+---------------------------------------------------------------
+
+You can go one level down and allow access to specific resources alone.
+1 레벨 더 내릴수 있습니다. 그리고 특정 자원에게만 권한을 허용할 수도 있습니다.
+
+For example say you have five pods in namespace.
+예를 들어, 당신은 이 네임스페이스 공간에 5개의 POD 를 가지고 있다고 가정 합니다.
+
+You want to give access to a user to pods, but not all pods.
+당신은 사용자에게 POD 의 접근 권한을 주기를 원합니다. 하지만 전부는 아닙니다.
+
+You can restrict access to the blue and orange pod alone by adding a resourceNames field to the rule.
+당신은 블루와 오렌지 POD 에 대해서는 룰의 resourceNames 필드에 추가하여 접근을 제한할 수 있습니다. 
+
+well that's it for this lecture.
+
+Head over to the practice exercises section and practice working with role based access controls.

@@ -1,0 +1,162 @@
+Hello and welcome to this lecture, in this lecture, we look at demon sets in Kuubernetes
+안녕하세요 이번 강의에서는 데몬 셋에 대해 알아 보겠습니다.
+
+(So far:지금까지)
+So far, we have deployed various pods on different nodes in our cluster with the help of replica sets and deployments, 
+지금까지 우리내 클러스터에 각기 다른 NODE에 다양한 POD를 배포해왔습니다. 레플리카셋의 도움과 deployments 의 도움을 통해서요.
+
+(make sure:확실하게 하다)
+we made sure multiple copies of our applications are made available across various different worker nodes.
+우리는 우리의 어플리케이션을 다수의 카피로 각 다른 다양한 워커 노드에 복사되는게 가능하도록 확실히 했습니다.
+
+Demon sets are like replica sets, as in it helps you deploy multiple instances of pod, but it runs one copy of your pod on each node in your cluster.
+데몬셋은 레플리카셋과 비슷합니다. 데몬셋은 다수의 인스턴스에 POD 를 배포해주는 것을 도와줍니다. 하지만 데몬셋은 각각의 노드에서 하나의 POD 만 을 실행시킵니다.
+
+Whenever a new node is added to the cluster, a replica of the pod is automatically added to that node.
+언제든 새로운 노드가 클러스터에 추가될때면, POD의 복제품은 노드에 자동으로 추가 됩니다.
+
+And when a node is removed, the pod is automatically removed.
+그리고 NODE 가 사라지면,  POD 역시 자동으로 제거됩니다.
+
+(present:표하다, 겨누다, 정하다, 증정하다, 헌납하다, 상정하다)
+The demon set ensures that one copy of the pod is always present in all nodes in the cluster.
+이 데몬셋은 클러스터내 모든 노드에서 항상 하나의 POD 카피가 생성되도록 보장합니다.
+
+So what are some use cases of demonset 
+그럼, 데몬셋의 유스케이스로 무엇이 있을까요?
+
+say you would like to deploy a monitoring agent or log collector on each of your nodes in the cluster 
+당신은 모니터링 에이젼트 또는 로그 컬렉터를 각각의 노드에 배포 했다고 가정해 봅시다.
+
+so you can monitor your cluster better.
+그래서 당신은 당신의 클러스터를 더 잘 모니터링 할 수 있게 되었습니다.
+
+A demon set is perfect for that, as it can deploy your monitoring agent in the form of a pod in all the nodes in your cluster.
+당신의 클러스터의 모든 노드에 POD형태로 모니터링 에이전트를 배포할 수 있으므로, 데몬셋은 이런 상황에 안성맞춤입니다.
+
+Then you don't have to worry about adding or removing monitoring agents from these nodes when there are changes in your cluster
+그런다음에는 노드에 변경사항이 생길때에도 모니터링 에이젼트의 추가 또는 제거를 걱정할 필요가 없습니다.
+
+as the demon set, will take care of that for you 
+데몬셋으로 이런 상황에서 당신을 위해 항상 보살펴 줄 것입니다.
+
+earlier while discussing the architecture.
+예전 아키텍처에 대한 논의하는 동안에
+
+We learned that one of the worker node components that is required on every node in the cluster is a kube-proxy.
+우리는 워커 노드 컴포넌트중에 하나가 모든 노드들에 배포되어질 필요가 있는 컴포넌트가 있고 그것이 쿠버프록시라는걸 배웠습니다.
+
+That is one good use case of demon sets.
+이 경우 데몬셋을 적용할 가장 알맞은 케이스입니다.
+
+The Kube proxy component can be deployed as a demon set  in the cluster.
+큐브 프록시는 클러스터에 데몬셋으로 배포 될수 있습니다.
+
+Another use case is for networking.
+또다른 사용례로 네트워킹이 있습니다.
+
+Networking solutions like Livnat requires an agent to be deployed on each node in the cluster.
+리브넷 같은 네트워킹 솔루션은 각각의 노드마다 에이전트가 배치되기를 원합니다.
+
+We will discuss about networking concepts in much more detail later during this course.
+네트워크의 컨셉에 대한 것은 이 강의 후반에 다시 다루도록 합니다.
+
+But I just wanted to point it out here for now.
+하지만 제가 명시하고 싶은 것은 바로 여기 있습니다.
+
+Creating a demon set is similar to the replica set creation process.
+데몬셋을 생성하는 과정은 레플리카 셋이랑 유사합니다.
+
+It has nested pod specification under the template section and selectors to link the demon set to the pods.
+데몬셋을 생성하는 것은 템플릿 섹션 아래 중첩된 SPEC 섹션 부분에 있습니다. 그리고 그리고 데몬셋을 POD 에 연결하기 위한 셀렉터 부분도 있습니다.
+
+A demon set definition file has a similar structure.
+데몬셋 정의파일은 비슷한 구조를 가지고 있습니다.
+
+We start with the API version kind of metadata and spec.
+apiVersion, kind, metadata, spec 으로 시작합니다.
+
+[레플리카 셋이랑 데몬만 apps/v1]
+
+The API version is apps.
+api 버전은 apps/v1 입니다.
+
+kind is DemonSet.
+kind 는 데몬 셋입니다.
+
+Instead of replica set, we will set the name to a monitoring demon.
+레플리카 셋 대신에 우린 모니터링 데몬의 이름을 셋 할 겁니다.
+
+Under spec you have a selector and a pod specification template.
+spec 항목 아래 select 가 있고 pod 정의 템플릿이 있습니다.
+
+[참된 데몬 셋 구조 요약]
+------------------------------------------------------------
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+	name: monitoring-daemon
+spec:
+	selector:
+		matchLabels:
+			app: monitoring-agent
+		template:
+			metadata:
+			...
+------------------------------------------------------------
+
+It's almost exactly like the repicaset definition, except that the kind is a demon set.
+종류가 데몬셋인걸 제외하면 replicaset 정의파일이랑 거의 똑같습니다.
+
+(Ensure:보장하다)
+Ensure the labels in The Selector matches the ones in the pod template.
+하나의 POD템플릿과 셀렉터의 레이블이 서로 일치 하는지 확인하십시오.
+
+ones ready, create the demons that is in the "kubectl create demonset" Command.
+준비가 되면, kubectl create daemonset 명령어로 데몬 셋을 생성하십시오.
+>>  kubectl create daemonsets elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 --namespace=kube-system
+
+To view the created demons set run to "kubectl get demonsets"
+
+>> kubectl get daemonsets
+
+ that command and of course, to view more details on the "kubectl describe daemonsets" command.
+생성된 데몬 셋을 확인하는 것은 kubectl get daemonset 명령어를 실행하십시오. 그리고 보다 상세한 정보를 보기위해서는 kubectl describe daemonset 명령어를 실행하시면 됩니다.
+
+>> kubectl describe demonsets
+
+So how does daemonset work?
+그럼 데몬셋은 어떻게 동작하던가요?
+
+How does it schedule pod on each node and how does it ensure that every node has a pod?
+어떻게 POD를 각각의 노드에 예약할 수 있나요? 그리고 어떻게 모든 NODE 에 POD 가 할당된걸 보장 할 수 있나요?
+
+If you were asked to schedule a pod on each node in the cluster,
+만약 당신이 각각의 NODE 에 위치한 POD를 스케쥴 하기 위해 질문을 받는다면
+
+how would you do it?
+당신은 어떻게 하시겠습니까?
+
+In one of the previous lectures in this section, we discussed that we could set the node name property on the pod
+이전 강의중 하나에서 우리는 POD에 노드 네임을 설정할 수 있다는 점을 논의했었습니다. 
+
+to bypass the scheduler and get the pod placed on a node directly.
+스케쥴러를 우회하고 노드에 POD를 직접 배치 합니다.
+
+So that's one approach 
+이것이 하나의 접근법입니다.
+
+on each pod, set the node name property and its specification before it is created.
+각각의 POD에 노드 이름을 설정하고 이것이 생성되기 이전에 지정 합니다.
+
+And when they are created, they automatically land on the respective nodes.
+그리고 생성이되면, 그들은 자동으로 각각의 node 에 안착하게 됩니다.
+
+So that's how it used to be until Kubernetes version 1.12 
+이것이 쿠버네티스 버전 1.12까지 사용하는 방식이였습니다.
+
+from version 1.12 onwards, the demon set uses the default scheduler and node affinity rules that we learned in one of the previous lectures to schedule pod on node.
+1.12버전 부터 데몬셋은 기본 스케쥴러와 노드 선호도 룰 사용하도록 설정했습니다.
+우리가 이전 강좌에서 pod 가 node 에 할당 하기 위해 배웠던.
+
+Well, that's it for this lecture, head over to the practice test and practice working with demonises.

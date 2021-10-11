@@ -1,0 +1,244 @@
+>> kubectl get pods --show-labels
+>> kubectl get pods -l evc=dev --no-headers | wc -l
+
+
+Hello and welcome to this lecture on labels and selectors.
+레이블과 셀렉터 강의에 온것을 환영합니다.
+
+My name is Mumshad Mannambeth .
+
+what do we know about labels and selectors already?
+레이블과 셀렉터에 대해 알고 있는것은 무엇인가요?
+
+labels and selectors are a standard method to group things together.
+레이블과 셀렉터는 대상을 그룹으로 묶는 표준 방법입니다.
+
+Say you have a set of different species.
+당신은 다른 특징을 가진 셋트가 있습니다.
+
+(criteria:기준)
+A user wants to be able to filter them based on different criteria 
+사용자는 서로 다른 기준에 따라 필터링 가능하기를 원합니다.
+
+such as based on their class or kind if they are domestic or wild or see by their color and not just group.
+다음과 같은. 그들의 등급이나 종류 그들의 보여지는 색상등 단지 그룹 뿐만 아니라.
+
+You want to be able to filter them based on a criteria such as all green animals or with multiple criteria such as everything green. That is also a bird.
+당신은 그들을 전녹색 동물 이나 다른 특징(모든게 녹색이나 여전히 새이다)에 따라 분류할 수 있길 원합니다. 
+
+Whatever that classification maybe you need the ability to group things together and filter them based on your needs and the best way to do that is with labels. 
+분류하고자 하는게 무엇이건, 아마 그것들을 분류하고 원하는 바에 따라 필터링 하는 능력을 갖길 원할겁니다.
+그리고 이를 행할 가장 좋은 방법은 레이블을 붙이는 것입니다.
+
+(attached:첨부된)
+Labels or properties attached to each item.
+레이블 또는 프로퍼티는 모든 아이탬에 첨부되어 있습니다.
+
+So you add properties to each item for their class, kind and color 
+그러므로 당신은 아이탬들에 그들의 클래스나 종류 색상등의 프로퍼티를 추가합니다.
+
+selectors help you filter these items.
+셀렉터는 이런 아이탬들을 필터링 하도롭 돕습니다.
+
+For example when you say class equals mammal.
+we get a list of mammals 
+예를들어 당신이 클래스가 mammal 이라고 한다면, mammal 로 된 목록을 얻습니다.
+
+and when you say color equals green
+그리고 컬러는 그린이라고 말하면,
+
+we get the green mammals 
+녹색의 mammals 을 얻게 됩니다.
+
+we see labels and selectors used everywhere such as the keywords you tag to YouTube videos or blogs that help users filter and find the right content 
+우리는 레이블과 셀렉터가 모든곳에 사용되는 것을 볼수 있씁니다. 
+유튜브에 태그된 카워드나 사람들을 돕는 블로그 그리고 정확한 컨텐츠를 찾는데에 사용되는 것
+
+we see labels added to items in an online store that help you add different kinds of filters to view your products.
+우리는 온라인 스토어에서 다양한 종류의 필터를 통해 당신이 제품을 보는데 도움이 되도록 아이탬에 붙인 레이블을 볼수 있습니다.
+
+So how are labels and selectors used in Kubernetes?
+그럼 쿠버네티스에서 이 레이블과 셀렉터를 어떻게 쓰일까요?
+
+여기까지 서론......
+------------------------------------------------------------------
+
+We have created a lot of different types of Objects in Kuberentes. Pods, Services, ReplicaSets and Deployments etc.
+우리는 쿠버네티스에서 아주 다양한 유형의 오브젝트를 생성했습니다. POD, 서비스, 레플리카셋, 그리고 디플로이먼트 등등.
+
+For Kubernetes, all of these are different objects.
+쿠버네티스 입장에서 이 모든것들은 다른 오브젝트 입니다.
+
+(Over time:시간이 지남에 따라) (end up:무언가 마지막 까지 감)
+Over time you may end up having hundreds or thousands of these objects in your cluster.
+시간이 흘러 당신의 클러스터에 수백 수천가지의 오브젝트들이 있게 될 수 있씁니다.
+
+Then you will need a way to filter and view different objects by different categories 
+따라서 당신은 필터링 하고 다른 오브젝트들을 각 다른 카테고리별로 볼 수 있는 방법이 필요해 질겁니다.
+
+such as to group objects by their type 
+유형별로 오브젝트를 그룹화 하는것 같은 것.
+
+or view objects by application 
+또는 어플리케이션 별로 오브젝트를 보는 것
+
+or by their functionality.
+또는 그들의 기능적인 것에 따라.
+
+whatever it may be. You can group and select objects using labels and selectors 
+무엇이 됐껀 이건 아마도 레이블과 셀렉터를 이용하여 오브젝트를 선택하고 그룹화 할 수 있습니다.
+
+for each object attach labels as per your needs, like app, function etc.
+각각의 오브젝트 마다 필요에 따른 레이블을 부여합니다. APP 이라던가 FUNCTION 등등.
+
+[레이블링을 할 수 있다는걸 설명중]
+
+Then while selecting specify a condition to filter specific objects. 
+그런다음 선택하는 동안 오브젝트의 특징을 거르기 위한 상태(조건)를 지정합니다.
+
+For example app == App1. 
+예를 들면 app = App1
+
+So how exactly do you specify labels in kubernetes.
+그럼 어떻게 쿠버네티스에서 정확히 레이블을 지정하는 할 수 있을까요?
+
+In a pod-definition file, under metadata, create a section called labels. 
+POD정의 파일내, METADATA아래에 레이블이라는 섹션을 생성합니다.
+
+Under that add the labels in a key value format like this.
+레이블 아래에 키-벨류 형식의 라벨을 추가합니다. 아래와 같이.
+
+You can add as many labels as you like. 
+라벨은 원하는 만큼 추가가능합니다.
+
+[레이블에 하나의 키를 지정하는게 아니라. 키를 복수개로 가질 수 있는 구조임.]
+- labels:
+-		doraemon: jingu
+-		pang: melonpang
+- 식으로 카테고리를 여러개 추가하여 그 값으로 필터링 할 수 있음.
+
+
+
+
+[라벨을 복수개로 설정할 수 있다는 이야기]
+-----------------------------------------------------------------
+Once the pod is created, to select the pod with the labels
+POD가 한번 생성되고 레이블로 그 POD를 선택하는 하기 위해서는
+
+use the kubectl get pods command along with the selector option, and specify the condition like app=App1.
+"kubectl get pods" 커맨드를 사용할때 selecter 옵션을 사용하면 됩니다. 그리고 컨디션을 지정하면 됩니다.
+>> kubectl get pods --selector=app=casandra
+>> kubectl get pods -l 라벨명=값
+>> kubectl get pods -l '라벨명 in (복수개의 값, 복수개의 값)'
+
+[YAML 파일 내 속성 정보도 호출 가능하다.]
+>> kubectl get pods --sort-by=.metadata.name
+
+
+Now this is one use case of labels and selectors. 
+이제 여기 레이블과 셀렉터를 이용한 하나의 유즈케이스가 있습니다.
+
+Kubernetes objects use labels and selectors internally to connect different objects together.
+쿠버네티스 오브젝트는 다른 오브젝트와 함께 연결하기 위해 레이블과 셀렉터를 내부적으로 사용합니다.
+
+(consisting:구성된)
+For example to create a replicaset consisting of 3 different pods,
+예를 들어 3개의 다른 POD로 구성된 레플리카셋을 생성하기 위해
+
+we first label the pod definition and use selector in a replicaset to group the pods. 
+첫번째로 POD 정의에 레이블링을 하고 레플리카셋의 셀렉터를 이용해 POD들을 그룹화 합니다.
+
+>> pod-definition.yaml
+>> metadata:
+>> 		labels:
+>>			app : App1
+
+>> kubectl get pods --selector app=App1
+### POD 의 레이블 값을 먼저 선언해 두고 replicaset 정의파일의 selector 부분을 App1 로
+지정하면, 이들을 하나의 그룹으로 묶어 준다는 이야기임.
+------------------------------------------------------------------
+In the replicaset definition file. You will see labels defined in two places.
+레플리카 정의 파일에서 두 부분에서 레이블이 정의된 것을 볼 수 있습니다.
+
+
+------------------------------------------------------------------
+(attempt:시도)
+Note that this is an area where beginners attempt to make a mistake.
+이부분은 초보자가 실수 하기 쉬운 부분이라는 걸 염두 하십시오.
+------------------------------------------------------------------
+
+[템플릿 아래 정의된 부분은 POD 의 영역]
+The labels defined under the template section are the labels configured on the pods. 
+템플릿 섹션 아래에 정의된 레이블들은 POD 레이블을 구성한 것입니다.
+
+The labels you see at the top are the labels of the replicas set itself.
+상단에 보이는 레이블이 레플리카셋의 레이블 입니다.
+
+
+
+[POD와 레플리카셋의 서로 다른 레이블 정의위치]
+
+
+
+(concerned:관심있는)
+We're not really concerned about the labels of the replica set for now 
+지금 당장은 레플리카셋의 레이블에 대해서는 관심을 두지 않겠습니다.
+
+because we are trying to get the replica set to discover the pods.
+레플리카셋을 얻는건 POD를 찾기 위한 것이 때문입니다.
+
+The labels on the replica set will be used if you were to configure some other object to discover the replica set 
+레플리카셋의 레이블은 만약 당신이 다른 오브젝트로 레플리카셋을 찾기 위한 오브젝트를 구성한다면. 그때 사용되어집니다.
+
+(in order to:~하기위해)
+in order to connect the replica set to the pod,
+레플리카 셋을 POD 에 연결하기 위해
+
+we configure the selector field under the replica set specification to match the labels defined on the pod.
+우린 레플리카셋 아래에 POD에서 지정한 레이블과 일치하는 레이블을 지정하기 위해 셀렉터 필드를 구성했습니다.
+
+a single label will do. if it matches correctly.
+레이블이 정확히 일치하면 단일 레이블이 수행됩니다.
+
+However if you feel there could be other pods with the same label but with a different function
+하지만 레이블은 동일하지만 다른 기능을 가진 POD 들이 있을수 있다고 생각되면은
+
+then you could specify both the labels to ensure that the right pods are discovered by the replica set 
+레플리카 셋에서 올바른 POD 를 찾는걸 보장 하기위해 레이블을 두개 지정할 수 있씁니다.
+
+on creation.
+
+
+[템플릿 아래 공간은 POD 의 특성을 지정하는 곳. 여기에 레이블을 적어두면]
+- POD 정의파일에 적혀있는 동일한 레이블을 찾아 복제를 시도한다.
+- 그러한 맥락에서. 
+
+If the labels match the replica set is created successfully 
+만약 레플리카 셋과 레이블이 일치하면 성공적으로 생성되어집니다.
+
+it works the same for other objects like a service when a service is created.
+이건 다른 오브젝트들도 동일하게 작동합니다. 서비스가 생성되어질때와 같이.
+
+it uses the selector defined in the service definition file to match the labels set on the pods in the replica set definition file.
+서비스 생성은 서비스 정의파일에 셀럭터 정의를 사용합니다. 레플리카셋 정의파일에 POD 레이블과 일치시키기 위해
+
+Finally let’s look at annotations. 
+마지막으로 어노테이션을 살펴봅시다.
+
+While labels and selectors are used to group and select objects, annotations are used to record other details for inflammatory purpose.
+레이블과 셀렉터는 개체를 그룹화하고 선택하는데 사용되지만 주석은 다른 상세정보를 기록하기 위해 사용되어 집니다.
+
+
+
+[레이블 과 같은 레벨에 annotations 도 작성 하는 이야기.]
+
+
+For example tool details like name, version, build information, etc or contact details, phone numbers, email id etc.
+예를 들어 도구의 상세정보, 가령 이름이나 버전, 빌드 정보, 등등 또는 연락처 정보 핸드폰 번호 이메일 ID 등등
+
+that may be used for some kind of integration purpose. 
+어노테이션은 통합의 목적같은 것을 위해 사용되어 집니다.
+
+Well, that’s it for this lecture on labels and selectors and annotations.
+
+Head over to the coding exercises section and practice working with labels and selectors.

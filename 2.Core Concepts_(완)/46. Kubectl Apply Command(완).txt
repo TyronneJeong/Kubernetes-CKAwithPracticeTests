@@ -1,0 +1,143 @@
+In this lecture, we will understand more about how the kubectl apply command works.
+이번 강의에서는 kubectl apply 가 어떻게 작동하는지에 대해 조금 더 이해해 보겠습니다.
+
+In the previous lecture, we saw how "kubectl apply" can be used to manage objects in a declarative way.
+이전 강의에서 kubectl apply 커맨드가 명령적 방식에서 어떻게 오브젝트를 관리하는데 사용되는지를 보았습니다.
+
+This lecture, we'll see a bit more about how the command works internally.
+이번 강의에서는, 내부적으로이 명령어들이 어떻게 동작하는지 조금 더 자세히 살펴보겠습니다.
+
+(takes into consideration:고려하다)
+The Apply command takes into consideration the local configuration file, a live object definition on Kubernetes 
+apply커맨드는 쿠버네티스에서 라이브 오브젝트를 정의하는 로컬 설정 파일과
+
+and the last applied configuration before making a decision on what changes are to be made.
+변경사항이 어떻게 되는지 결정하기 이전에 최종적으로 적용된 설정을 고려합니다.
+ 
+So when you run the apply command, if the object does not already exist, the object is created .
+그래서 어플라이 커맨드를 실행할때, 오브젝트가 기존에 존재하지 않으면, 오브젝트가 생성됩니다.
+
+(locally:장소상에서, 지역상에서)
+when the object is created, an object configuration similar to what we created locally is created within Kubernetes, but with additional fields to store status of the object.
+오브젝트가 생성될 때에, 
+우리가 생성한것과 유사한 오브젝트 설정파일이 쿠버네티스에 생성됩니다. 그외 객체의 상태를 저장하기 위한 추가적인 필드들도 함께.
+
+This is the live configuration of the object on the kubernetes cluster.
+이것이 쿠버네티스 클러스터 오브젝트의 라이브 설정입니다.
+
+This is how kubernetes internally are stores information about an object.
+이것이 쿠버네시트가 내부적으로 오브젝트 정보를 저장하는 방법입니다.
+
+[YAML이건 명령이건 대상 정보를 기초로 오브젝트를 생성하지만 그외 STATUS 라는 필드들은 쿠버네티스가 관리할 목적으로 메모리상에는 추가되어 등록되어진다는 의미.]
+
+no matter what approach you use to create the object.
+당신이 오브젝트를 생성하는데 어떤 접근법을 사용하는지는 상관없다.
+
+But when you use the kubectl apply command to create an object, it does something a bit more.
+하지만 당신이 오브젝트 생성을 위해 kubectl apply 커맨드를 사용할때엔, 여기엔 무언가 조금 더 한다.
+
+The Yaml version of the local object configuration file road is convertion to a JSON format, 
+YAML형태의 오브젝트 설정파일은 JSON 포맷으로 변환됩니다.
+
+and it is then stored as(으로) the last applied configuration 
+그런다음 마지막으로 적용된 구성으로 저장됩니다.
+
+going forward for any updates to the object.
+모든 오브젝트에 업데이트가 진행될때에는
+
+All the three are compared to identify what changes are to be made on the live object.
+이 세가지 모두 서로 비교됩니다. 무엇이 라이브 오브젝트와 다른지.
+
+[로컬 파일 vs 마지막 적용 설정 vs 라이브 오브젝트]
+
+For example, say when the nginx image is updated to 1.19 in our local file and we run the apply command.
+예를 들어, 다음 nginx 이미지가 우리 로컬 파일상 1.19로 업데이트 했고 우리가 apply 커맨드를 실행했을때
+
+This value is compared with the value in the live configuration and if there is a difference, the life configuration is updated with the new value.
+버전 정보는 라이브 설정의 버전정보와 비교됩니다. 그리고 이 둘이 다른 경우 라이브 설정은 새 버전 정보로 업데이트 됩니다.
+
+After any change.
+모든 변경이후
+
+The last applied JSON format is always updated to the latest so that it's always up to date.
+최종 적용된 JSON 포맷은 항상 최신버전으로 업데이트 됩니다.
+그러니 이건 항상 최신 상태라는 겁니다.
+
+[로컬YAML파일 vs 라이브배포전 JSON 파일 VS 라이브오브젝트설정정보]
+
+So why do we then really need the last applied configuration, right?
+그렇다면 마지막으로 적용된 JSON 포맷은 왜 필요한 걸까요?
+
+So if a field was deleted, say, for example, the typed label was deleted, and now when we run the kubectl apply command
+그건 만약, 필드가 삭제되거나, 예를 들어 입력된 레이블이 지워졌고 우린 kubectl apply 커맨드를 입력한 경우
+
+(present:표현하다, 겨누다, 정하다, 증정하다)
+we see that the last applied configuration had a label, but it's not present in the local configuration.
+우린 최종 적용 정보에는 레이블이 있지만 로컬 설정 파일에는 없다는걸 알게됩니다.
+
+
+This means that the field needs to be removed from the live configuration.
+이것의 의미는 라이브 설정에서 해당 필드가 삭제될 필요가 있다는 걸 의미합니다.
+
+So if a field was present in the live configuration and not present in the local or the last applied configuration,
+만약 라이브 설정에 해당 필드가 있었으나, 로컬 파일 또는 최종 적용 버전에는 없는 경우
+
+then it will be left as is.
+그러면 그대로 남습니다.
+
+But if a field is missing from the local field and it is present in the last applied configuration,
+하지만 만약 로컬 필드에서는 사라지고 최종 적용 설정에 존재하는 경우
+
+(particular:특정한, 각별한, 상세한, 꼼꼼한)
+so that means that in the previous step or whenever the last time we ran the program in that particular field was there and it is now being removed.
+그럼 이전 단계 또는 최종시간이 어떻게되든, 우린 특정 필드가 존재할때 프로그램을 돌렸다가 현재는 사라졌다는 것을 의미합니다.
+
+So the last applied configuration helps us figure out What fields have been removed from the local file?.
+그러니 최종 설정 정보는 어떤 필드가 로컬 파일상에서 삭제되어졌는지 밝혀내는데에 도움을 줍니다.
+
+Right, so that field is then removed from the actual live configuration.
+맞습니다. 저 필드가 라이브 실제 라이브 설정에서 삭제되었습니다.
+
+What we just discussed is available for your reference in detail in the kubernetes document pages,
+우리가 방금 논의했던것들은 쿠버네티스 도큐먼트 페이지에서 상세한 정보를 참고 할 수 있습니다.
+
+so follow this link to view that, 
+그럼 해당 문서를 보기 위해 아래 링크를 따라가세요.
+
+OK, so we saw the three sets of files and we know that the local file is what's stored on our local system.
+우리는 3개의 파일 세트를 보았습니다.
+그리고 로컬 파일은 로컬 시스템에 무엇이 저장되었는지를 알게되었습니다.
+
+The live object configuration is in the kubernetes memory.
+라이브 오브젝트 설정은 쿠버네티스 메모리상에서 존재합니다.
+
+But where is this JSON file that has the last applied configuration stored?
+그럼 최종 설정정보가 저장된 JSON 파일은 어디에 있을까요?
+
+Well, it's stored on the live object configuration on the kubernetes cluster itself as an annotation
+이건 쿠버네티스 클러스터에 라이브 오브젝트 설정에 어노테이션 형태로 저장되어있습니다.
+
+named last applied configuration.
+라스트 어플라이크 컨피규레이션이란 이름으로.
+
+So remember that this is only done when you use the apply command, 
+그러니 이런 저장정보는 오직 apply 커맨드를 사용할 떄에만 발생한다는걸 기억하세요.
+
+the kubectl create or replace command do not stored the last applied configuration like this.
+kubectl create 나 replace 명령어들은 이런 최종 저장정보를 만들지 않습니다.
+
+(bear in mind:명심하다) (bear:견디다, 지다, 기대다, 낳다, 팔다)
+So you must bear in mind not to mix the imperative and declarative approaches while managing the kubernetes as objects.
+그러니 쿠버네티스 오브젝트를 관리하는 동안 항상 명령적 선언과 선언적 선언이 뒤 섞이지 않도록 주의해야 합니다.
+
+
+So once you use the Apply command going forward, whenever a change is made, the Apply command compares all three sections.
+apply 명령어를 한번 사용하면, 무언가 변경사항이 만들어 지고, apply 커맨드는 이 3가지 섹션을 서로 비교합니다.
+
+
+The local definition file, the live object configuration and the last applied configuration stored within the life object configuration file for deciding what changes are to be made to the live 
+로컬 파일, 최종 설정 JSON, 라이브 오브젝트 설정 파일 중 어떤 것이 변경사항인지 결정하기 위해
+
+Well, that's it for this lecture.
+
+I will see you in the next.

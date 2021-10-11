@@ -1,0 +1,299 @@
+------------------------------------------------------------
+[인증서와 키의 종류]
+[서버인증서]
+- KubeAPI 서버 인증서
+- ETCD 서버 인증서
+- 큐블렛 서버 인증서
+
+[클라이언트인증서]
+- 관리자 인증서
+- 스케쥴러 인증서
+- 큐브 컨트롤 매니저
+- 큐브 프록시
+
+[ETCD <-> API Server]
+- apiserver 키와 인증서를 그대로 사용가능
+
+[Kubelet 서버 <-> API Server]
+- kubelet.crt 키와 인증서를 그대로 사용가능
+
+[CA 서버]
+- ca.crt 와 ca.key 인증 파일을 사용
+------------------------------------------------------------
+
+
+
+Hello and welcome to this lecture notes lecture, we look at securing your kubernetes cluster with TLS certificates.
+안녕하세요 이번 강의에서는 TLS 인증을 이용한 쿠버네티스 클러스터 보안 입니다.
+
+In the previous lecture we saw what public and private keys are, how a server uses public and private keys to secure connectivity.
+이전 강의에서 우리는 공개키와 개인키, 어떻게 서버가 공개키를 이용하고 개인키를 이용하는지에 대해 알아보았습니다.
+
+We will call them server certificates.
+우리는 이걸 인증서 서버 인증서하고 부를 것입니다.
+
+We saw what a certificate authority is.
+우리는 인증 기관이 무엇인지 보았습니다.
+
+We learned that the CA has its own set of public and private key pairs that it uses to sign server certificates.
+우리는 CA기관이 서버인증서에 서명할때 사용되는 공개키와 개인키 쌍을 가지고 있다고 배웠습니다.
+
+We will call them Root certificates.
+우린 이것을 루트 인증서라고 부르겠습니다.
+
+---------------------------------------------------------------
+[Server Cerificates]
+[Root Cerificates]
+[Client Cerificates]
+---------------------------------------------------------------
+
+We also saw how a server can request a client to verify themselves using client certificates.
+우리는 또 서버가 사용자 인증서로 자기증명을 요청하는 방법또한 보았습니다.
+
+So three types of certificates, server certificates configured on the server, root certificate configured on the CA servers, and then client certificates configured on the clients.
+3가지 유형의 인증이 있습니다. 서버인증서는 서버에 구성이 됩니다. 루트 인증서는 CA서버에 그리고 클라이언트 인증서는 클라이언트에 구성됩니다.
+
+And a quick note on naming convention before we go forward.
+그리고 앞으로 진행하기에 앞서 네이밍 컨밴션에 대해 짚고 가겠습니다.
+
+You're going to see a lot of certificate files in this lecture and it could be very confusing.
+당신은 이강의에서 아주 많은 인증서 파일을 볼게 될 것입니다. 그리고 이것들은 아주 혼란스럽습니다.
+
+So use this technique to know which one is which.
+그래서 어느것이 어느것인지 를 알기 위한 테크닉을 써야 합니다.
+
+Usually certificates with public keys are named .crt or .pem extension.
+일반적으로 공개키를 이용한 인증서는 .crt 또는 .pem 확장자를 붙입니다.
+
+So that's server.crt or server.pem for server certificates or client.crt or clien.pem for client certificates.
+그래서 서버 인증서의 경우 server.crt, cerver.pem
+    사용자인증서의 경우 client.crt, client.pem
+
+And private keys are usually with extension .key or with -Key in the filenames, 
+그리고 개인키는 보통 key 확장자 또는 -key 키워드를 파일명에 붙입니다.
+
+for example. Server.key or server-key.pem
+예를들어 server.key 또는 server-key.pem
+
+[PEM 은 확장자로 다 통용되는듯]
+
+So just remember, private keys have the word key in them, usually either as an extension or in the name of the certificate 
+그러니 기억하세요. 개인키는 인증서의 확장자는 파일명에 key 보통 워드가 있습니다.
+
+and one that doesn't have the word key in them is usually a public key or certificate.
+그리고 key 워드가 없는 경우 보통 공개키 또는 인증서가 되겠습니다.
+
+That's how I remember it.
+이것이 내가 기억해야할 그 방법입니다.
+-----------------------------------------------------------------
+
+We will now see how these concepts relate to a kubernetes cluster.
+우리는 이제 이 커셉을 쿠버네티스 클러스터에 연결시키는 방법에 대해 알아보겠습니다.
+
+The kubernetes cluster consists of a set of master and worker nodes, 
+쿠버네티스 클러스터는 마스터와 워커 노드로 구성되어 있습니다.
+
+of course, all communication between these nodes need to be secure and must be encrypted.
+당연하게도 모든 노드간 커뮤니케이션는 보호되어야 하고 암호화 되어야만 합니다.
+
+All interactions between all services and their clients need to be secure.
+모든 서비스와 그들의 클라이언트 같에도 보안이 필요합니다.
+
+(via:통하다, 통해, ~경유하여)
+For example, an administrator interacting with the kubernetes clustered through the kubectl utility or via accessing the kubernetes API directly must establish secure TLS connection.
+예를들어 kubectl 유틸리티를 통해 또는 쿠버네티스 API를 직접 이용해 접근하는 쿠버네티스 클러스터와 상호작용하는 관리자는 TLS커넥션으로 보호해야 합니다.
+
+Communication between all the components within the kubernetes cluster also need to be secured.
+쿠버네티스 클러스터내 모든 컴포넌트들과의 소통은 보안이 필요합니다.
+
+So the two primary requirements are to have all the various services within the cluster to use server certificates  and all clients to use client certificates to verify they are who they say they are.
+그래서 두가지 기본 요구사항이 있습니다.
+클러스터내 다양한 서비스는 서버 인증을 이용해야한다는 것과 모든 클라이언트는 그들이 누구인지 확인하기 위해 클라이언트 인증을 이용해야 한다는 것입니다.
+
+Let's look at the different components within the kubernetes cluster and identify the various servers and clients and who talks to who.
+쿠버네티스 클러스터 내 다른 컴포넌트들을 확인 합시다. 그리고 다양한 서버를 확인하고 클라이언트와 누가 누구랑 이야기하는지
+---------------------------------------------------------------
+Let's start with the KubeAPI server.
+KubeAPI 서버로 부터 시작해 봅시다.
+
+As we know already, the API server exposes https service that other components as well as external users use to manage the kubernetes cluster.
+우리는 이미 알고 있듯이. API 서버는 다른컴포넌트들에게 https 서비스로 제공되고 있습니다. 게다가 외부 유저가 쿠버네티스 클러스터를 관리하기 위해 이용합니다.
+
+So it is a server and it requires certificates to secure all communication with its clients.
+이것은 서버 그리고 클라이언트와의 모든 커뮤니케이션의 보호를 위해 인증서를 필요로 하는것 입니다.
+
+So we generate a certificate and keep here.
+그래서 인증서를 생성하고 여기 보관하고 있습니다.
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+[API서버 인증서 & 개인키]
+- API 서버는 인증서와 개인키를 모두 가지고 있다.
+- 컴포넌트들간의 소통을 중재하는 역할이므로.
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+
+We call it apiserver.crt and apiserver.key
+apiserver.crt 그리고 apiserver.key 라고 부른다.
+
+We will try to stick to this naming convention going forward.
+우린 앞으로도 이 네이밍을 계속 고수 할 것입니다.
+
+Anything with a CRT extension is the certificate and .key extension is the private key.
+crt 확장자가 붙은것은 인증서 입니다. 그리고 .key 확장자는 개인키 입니다.
+
+Also remember, the certificate names could be different in different kubernetes setups depending on who and how the cluster was set up.
+그리고 기억하세요. 인증서 이름은 누가 어떤 셋업을 했냐에 따라 쿠버네티스 셋업에 따라 다를 수 있습니다.
+
+So these names may be different in yours.
+그래서 이 이름이 당신의 상황에서는 다를 수 있습니다.
+
+In this lecture, we will try to use names that help us easily identify the cert files.
+이 강의에서는 crt 파일을 쉽게인식 하기 위해 이름으로 사용하겠습니다.
+
+Another server in the cluster is the ETCD server, the ETCD server stores, all the information about the cluster, 
+클러스터내 또 다른 서버로 ETCD 서버가 있습니다. ETCD 서버는 클러스터내 모든 정보를 저장합니다.
+
+so it requires a pair of certificate and key for itself.
+그래서 ETCD 서버도 인증 쌍과 키가 필요합니다. 
+
+We will call etcdserver.crt and etcdserver.key 
+우리는 이를 etcdserver.crt 또는 etcdserver.key 라고 부릅니다.
+
+the other server component in the cluster is on the worker nodes.
+클러스터내 다른 서버로는 워커 노드가 있습니다.
+
+There are the kubelet services.
+거기엔 큐블렛 서비스가 있습니다.
+
+They also expose https API endpoint that the Kube API server talks to to interact with the worker nodes.
+큐블렛은 또한 API 서버와 워커 노드가 통신을 하기 위한 https API 엔드포인트로 노출 되어 있습니다.
+
+Again, that requires a certificate and key pairs.
+다시한번 여기에 인증서와 키 쌍이 필요합니다.
+
+We call it kubelet.crt and kubelet.key
+우린 이걸 kubelet.crt 와 kubelet.key 라고 부릅니다.
+
+[3개의 인증서와 키]
+- KubeAPIServer
+- ETCD
+- Kubelet
+
+Those are really the server components in the kubernetes cluster.
+이것들은 실제로 쿠버네티스 클러스터의 서버 구성 요소 입니다.
+
+Let's now look at the client components, who are the clients who access the services.
+이제 클라이언트 컴포넌트들 봅시다. 누가 클라이언트이고 누가 서비스에 접근합니까
+
+the clients who access the KubeAPIServer are us.
+KubeAPI서버에 접근하는 사용자는 바로 우리입니다.
+
+The administrators to kubectl arrested??? API the admin user requires a certificate and key pair to authenticate to kubeAPI server.
+관리자는 KubeAPI 서버의 인증을 받기 위해 인증서와 키 쌍이 필요합니다.
+
+We will call it admin.crt and admin.key
+우린 이걸 admin.crt 와 admin.key 라고 부를것입니다.
+
+The scheduler talks to the API server to look for pods that require scheduling and then get the API server to schedule the pods on the right worker nodes.
+스케쥴러는 API 서버와 통신합니다. 스케쥴링이 필요한 POD 를 찾기 위해. 그리고 POD를 올바른 워커 노드에 스케쥴 하기 위해 API 서버를 얻습니다.
+
+The scheduler is a client that accesses the API server.
+스케쥴러는 API 서버에 접근하는 클라이언트 입니다.
+
+(As far as: ~관한한)
+As far as the API server is concerned, the scheduler is just another client, like the admin user.
+API 서버에관한한 스케쥴러는 관리자와 같은 클라이언트 일 뿐입니다.
+
+So the scheduler needs to validate its identity using a client TLS certificate. 
+그래서 스케쥴러는 검증이 필요합니다. 클라이언트 인증으로 사용하기 위해 식별되는 클라이언트 TLS 인증서가 필요합니다.
+
+so it needs its own payroll certificate and keys.
+따라서 자체적으로 부텨된 인증서와 키가 필요합니다.
+
+We will call it scheduler.crt and scheduler.key.
+우리는 이를 scheduler.crt 와 scheduler.key 라고 부릅니다.
+
+The Kube controller manager is another client that accesses the Kube API server, so it also requires a certificate for authentication to the KubeAPI server.
+큐브 컨트롤러 매니저는 API 서버에 접근하는 또다른 클라이언트 입니다. 그래서 이 역시 KubeAPI 서버에 인증받기 위한 인증서가 필요합니다.ㄴ
+
+So we create a certificate, prepare for it.
+그래서 우리는 인증서는 생성하고 준비합니다.
+
+The last client component is the Kube-Proxy, the Kube-Proxy requires a client certificate to authenticate to the API server and so it requires its own pair of certificate and keys.
+마지막 클라이언트 컴포넌트는 큐브 프록시 입니다. 큐브프록시 도 인증서와 키쌍이 필요함.
+
+We will call them kube-proxy.crt and kube-proxy.key
+우리는 이를 kube-proxy.crt 그리고 kube-proxy.key 라고 합니다.
+
+the servers communicate amongst them as well.
+서버는 그들 사이에서도 통신합니다.
+
+For example, the API server communicates with the server.
+예를 들어 API 서버는 서버와 통신을 합니다.
+
+In fact, of all the components, the Kube API server is the only server that talks to the ETCD server.
+사실 모든 컴포넌트들에게 API 서버는 ETCD서버와 통신가능한 유일한 서버입니다.
+
+So as far as ETCD server is concerned, the Kube API server is a client, so it needs to authenticate.
+그래서 ETCD 서버에 관한해서만큼은, KubeAPI 서버는 클라이언트 입니다. 때문에 서버 역시 인증이 필요합니다.
+
+The API server can use the same keys that it used earlier for serving its own API service.
+API 서버는 동일 한 키를 사용할 수 있습니다. API 서버가 보유한 서비스를 서빙을 위해 사용하던 키를 동일하게 사용할 수 있습니다.
+
+The apiserver.crt and the apiserver.key files.
+API 서버는
+
+Or you can generate a new pair of certificates specifically KubeAPI server to authenticate to the ETCD server.
+또는 특별히 인증서 쌍을 생성할수도 있습니다. KubeAPI 서버의 ETCD 서버의 인증을 위해서.
+
+The KubeAPI server also talks to the Kubelet server on each of the individual nodes.
+KubeAPI 서버는 또한 개별 노드의 큐블렛 서버와 통신할 수 있습니다.
+
+That's how it monitors the worker nodes.
+이것은 워커노드를 모니터링 하는 방법입니다.
+
+for this again, it can use the original certificates or generate new ones specifically for this purpose.
+이 역시 반복적으로, 해당 목적을 위해 기존 인증서 또는 새로운 인증서 생성 모두 할 수 있습니다.
+
+So that's too many certificates.
+음 꽤 많은 인증서들이 있습니다.
+
+Let's try and group them.
+그럼 이들을 그룹지어 봅시다.
+
+--------------------------------------------------------------
+
+There are a set of client certificates mostly used by clients to connect to the KubeAPI server, and there are a set of server side certificates used by the KubeAPI server
+저기 대부분 클라이언트들이 KubeAPI 서버에 접속 할때 사용되는 클라이언트 인증서 세트가 있습니다. 그리고 저기에는 KubeAPI서버에서 사용되는 서버 인증서가 있습니다.
+
+ETCD server and kubelet to authenticate their clients.
+ETCD 서버와 큐블렛은 그들의 클라이언트를 인증합니다.
+
+We will now see how to generate these certificates.
+우리는 이제 이 인증서가 어떻게 생성되는지 보겠습니다.
+
+As we know already, we need a certificate authority to sign all of these certificates.
+우리는 이미 알고 있는바와 같이. 이 인증서에 서명해줄 인증기관이 필요합니다.
+
+kubernetes requires you to have at least one certificate authority for your cluster.
+쿠버네티스는는 클러스터내 최소 하나이상의 인증기관을 필요로 합니다.
+
+In fact, you can have more than one.
+사실 하나 이상을 가지고 있습니다.
+
+one for all the components in the cluster and another one specifically for ETCD.
+클러스터내 모든 컴포넌트들을 위한 하나와 ETCD 만들 위한 나머지 하나.
+
+That case, the ETCD server certificates and the ETCD servers client certificates, which in this case is the API server client certificate will be all signed by the ETCD server's CA.
+이 경우 ETCD 서버 인증서와 클라이언트 인증서는 모두 ETCD 서버의 CA 에서 서명됩니다.
+
+For now, we will stick to just one CA for our cluster.
+지금은 그저 하나의 CA 로만 고수하겠습니다.
+
+The CA as we know, has its own pair of certificate and key.
+CA는 우리가 알다 시피 한 쌍의 인증서와 키로 구성되어 있습니다.
+
+We will call it CA.crt and CA.key
+우리는 이걸 ca.crt 와 ca.key 로 부릅니다.
+
+That should sum up all the certificates used in the cluster.
+우리는 클러스터내 사용된 모든 인증서를 요약 해야 합니다.

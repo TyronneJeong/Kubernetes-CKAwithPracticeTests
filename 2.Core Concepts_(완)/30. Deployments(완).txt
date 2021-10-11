@@ -1,0 +1,165 @@
+Hello and welcome to this lecture.
+
+My name is Mumshad Mannambeth.
+
+In this lecture
+
+we will discuss about Kubernetes Deployments. For a minute,
+이번 강의에서는 쿠버네티스 디플로이먼츠 에 대해 논의해 보겠습니다.
+
+(might: ??)
+
+let us forget about PODs and replicasets and other kubernetes concepts and talk about how you might want to deploy your application in a production environment.
+POD와 레플리카셋등 다른 쿠버네티스 개념에 대해서는 잠시 잊읍시다.  그리고 어떻게 당신의 어플리케이션을 어떻게 배포할 수 있을지에 대해서만 말해봅시다.
+
+
+Say for example. you have a web server that needs to be deployed in a production environment.
+예를 들어보면. 실제 환경에 배포되기를 원하는 웹 서버가 있씁니다.
+
+(obvious reasons:명백한 이유)
+You need not one but many such instances of the web server running for obvious reasons.
+분명한 이유로 하나가 아닌 많은 수의 웹 서버 인스턴스가 동작 해야할 필요가 있습니다.
+
+
+Secondly whenever newer versions of application builds become available on the docker registry.
+두번째로, 새로운 버전의 어플리케이션이 도커 레지스트리에서 사용가능해질 때면
+
+(would like to : ~  하고 싶을 수 있따.) (seamlessly:원활하게)
+you would like to upgrade your Docker instances seamlessly.
+당신의 도커 인스턴스를 업그레이드 하고 싶을 수도 있습니다.
+
+However when you upgrade your instances.
+하지만 당신이 당신의 인스턴스를 업그레이드 할 떄면, 
+
+you do not want to upgrade all of them at once as we just did. 
+당신은 우리가 방금 했던것 처럼 한번에 대상 전부를 업그레이드 하길 원하지 않을 수도 있습니다.
+
+[한번에 업그레이드 하지 않고 하나씩 해야하는 이유가 있음.]
+
+(may:할수 있다) (impact:타격)
+This may impact users accessing our applications, so you might want to upgrade them one after the other.
+이로인해 우리의 어플리케이션에 접근하는 유저들에게 타격을 줄 수 있씁니다.
+때문에 당신를 업그레이드 한 후 다른것들을 업그레이드 하는 것을 원했을 수도 있습니다.
+
+
+[롤링 업그레이드의 등장.]
+
+And that kind of upgrade is known as rolling updates.
+이런 종류의 업그레이드 방식은 롤링 업그레이드라고 하고 있습니다.
+
+(Suppose:가정하다)
+Suppose one of the upgrades you performed resulted in an unexpected error and you're asked to undo the recent change.
+당신의 업그레이드들 중 하나가 예상치 못한 오류가 발생했고 그걸 원복하길 원한다고 가정해 봅시다.
+
+(would like to : ~ 하기를 원하다)
+you would like to be able to roll back the changes that were recently carried out. 
+당신은 최근에 수행된 것들을 롤백하기를 원합니다.
+
+Finally, say for example.
+마지막으로 예를들어
+
+you would like to make multiple changes to your environment.
+당신의 실행환경에서 많은 수의 변경을 하려고 합니다.
+
+(allocations: allow 허락, allocation:할당)
+such as upgrading the underlying WebServer versions, as well as scaling your environment and also modifying the resource allocations etc.
+웹서버 버전을 업그레이드 하는 것 과 같은, 인프라의 스케일을 늘리는 것, 그리고 할당 받은 자원을 수정하는 것 등등과 같은 것들을
+
+You do not want to apply each change immediately after the command is run instead.
+당신은 각각의 변경이 명령어 입력 이후 즉시 적용되는것을 원하지 않습니다.
+
+(you would like to:~하려고 합니다)
+you would like to apply a pause to your environment, make the changes and then resume.
+당신은 실행환경을 잠시 정지시키고 변경을 완료한다면 다시 진행시키고 싶어 합니다.
+
+so that all changes are rolled-out together. 
+그리고 모든 변경사항을 함께 릴리즈 합니다.
+
+[롤 아웃이 뭐여.. -> 출시, 발표]
+
+
+
+(capabilities:능력)
+All of these capabilities are available with the kubernetes Deployments. 
+이 모든 능력은 쿠버네티스 디플로이먼츠를 통해 가능합니다.
+
+
+So far in this course we discussed about PODs, which deploy single instances of our application such as the web application in this case. Each container is encapsulated in PODs. 
+그래서 이 과정 후반에 현제 웹 어플리케이션과 같은 어플리케이션 인스턴스가 배포되는 POD 에 대해 다룰 것입니다.
+각각의 컨테이너는 POD안에 캡슐화 되어있습니다.
+
+
+Multiple such PODs are deployed using Replication Controllers or Replica Sets. 
+다수의 그런 POD는 레플리케이션 컨트롤러나 레플리카셋을 이용하여 디플로이 됩니다.
+
+And then comes deployment which is a kubernetes object that 
+그리고 계층구조에서 상위 오브젝로 디플로이 됩니다.
+
+(underlying:밑에있는) (seamlessly:원활하게)
+The deployment provides us with the capability to upgrade the underlying instances seamlessly using rolling updates, undo changes, and pause and resume changes as required.
+디플로이먼트는 롤링 업데이트, Undo체인지, 그리고 pause & resume change 를 요청에 맞춰 사용하여, 밑에있는 인스턴스를 원활히 업그레이드하는 기능을 함께 우리에게 제공합니다.
+
+
+So how do we create a deployment. As with the previous components,
+그럼 디플로이먼트를 어떻게 만들까요. 이전의 컴포넌트들과 같이.
+
+We first create a deployment definition file. 
+디플로이먼트 정의파일부터 생성합니다.
+
+The contents of the deployment definition file are exactly similar to the replica set definition file, except for the kind, which is now going to be deployment. 
+디플로이먼트 정의파일은 레플리카셋을 정의한 파일과 kind만 제외하고 정확히 동일합니다.
+현재 kind 는 deployment가 되어야 합니다.
+
+
+If we walk through the contents of the file.
+만약 파일의 컨텐츠를 훑는다면
+
+it has an apiVersion which is apps/v1, metadata which has name and labels and a spec that has template, replicas and selector.
+파일에 apiVersion은 apps/v1을 가집니다.
+metadata는 name와 labels 을 가지고 그리고 spec 은 template, replicas, selector 를 가집니다.
+
+
+(specify:지정하다, 기입하다, 열거하다)
+The template has a pod definition inside it. Once the file is ready run the kubectl create command and specify the deployment definition file. 
+template 는 pod definition 을 안에 가지고 있습니다.
+파일이 준비되면 kubectl create 커맨드를 이용해 실행해 줍니다. 그리고 디플로이먼트 정의파일을 지정합니다.
+
+
+Then run the kubectl get deployments command to see the newly created deployment. 
+그리고 kubectl get deployments 명령을 사용해 새롭게 생성된 deployment 를 봅니다.
+
+
+The deployment automatically creates a replica set.
+이 디플로이먼트는 자동으로 레플리카 셋을 생성합니다.
+
+
+So if you run the kubectl get replcaset command You will be able to see a new replica set in the name of the deployment.
+따라서 당신이 kubectl get replicaset 명령을 친다면 새롭게 생성된 레플리가 셋을 볼 수 있씁니다.
+
+The replicasets ultimately create pods, so if you run the kubectl get pods command.
+레플리카 셋은 자동으로 pod들을 생성합니다. 그래서 kubectl get pods 커맨드를 치면
+
+you will be able to see the pods with the name of the deployment and the replicaset.
+디플로이먼트나 레플리카 셋과 함께 pod 들도 볼 수 있습니다.
+
+
+So far there hasn't been much of a difference between replica set and deployments.
+레플리카 셋과 디플로이먼트에 커다란 차이점은 존재하지 않습니다.
+
+except for the fact that deployments created a new kubernetes object called deployments.
+디플로이먼트라고 불리는 녀석에게서 디플로이먼츠가 생성되었다는 사실을 제외 하고 말입니다.
+
+We will see how to take advantage of the deployment using the use cases.
+유즈케이스의 사용을 통해 디플로이먼츠가 어떻게 이점을 가지는지 살펴보겠습니다.
+
+we discussed in the previous slide in the upcoming lectures and one more note before we end this lecture.
+우린 다가오는 강의의 이전 슬라이드를 활용해 논의했었습니다. 그리고 이 강의를 끝내기전 하나 더 노트하자면
+
+To see all the created objects at once.
+생성된 모든 객체들을 한번에 보는 것은
+
+run the kubectl get all command and in this case we can see that the deployment was created and then we have the replica set followed by three pods that were created as part of the deployment.
+kubectl get all 명령어 입니다.
+이경우 우린 이걸로 다 볼수 있씁니다.
+
+That's it for this lecture.

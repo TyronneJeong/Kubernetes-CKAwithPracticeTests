@@ -1,0 +1,91 @@
+[KODE KLOUD 사용법]
+
+Hello, in this video, I will explain how to access labs, part of this course, 
+안녕하세요. 이번 비디오에서는 어떻게 랩에 엑세스 하는지를 설명드릴 겁니다.
+
+this course comes with real hands on labs that you can access right in your browser.
+해당 코스는 브라우저에서 바로 엑세스 할 수 있는 실제 실습가능한 랩을 함께 제공합니다. 
+
+Unfortunately, Udemy does not have native support for embedding real hands on labs in the course.
+불행하게도 유데미는 이과정에서 실습과제를 포함하는 기능을 제공하지 않습니다.
+
+And that's why these labs are hosted on code cloud.
+그리고 이게 실습환경을 코드 클라우드에서 호스팅 되는 이유입니다.
+
+Students who purchased this course on Udemy can get access to the labs for free on Kode Kloud.
+유데미에서 이 과정을 결제한 학생들은 코드클라우드에서 무료로 엑세스 가능 합니다.
+
+You don't have to make any extra payments to access the labs.
+해당 랩에 접근하는걸로 추가적인 지출을 하실 필요가 없습니다.
+
+There's a lecture named Accessing the Labs in your course.
+해당 과정의 엑시스 랩이라는 이름으로 강의가 있습니다.
+
+It is under the core concept section in the course for CKA and CKAD 
+이 강의는 CKA또는 CKAD 과정의  코어 컨셉 아래에 있으며,
+
+right before the first lab starts in the lecture.
+
+There is a link with a coupon code to enroll in the labs.
+거기 랩을 수강할 수 있는 쿠폰코드와 함께 링크가 있습니다.
+
+Use the link to go to the checkout page on Code Cloud and apply the coupon code to gain access to the labs for free.
+링크를 사용하여 체크아웃 페이지로 가십시오. 그리고 해당 랩을 무료로 얻기 위해 쿠폰코드를 적용하세요.
+
+
+If you haven't signed up on the Cloud website before, you will need to provide your email address.
+만약 코드클라우드에 가입 하신 적이 없다면, 먼저 이메일 주소를 제공해야합니다.
+
+A temporary password will be emailed to you 
+임시 페스워드가 당신에게 이메일로 갈 것입니다. 그걸로 
+
+so that you can log in code Cloud and Udemy are different platforms and unfortunately there is no option available yet to share the same user accounts between the two.
+그럼 그걸로 코드 클라우드와 유데미에 로그인 가능 할 것입니다. 그리고 불행히고 그것들은 동일한 유저의 두개의 계정사이에 공유가능한 옵션이 아직 없습니다.
+
+So you must create an account and sign up on code cloud to access the labs.
+그래서 꼭 계정을 생성하고 코드 클라우드에 접속해야합니다.
+
+Remember, your Udemy credentials won't work on code cloud if you are accessing through Udemy for business,
+기억하세요. 비즈니스 유데미를 통해 엑세스 하는 경우 유데미는 자격증명이 코드 클라우드에서 정상적으로 작동하지 않습니다.
+
+then your company credentials won't work either.
+회사 자격증명도 마찬가지입니다.
+
+You must create a new account on code cloud.
+코드클라우드에서 새로운 계정을 생성하셔야만 합니다.
+
+This is something we hope to improve in the future.
+이것은 우리가 향후 개선되기를 바라는 것이기도 합니다.
+
+Note that the coupon code may not be the same as what you see in this video.
+노트하세요. 쿠폰 코드는 현재 비디오와 다를 수도 있습니다.
+
+So remember to use the correct one from the lecture when you access the labs.
+그러니 랩에 엑세스 할때 강의에서 제대로 된 것을 사용하는 것을 기억하세요.
+
+Once logged in, you can find your cause under the causes page 
+lab courses start with the term labs in their name.
+한번 로그인 되면, 
+
+Once the labs are open, use the maximise button to hide the core curriculum, to get more space for your labs.
+
+And if you want to see the course curriculum again, click on the same button.
+
+And to turn on Darkmode, click the theme toggle button in the top right corner of your screen.
+
+Once you're done working on a lab market complete, using the market complete button, 
+
+
+as you can see, there are multiple lab scenarios for each course and when to access which lab, 
+
+
+the detail of that will be given within the course, as in when you progress through the course on Udemy, you will know when to access what lab.
+
+Well, that's it for now.
+
+I wish you all the best, and if you run into issues with accessing labs, please write to support at
+
+support at COLCLOUGH dot com.
+
+I hope you have a great learning experience from us.
+

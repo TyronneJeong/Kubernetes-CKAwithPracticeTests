@@ -1,0 +1,304 @@
+Hello and welcome to this lecture. 
+안녕하세요.
+
+We now look at high availability in kubernetes.
+이제 고가용성 HA 에 대해 알아보겠습니다.
+
+So what happens when you lose the master node in your cluster?
+당신의 클러스터에서 마스터 노드가 사라진다면 무슨일이 생길까요?
+
+As long as the workers are up and containers are alive, 
+워커 노드가 살아 있고 컨테이너가 살아 있는한
+
+your applications are still running.
+어플리케이션들은 정상 동작 할 것입니다.
+
+Users can access the application until things start to fail.
+사용자도 이것들에 문제가 생기기 전까지 어플리케이션에 접근 할 수 있습니다.
+
+For example a container or POD on the worker node crashes.
+예를들어 워커노드의 컨테이너 또는 POD가 충돌하게 되면?????????????????????
+
+Now, if that pod was part of a replicaset then the replication controller on the master needs to instruct the worker to load a new pod.
+만약 POD 가 레플리카 셋의 일부라면 마스터 노드의 레플리카 컨트롤러는 워커 노드에세 새로운 POD 를 가져오도록 지시 합니다.
+
+But the Master is not available and so are the controllers and schedulers on the master.
+하지만 마스터 노드가 지금 이용이 불가능 하고 컨트롤러와 스케쥴러는 마스터 노드에 있습니다.
+
+There is no one to recreate the pod and no one to schedule it on nodes.
+어느누구도 POD 를 재생성하지 않습니다. 그리고 어느누구도 Node 에 스케쥴 하지 않습니다.
+
+Similarly, since the kube-api server is not available 
+비슷하게. kube-api 서버가 이용불가능해진 이후 부터
+
+you cannot access the cluster externally through kubectl tool or through API for management purposes. 
+kubectl 도구를 통한 외부 접근이 불가능 해집니다. 또는 API 를 통한 관리목적으로 접근이 불가능 해집니다.
+
+Which is why you must consider multiple master nodes in in a High availability configuration in your production environment. 
+이것이 HA 설정에서 왜 당신이 다수의 마스터 노드를 고려해야만 하는지에 대한 이유입니다.
+
+(redundancy:여분)
+A high availability configuration is where you have redundancy across every component in the cluster 
+HA 설정은 클러스터 내 모든 컴포넌트의 여분을 가지는 장소입니다.
+
+so as to avoid a single point of failure.
+단일 실패 지점을 피하기 위해
+
+The master nodes, the worker nodes, the control plane components, the application of course, which we already have multiple copies in the form of replicasets and services.
+마스터 노드, 워커 노드, 컨트롤 플레인 컴포넌트, 어플리케이션, 레플리카셋과 서비스형태로 이미 다수의 복사본을 가지고 있습니다.
+
+So our focus in this lecture is going to be on the master and control plane components. 
+그래서 이 강의에서의 포커스는 마스터와 컨트롤 플레인 컴포넌트에 있습니다. 
+
+Let's take a better look at how it works.
+어떻게 동작하는지를 좀 더 살펴 봅시다.
+
+------------------------------------------------------------------------
+[HA 는 사본을 가지는 것]
+
+
+We’ve been looking at a 3 node cluster with 1 master and 2 worker nodes throughout this course. 
+우리는 3개의 노드 클러스가 보입니다. 1개의 마스터 2개의 워커 노드.
+
+In this lecture, we will focus on just the master node. 
+이번 강의에서 우리는 마스터 노드에 집중 할 것이빈다.
+
+As we learned already 
+이미 배운것 처럼.
+
+the master node hosts the control plane components including the API, Controller Manager, Scheduler and ETCD server. 
+마스터 노드는 API 컨트롤 매니저와 스케쥴러 ETCD 서버를 포함한 컨트롤 플레인 컴포넌트를 호스팅 하고 있습니다.
+
+------------------
+[쿠버네티스 컨트롤 플레인]
+------------------
+| API Server     |
+| Scheduler      |
+| ETCD Server    |
+------------------
+
+In a HA setup, with an additional master node, you have the same components running on the new master as well.
+HA 설정에서, 추가적인 마스터 노드를 사용하면, 새 마스터에도 동일한 구성 요소가 실행되게 됩니다.
+
+So how does that work.
+그럼 어떻게 동작하는 걸까요.
+
+Running multiple instances of the same components? 
+동일한 컴포넌트를 다수의 인스턴스로 실행 하는 것일까요?
+
+Are they going to do the same thing twice?
+컴포넌트들이 하는 것을 두번씩 하는 것일까요?
+
+How do they share the work among themselves?
+어떻게 그들이 작업 한 내용을 공유할 수 있을까요?
+
+Well that differs based on what they do.
+그들이 하는 일에 따라 다릅니다.
+
+We know that the API server is responsible for receiving requests and processing them or providing information about the cluster. They work on one request at a time.
+우리는 API 서버가 요청을 받고 요청을 처리하거나 클러스터에 관한 정보를 제공 하는 역할을 하고 있다는 걸 압니다. API 서버는 한번에 하나의 작업만 진행합니다.
+
+So the API servers on all cluster nodes can be alive and running at the same time in an active active mode. 
+그래서 모든 클러스터 노드에 있는 API 서버들은 생존할 수 있고 똑같은 시간에 액티브 모드를 활성화 할 수 있습니다.
+
+So far in this course we know that the kubectl utility talks to the API server to get things done and we point the kubectl utility to reach the master node at port 6443.
+지금까지 이 과정에서 우리는 kubectl 유틸리가 API 와 소통 하는것을 알고 있습니다.
+그리고 kubectl 유틸리는 마스터 노드에 6443포트로 통신한다는 것도.
+
+That’s where the API server listens and this is configured in the kube-config file.
+저 포트가 API 서버가 수신받은 장소 입니다. 그리고 이것들은 kube-config 파일에 설정됩니다.
+
+Well now with 2 masters, where do we point the kubectl to?
+좋습니다. 이제 2개의 마스터 를 이용할때, kubectl 은 어디를 향하면 될까요??
+
+We can send a request to either one of them but we shouldn't be sending the same request to both of them.
+우리는 요청을 둘중 하나에 보낼 수 있습니다. 하지만 동일한 요청을 둘 모두에게 보낼 수는 없습니다.
+
+So it is better to have a load balancer of some kind configured in the front of the master nodes 
+그래서 마스터 노드 전면에 로드 밸런서를 구성하는 것이 좋습니다.
+
+that split traffic between the API servers.
+API 서버간의 트래픽을 분할 합니다.
+
+So We then point the kubectl utility to that load balancer.
+그런 다음 우리는 kubectl 유틸리티가 로드 밸런서를 가리킵니다.
+
+You may use NGINX or HA proxy or any other load balancer for this purpose.
+NGINX 또는 HA Proxy 또는 여타 다른 로드 밸런서를 이용할 수도 있씁니다.
+
+------------------------------------------------------------------------
+What about the scheduler and the controller manager.
+스케쥴러와 컨트롤 매니저는 어떤가요?
+
+These are controllers that watch the State of the cluster and take actions. 
+여기 있는 컨트롤러 들은 클러스터의 상태를 감시합니다. 그리고 액션을 취합니다.
+
+For example the controller manager consists of controllers like the replication controller that is constantly watching the state of PODs and taking necessary actions, like creating a new POD when one fails etc.
+예를 들어 컨트롤러 매니저는 (지속적으로 POD 의 상태를 관찰하고 필요한 조치를 취하는-예를들면 하나의 POD 가 실패시 다른 POD 를 생성하는 것과 같은 조치)복제컨트롤러 같은 컨트롤러 들로 구성 됩니다.
+
+
+POD 를 관찰한다가 포인트임.
+
+If multiple instances of those run in parallel, then they might duplicate actions resulting in more pods than actually needed.
+복제컨트롤러 같은 인스턴스가 다수로 병렬로 실행 한다고 하면 실제 필요한것들 보다 더 많은 pod가 생성되는 복제 동작이 될 수도 있습니다.
+
+The same is true with scheduler.
+이건 스케쥴러도 마찬 가징비니다.
+
+(As such:따라서)
+As such they must not run in parallel.
+따라서 이것들은 결코 병렬로 실행하지 않습니다.
+
+They run in an active standby mode.
+이것들은 스탠바이 모드로 활성화 합니다.
+
+So then who decides which among the two is active and which is passive.
+그리면 누군가가 그 둘중 어느것을 활성화 할지를 결정 합니다.
+
+This is achieved through a leader election process.
+이 과정은 리더 투표 프로세스에 의해 결정됩니다.
+
+So how does that work.
+그렇다면 리더투표 작업은 어떻게 되는 걸까요?
+
+Let's look at controller manager for instance. 
+컨트롤러 매니저를 잠시 봅시다.
+
+When a controller manager process is configured.
+컨트롤러 매니저 프로세스가 구성되었을떄
+
+You may specify the leader elect option which is by default set to true.
+당신은 리더 투표 옵션을 기본 true 로 지정 할 수도 있습니다.
+
+With this option when the controller manager process starts it tries to gain a lease or a lock on an endpoint object in kubernetes named as kube-controller-manager endpoint. 
+이 옵션을 사용하면 컨트롤러 매니저 프로세스가 시작 했을때, 컨트롤러 매니저 프로세스는 앤드 포인트(쿠버-컨트롤러-매니저 앤드포인트) 오브젝트에 대여 또는 잠금을 잡으려 시도 합니다. 
+
+Which ever process first updates the endpoint.
+어느 프로세스가 먼저 엔드 포인트를 업데이트 하는지
+
+With this information gains the lease and becomes the active of the two.
+정보를 이용하여 대여 권한을 얻습니다. 그리고 둘중 하나를 액티브 하고
+
+The other becomes passive 
+나머지를 비활성화 합니다.
+
+it holds the lock for the lease duration specified using the leader-elect-lease-duration option which is by default set to 15 seconds.
+이 리스 잠금은 leader-elect-lease-duration 옵션을 통해 지정된 기간 동안 유지됩니다.
+(기본 15초)
+
+The active process then renews the lease every 10 seconds which is the default value for the option leader-elect-renew-deadline. 
+활성 프로세스는 다음으로 매 10초 마다 임대를 갱신을 합니다. 기본값은 leader-elect-renew-deadline 옵션을 참고.
+
+Both the processes tries to become the leader every two seconds, set by the leader-elect-retry-period option.
+두 프로세스 모두 2초마다 리더가 되려고 시고 합니다. 재시도 시간 조정은 leader-elect-retry-period 옵션.
+
+----------------------------------------------------------------------
+[리더 투표 시스템]
+>> kube-controller-manager --leader-elect true
+>>						--leader-elect-lease-deration 15s
+>>						--leader-elect-renew-deadline 10s
+>>						--leader-elect-retry-period 2s
+----------------------------------------------------------------------
+
+That way if one process fails maybe because the first must be crashes
+이 방법은 하나의 프로세스가 실패하게 되면 ???? 충돌입니다????
+
+then the second process can acquire the lock and become the leader.
+그런 다음 두번째 프로세스는 락을 습득 할 수 있고 리더가 됩니다.
+
+
+[스케쥴러]
+The scheduler follows a similar approach and has the same command line options. 
+스케쥴러는 유사한 접근법을 따릅니다. 그리고 동일 커맨드 라인 옵션을 가집니다.
+
+
+[ETCD]
+Next up, ETCD.
+다음으로 ETCD 입니다.
+
+We discussed about ETCD earlier in this course.
+우리는 이 코스의 이전 강의에서 ETCD에 대해 다루었습니다.
+
+It's a good idea to go through that again 
+
+now just to quickly refresh your memory as we're going to discuss some topics related to how ETCD works in this lecture. 
+
+------------------------------------------------------------------------
+[]
+
+With ETCD,
+ETCD 를 사용하는 것은
+
+there are two topologies that you can configure in kubernetes.
+당신이 쿠버네티스에서 설정 할 수 있는 두가지 토폴로지가 있습니다. 
+
+One is as it looks here and the same architecture we have been following through out this course, where ETCD is part of the kubernetes master nodes. 
+하나는 여기보이는 것과 동일한 아키텍처 이며, 이과정을 통해 동일한 아키텍처 입니다.
+
+It’s called as a stacked control plan nodes topology.
+이것을 Stacked Control Plan Node Topology 라고 합니다. (겹겹이 쌓은 컨트롤 플레인 노드 구성)
+
+This is easier to setup and easier to manage. And requires fewer nodes. 
+이것은 설치하기 쉽고 관리하기 쉽습니다. 그리고 더 적은 노드가 필요합니다.
+
+But if one node goes down both an ETCD member and control plane instance is lost and redundancy is compromised. 
+하지만 한 노드가 다운되면 ETCD 멤버와 컨트롤 플레인 인스턴스가 소실됩니다. 그리고 중복성은 손상됩니다.
+
+The other is where ETCD is separated from the control plane nodes and run on its own set of servers. 
+다른 방법은 ETCD서버가 컨트롤 플레인 노드와 분리하여 자세 서버 집합에서 실행하는 것 입니다.
+
+This is a topology with external ETCD servers. 
+이런 네트워크 자원관리를 외부 ETCD 서버라고 부릅니다.
+
+Compared to the previous topology this is less risky as a failed control plane node does not impact the ETCD cluster and the data it stores.
+이전 토폴로지와 비교해 보시면 컨트롤 플레인 노드가 ETCD 서버와 데이터에 영향을 주지 않기 때문에 훨씬 더 안전 합니다.
+
+However it is harder to setup and requires twice the number of servers for the external etcd nodes. 
+하지만 이것은 설정 하기가 어렵습니다. 그리고 외부 ETCD 노드를 위해 ETCD 갯수 만큼의 서버가 필요합니다.
+
+So remember, the API server is the only component that talks to the ETCD server and if you look into the API service configuration options, we have a set of options specifying where the ETCD server is.
+그러니 기억하세요. API 서버는 컴포넌트 일 뿐입니다. ETCD 서버와 통신하는. 그리고 만약 API 서비스 설정을 찾고 있다면, ETCD서버의 위치를 지정하는 옵션 세트가 있습니다.
+
+>> cat /etc/systemd/system/kube-apiserver.service
+
+(So regardless of the topology:따라서 토폴로지에 관계 없이.)
+So regardless of the topology we use 
+따라서 네트워크 구성에 관계 없이 우리는 사용할 수 있습니다.
+
+and wherever we configure ETCD servers, 
+ETCD 서버를 구성하는 곳 마다.
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+wether on the same server or on a separate server.
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+
+ultimately we need to make sure that the API server is pointing to the right address of the ETCD servers.
+궁극적으로 우리는 API 서버가 올바른 ETCD 서버 주소를 가리키는지 확인할 필요가 있습니다.
+
+Now remember ETCD is a distributed system, so the API server or any other component that wishes to talk to it, can reach the ETCD server at any of its instances.
+기억하세요. ETCD 는 분산된 시스템 입니다. 그래서 API 서버 또는 다른 컴포넌트가 ETCD 서버와 소통 하길 원하는 경우 모든 인스턴스에서 ETCD 서버에 연결 할 수 있습니다.
+
+You can read and write data through any of the available ETCD server instances.
+이용가능한 ETCD 서버 인스턴스를 통해 데이터를 읽고 쓰기를 할 수 있씁니다.
+
+This is why we specify a list of etcd-servers in the kube-apiserver configuration. 
+이것이 우리가 kube API 서버 설정에 ETCD 서버 리스트를 지정하는 이유 입니다.
+
+[kubeAPI 서버에 ETCD 서버를 목록 형태로 저장해서 소통 가능 한가 봄]
+
+In the next lecture we discuss more about how ETCD server works in a cluster setup and the best practices around the number of recommended nodes in a cluster.
+다음 강의에서는 어떻게 ETCD 서버 클러스터를 설정 하는지 그리고 가장 좋은 추천 노드 수에 대해 다루어보겠습니다.
+
+So back to our design we had originally planned for a single master node in our cluster.
+그래서 디자인으로 돌아가서 우리는 싱글 마스터 노드인 오리지널 플랜을 가지고 있습니다.
+
+Now with HA, we decided to configure multiple masters.
+HA 을 사용하여 우리는 멀티플 마스터 노드를 구성 하는걸 결심했습니다.
+
+We also mentioned about a load balancer for the API server. 
+우린 또한 로드 밸런서에 대해서도 다루었습니다.
+
+So we will have that as well.
+
+So we now have a total of five nodes in our cluster.
+그래서 우리는 총합 5개의 노드를 가지고 있씁니다.

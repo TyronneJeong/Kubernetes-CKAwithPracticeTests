@@ -1,0 +1,352 @@
+Taints : 더러움, 감염, 기미, 수치
+Toleration : 관용, 용인, 
+
+
+>>
+>>
+
+
+(restrict:얽매다, 제한하다)
+In this lecture we will discuss about the pod to node relationship and how you can restrict what pod are placed on what nodes 
+이번강의에서는 POD와 NODE 의 관계와 어떻게 어떤 POD를 어떤 NODE 에 위치시킬수 있는지에 대해 논의해 보겠습니다.
+
+(can be a bit confusing for beginners : 초보자에게는 혼란스러울 수 있다.)
+the concept of taints and toleration can be a bit confusing for beginners.
+테인즈와 톨러런스의 컨셉은 초보자들에게 혼란스러울 수 있습니다.
+
+(approaching:접근하는)
+So we will try to understand what they are using an analogy of a bug approaching a person.
+그럼 사람에게 접근하는 벌레에 비유하여 이해해보도록 해 보겠습니다.
+
+(Now my apologies in advance:지금 미리 사과드립니다.)
+Now my apologies in advance but this is the best I could come up with 
+미리 사과 드립니다. 만 이것은 제가 생각해낼수 있는 최선입니다.
+
+(prevent:준비하다, 예방하다)
+to prevent the bug from landing on the person.
+사람에게 착륙 하려는 벌레를 위해 방지하려면
+
+(attain:달성하다, 도달하다) (repellent spray:구충제 스프레이)
+We spray the person with a repellent spray or attained as we will call it in this lecture.
+구충제 스프레이를 뿌리거나 ?????????
+
+(intolerant:내성이 없다.)
+the bug is intolerant to the smell.
+버그는 냄새에는 내성이 없습니다.
+
+So on approaching the person the taint applied on the person throws the bug off.
+때문에 사람에게 다가갈때, 그 Taint(감염, 오염, 약 같은거) 는 사람에게 작용합니다. 벌레는 쫓게
+
+
+[Taint 는 예방약 같은 의미로군]
+
+however there could be other bug that are tolerant to the smell and so the taint doesn't really affect them.
+하지만 저기 냄새에 내성있고 Taint 가 작용하지 않는 또 다른 벌레가 있습니다.
+
+And so they end up landing on the person.
+결국 사람 한테 까지 붙었습니다.
+
+So there are two things that decide if a bug can land on a person.
+벌레가 사람에게 앉을 때 결정 가능한 두가지가 있습니다.
+
+First the taint on the person.
+첫번째로 사람을 오염시키는 것
+
+(podicular:특정한)
+And second the bugs toleration level to that podicular taint.
+그리고 두번째는 특정 오염원에 대한 버그의 내성
+
+getting back to Kubernetes the person is a node and the bugs are pods. 쿠버네티스로 돌아가서, 사람은 노드 입니다. 그리고 버그는 POD 입니다.
+
+
+(intrusion:강요)
+Now taints and toleration have nothing to do with security or intrusion on the Cluster.
+이제 테인트와 톨러런스는 아무것도 가지지 않습니다. 보안이나 클러스터에 대한 강요 같은 것.
+
+(restrictions:제한)
+taints and toleration are used to set restrictions on what pods can be scheduled on a node.
+테인트와 톨러런스는 어떤 POD 가 노드에 스케쥴링 될 수 있는지를 제한하는데 사용됩니다.
+
+let us start with a simple cluster with three worker nodes 
+3개의 노드를 보유한 단일 클러스터에서 시작해 봅시다.
+
+the nodes are named one two and three.
+노드들의 이름은 원, 투, 쓰리 입니다.
+
+We also have a set of paths that are to be deployed on these nodes.
+우린 또한 POD들이 해당 노드에 배포되어진 경로 집합을 가지고 있습니다.
+
+Let's call them A B C and D.
+그 경로를 A, B, C, D라고 부릅시다. (POD는 3개인데?)
+
+When the pods are created kubernetes scheduler tries to place these pods on the available worker nodes.
+pod 가 쿠버네티스에 생성이 될때, 스케쥴러는 이용가능한 워커 노드에 위치 시키려고 할 겁니다.
+
+(As of now:지금과같은)(restrictions:제한)
+As of now there are no restrictions are limitations and 
+지금과 같이 그곳에 아무런 제약이 없습니다
+
+(as such:이와같이)
+as such the scheduler places the pods across all of the nodes to balance them out equally.
+이와같이 스케쥴러는 POD들을 균형이 동등하게 모든 노드들에게 가로 질러 위치시킵니다.
+
+(podicular:특정한) (dedicate:헌신하다, 헌정하다, 바치다, 봉납하다)
+Now let us assume that we have dedicated resources on Node 1 for a podicular use case or application
+그럼 우리가 노드1원 자원을 특정 유즈케이스나 어플리케이션에 할당하는걸로 가정해봅시다.
+
+(we would like:~를 원한다.) (belong:있어야 하다, 소속하다, 부속하다)
+so we would like only those pods that belong to this application to be placed on Node 1.
+우린 대상 이 어플리케이션이 소속된 POD들만이 NODE1에 위치해 있기를 원합니다.
+
+First we prevent all pods from being placed on the Node by placing a taint on the Node.
+우선 첫번째로, 모든 POD들을 노드에 위치 시키기 위해 준비합니다. TAINT되어진 노드에 위치시키기 위해
+
+Let's call it blue.
+블루로 부릅시다.
+
+by default, Paths have no toleration which means unless specified otherwise none of the pods can tolerate any taint.
+기본적으로 별도로 지정하지 않는한 경로에 내성은 존재하지 않습니다. 그렇지 않으면 어떤 오염도 견딜 수 있는 POD 는 없습니다.
+
+(tolerate:참다, 내성이 있다)
+So in this case none of the pods can be placed on Node 1 as none of them can tolerate the team Blue.
+그래서 이 경우 NODE1에 위치 가능한 POD 는 없습니다. 팀 블루를 견뎌낼수 있는 POD가 없는 것 처럼.
+
+this solves half of our requirement no unwanted pods are going to be placed on this node.
+이방법은 우리의 요구 사항중 절반을 해결합니다. 원하지 않는 POD 가 이 NODE 이 위치 되지 않도록
+
+(certain:어떤, 일정한, 확실한)
+The other half is to enable certain pods to be placed on this node.
+나머지 절반은 어떤 POD 가 그 노드에 위치하는게 가능해지는 것 입니다.
+
+(attempt:시도)
+For this we must specify which pods are tolerant to this podicular a taint.
+이를 위해 우린 어떤 POD 가 그 특정한 오염에 내성을 가질 것인지를 정해야만 합니다.
+
+In our case we would like to allow only pod D to be placed on this node.
+우리는 오직 pod D 만이 그 노드에 위치 할수 있도록 허락 합니다. 
+
+so we add a toleration to pod D.
+고로 우리는 POD D에 내성을 주입합니다.
+
+pod D is now tolerant to blue.
+이제 POD D는 블루에 내성을 가지게 되었습니다.
+
+so when the scheduler tries to place this pod on Node 1 it goes through Node 1 can now only accept pods that can tolerate the taint Node1 Blue
+때문에 스케쥴러가 해당 POD를 노드1에 위치시키려 할때면 Node1은 해당 노드에 해당이 있는 POD들만 수용하게 할 수 있습니다.
+
+so with all the taints and toleration is in place.
+그래서 모든 오염과 내성은 이 안에 있습니다.
+
+This is how the pods would be scheduled.
+이게 POD 가 스케쥴 되는 방법입니다.
+
+The scheduler tries to place pod a on Node1 but due to the Taint it is thrown off and it goes to node to the scheduler then tries to place pod B on Node1
+스케쥴러는 pod 를 하나이상에 위치 시키려 시도합니다. 하지만 오염으로 인해 pod 는 다른 곳으로 도망갑니다. 그리고 스케쥴러는 POD B 를 Node1 에 위치시키려 시도합니다.
+
+but again due to the taint it is thrown off and is placed on Node 3 which happens to be the next free node.
+하지만 역시 오염으로 인해 도망가게 되고 아무런 제약이 없는 Node3 에 위치 하게 됩니다.
+
+The scheduler then tries to place pod c to the Node 1 it is thrown off again and ends up on Node 2.
+그런다음 POD C 를 Node1 에 위치 시켜 봅니다. 그리고 Node2
+
+Finally the scheduler tries to place pod D on Node 1.
+최종적으로 스케쥴러는 POD D를 Node1 올려 봅니다.
+
+since the pod is tolerant to Node 1.
+POD가 NODE1 에 내성이 생기면서 부터
+
+It goes through.
+이 POD 는 통과 됩니다.
+
+so remember taints are set on nodes and toleration are set on pods.
+기억하세요. 오염은 NODE 에 설정합니다. 그리고 내성은 POD에 설정됩니다.
+
+So how do you do this.
+그럼 이걸 어떻게 할까요
+
+Use the kubectl taint nodes command to taint in node specify the name of the node to taint followed by the taint itself which is a key value pair.
+taint오염을 지정하기 위해 kubectl taint nodes 명령어를 사용하세요.
+대상으로 지정된 이름의 노드는 키-벨류 쌍으로된 taint 정보로 taint 됩니다.
+
+>> kubectl taint nodes node-name key=value:taint-effect
+
+For example if you would like to dedicate the Node to pods in application blue then the key value pair would be "app=blue" 
+예를 들어, 어플리케이션 블루에 존재하는 이 NODE 를 POD에 할당하고 싶다면
+
+the taint effect defines what would happen to the pods if they do not tolerate the taint 
+TAINTS 는 만약 POD들이 오염에 대한 내성이 없다면 발생한 것에 대해 정의하는데 효과를 발휘합니다.
+
+
+[TAINTS 효과 옵션 3가지]
+- NoSchedule
+- PreferNoSchedule
+- Noexecute
+
+there are three taint effects "NoSchedule" which means the pods will not be scheduled on the node which is what we have been discussing.
+저기 3가지 TAINT 효과가 있습니다. NoSchedule 은 말그래도 POD 를 NODE 에 할당시키지 않는 것 입니다. 우리가 이야기 해왔던 것과 같이.
+
+"PreferNoSchedule" which means the system will try to avoid placing a pod on the node but that is not guaranteed.
+PreferNoSchedule 은 시스템이 POD 를 NODE 에 할당하는걸 회피 하도록 합니다. 하지만 이건 항상 보장되는 옵션은 아닙니다.
+
+(evicted:퇴거)
+And third is "NoExecute". Which means that new pods will not be scheduled on the node and existing pods on the node if any will be evicted if they do not tolerate the taint.
+그리고 세번째 "NoExecute" 는 새로운 POD나 기존에 NODE 에 존재하는 POD의 내성이 제거되어 퇴거되었을 때에는 스케쥴을 배정하지 않는 것을 말합니다.
+
+
+These pods may have been scheduled on Node before the Taint was applied to the node.
+이 POD 들은 노드에 오염이 적용되기 전에 스케쥴 될 것입니다.
+
+An example command would be the Taint Node Node-1 with the key value pair "app=blue" and an effect of "NoSchedule" 
+예를 들어,
+>> kubectl taint nodes node1 app=blue:NoSchedule
+명령어는 node1 에 taint 효과를 부여 합니다.
+
+toleration is are added to pods to add a toleration to a pod.
+면역을 주입하기 위해 톨러런스 항목이 PODS 에 추가됩니다.
+
+First pull up the pod definition file in the spec section of the pod definition file had a section called toleration
+먼저 POD 정의파일을 열고, POD정의파일의 SPEC 섹션에 TOLERATION 이라고 부르는 항목이 추가되었습니다.
+
+move the same values used to while creating the taint under this section.
+이 섹션 아래에 taint 를 부여하기 위해 사용했던 값들과 동일한 값들을 옮겨적습니다.
+
+The key is app operator is equal value is blue and the effect is no should you.
+
+**********************************
+** tolerations:
+  - key: "app"
+	operator: "Equal"
+	value: "blue"
+	effect: "NoSchedule"
+**********************************
+
+And remember all of these values need to be encoded in double quatos.
+그리고 기억하세요. 이 모든 값들은 더블쿼테이션으로 싸줘야 할 필요가 있습니다.
+
+When the pods are now created or updated with the new toleration they are either not scheduled on nodes
+POD 가 방금 생성되었거나 새로운 항체가 업데이트 되었을 때에도 스케쥴러는 NODE 에 스케쥴 하지 않습니다.
+
+or evicted from the existing nodes depending on the effect set
+또는 이펙트 옵션에 의해 기존 노드에서 퇴건 되었을 때에도 스케쥴 되지 않습니다.
+
+[NoSchedule - 신규생성, 퇴거POD]
+
+
+
+let us try to understand the NoExecute takes effect in a bit more depth.
+NoExecute 가 가지는 효과에 대해 좀더 깊이 알아 봅시다.
+
+In this example we have three nodes running some worker-node.
+이 예제에서 우리는 몇몇 워크 노드에서 동작하는 3개의 노드가 있습니다.
+
+We do not have any taints or toleration at this point.
+우리는 여기에 어떤 taints 나 toleration 같은것이 없습니다.
+
+so they are scheduled this way.
+그래서 스케쥴러는 스케쥴 합니다.
+
+We then decided to dedicate Node 1 for a special application 
+Node1 에는 특별한 어플리케이션만 전용으로 할당 하기로 정합니다.
+
+(obtain:얻다, 생기다, 달성하다) (as such:따라서)
+and as such we obtained the node with the application name
+따라서 우린 응용프로그램 이름을 가진 노드를 얻었습니다. [C, D중 하나에만 해당]
+
+and add a toleration to the pod that belongs to the application which happens to be pod D In this case.
+그리고 POD에 저항력을 주입합니다. 이 경우에는 저항이 주입이 발생된 D 와 같은 어플리 케이션이 이에 속합니다.
+
+[TAINTS 를 종료하는 법 - 를 추가하면 untainted 됨.]
+>> kubectl taint nodes controlplane node-rol.kubernetes.io/master:NoSchedule- 
+while tending the node we set the taint effect to no execute 
+노드를 관리하는 동안 우리는 TAINT 효과를 NoExecute로 설정 합니다.  
+
+and as such once the taint on the Node takes effect
+Node 가 이펙트를 Taint 에 이펙트를 가짐에 따라서.
+
+it evokes pod C from the node which simply means that the pod is killed.
+POD C를 노드에서 퇴거 시킵니다. 쉬운 말로 POD 를 죽입니다.
+
+The pod D continues to run on the node as it has a toleration to the taints below.
+POD D는 TAINT 에 내성이 생긴 것 처럼 계속해서 노드에서 실행됩니다. 
+
+
+
+
+
+Now going back to our original scenario where we have taints and toleration is configured.
+자 이제 다시 우리의 원점으로 돌아가 봅니다. TAINTS 와 TOLERATION 이 설정되는 곳.
+
+Remember taints and toleration are only meant to restrict nodes from accepting certain pods.
+기억 하세요. TAINTS 와 TOLERATION 은 단순이 특정 PODS 가 노드에 채택되는걸 제한한다는 걸 의미합니다.
+
+In this case no one can only accept pod D 
+이번 예시에서는 POD D만 수용하는 경우는 어느 누구도 할 수 없습니다.
+
+but it does not guarantee that pod D will always be placed on Node 1.
+하지만 NODE1 에 POD D가 항상 위치하게 된다는걸 보장하진 않습니다.
+
+
+Since there are no taints or restrictions applied on the other two nodes pod D may very well be placed on any of the other two nodes 
+다른 두 NODE에 PODS 들이 TAINTS 또는 제한이 없을때부터 POD 는 다른 두 노드에 아주 잘 배정 받을 수 있었다.
+
+so remember taints and toleration does not tell the pod to go to a Paticular node.
+그러니 기억하십시오, TAINTS 와 TOLERATION 는 POD 에 특정 노드 위치로 가라고 말해주지 않습니다.
+[그냥 시도해보고 실패하면 다음 노드로 시도한다는 컨셉]
+
+Instead it tells the node to only accept pods with certain toleration.
+대신에 TAINTS 와 TOLERATION 은 해당 노드에게 허용되는 POD는 저항(Toleration)을 가지고 있다는건 알려줍니다.
+
+If your requirement is to restrict a pod to certain nodes 
+만약 당신의 요구가 POD를 특정 NODE로 향하는걸 제한하는 것 이라면
+
+it is achieved through another concept.
+이것은 또다른 컨셉을 호출하여 달성 할 수 있습니다.
+
+(Ask Node Affinity:노드 선호도 묻기)
+called "Ask Node Affinity" which we will discuss in the next lecture finally.
+우리가 다음장에서 최종적으로 알아볼 것으로 노드 선호도 묻기가 있씁니다.
+
+While we're on this topic let us also take a look at an interesting fact.
+우리가 해당 토픽을 다루는 동안, 흥미로운 사실 또한 살펴봅시다.
+
+(so far:지금까지)
+So far we have only been referring to the worker nodes.
+지금까지 우리는 워커노드에 대해서만 참조해왔습니다.
+
+But we also have master nodes in the cluster 
+하지만 마스터 노드 역시 참조 될 수 있습니다.
+
+which is technically just another node that has all the capabilities of hosting a pod.
+기술적으로는 POD를 호스팅 하는 모든 능력을 가진 또다른 NODE가 있습니다.
+
+Plus it runs all the management software.
+추가로 여기에는 모든 관리 소프트웨어가 동작하고 있습니다.
+
+(I'm not sure:확실치 않다, 잘 모르겠다)
+Now I'm not sure if you noticed the scheduler does not schedule any pod on the master node.
+지금 스케쥴러에게 마스터 노드에 있는 모든 POD 에세 스케쥴 하지 말라고 알려줬는지 알 수 없습니다.
+
+Why is that. 
+왜 그럴까요
+
+when the kubernetes cluster is first setup.
+쿠버네티스 클러스터를 처음 셋팅 할때, 
+
+It taints set on the master node automatically that prevents any pods from being schedule on this node.
+자동으로 마스터 노드에는 TAINTS 가 설정되어 집니다. 아무 POD 나 여기에 스케쥴 되는걸 예빵하기 위해.
+
+You can see this as well as modified his behavior if required.
+당신이 원한다면 이 모든걸 마찬가지로 그의 행동이 고쳐지는 것을 볼 수 있습니다.
+
+However a best practice is to not deploy application woker nodes on a master server 
+하지만 가장좋은 연습은 마스터 서버의 워커노드에 어플리케이션을 배포하지 않는 것입니다.
+
+to see this taints run? a Kubectl described node command with Kube master as the node name and look for the Taints section. You will see a taint set to not schedule any pods on the master node.
+TAINTS 가 실행되는걸 보려면, Kubectl describe node kubemaster 명령어로 TAINT 가 마스터노드에는 어떤 POD 에도 스케쥴 되지 않도록 설정된 것을 볼 수 있습니다.
+
+>> kubectl descrie node kubemaster | grep Taint
+
+
+Well that's it for this lecture.
+
+Head over to the coding exercises section and practice working with taints and toleration is.

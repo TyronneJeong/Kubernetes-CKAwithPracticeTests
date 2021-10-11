@@ -1,0 +1,552 @@
+Hello and welcome to this lecture on Kubernetes controllers.
+
+[쿠버네티스 컨트롤러]
+
+
+My name is Mushahid 
+
+
+in this lecture we will discuss about Kubernetes controllers.
+이번 강의에서는 쿠버네티스 컨트롤러에 대해 토론해보겠습니다.
+
+Controllers are the brains behind Kubernetes.
+컨트롤러들은 쿠버네티스 이면의 브레인 입니다.
+
+
+(respond:대답하다, 응답하다, 응수하다, 반응하다)
+they are the processes that monitor Kubernetes objects and respond 
+컨트롤러들은 쿠버네티스 오브젝트들을 감시하고 응답하는 프로세스입니다.
+
+(particular:특정한, 각별한, 꼼꼼한)
+accordingly(따라서), In this lecture, we will discuss about one controller in particular, and that is the replication controller.
+따라서, 이번강의에서는 특별히 하나의 컨트롤러에 대해 논의해볼 예정입니다.
+그리고 그건 복제 컨트롤러 입니다.
+
+
+So what is a replica and why do we need a replication controller?
+복제란 무엇이고 왜 복제컨트롤러가 필요할까요?
+
+
+Let's go back to our first scenario where we had a single pod running our application.
+어플리케이션이 동작중인 싱글 POD 시나리오로 돌아가 봅시다.
+
+What if for some reason our application crashes and the pod fails?
+만약 어떤 이유로 어플리케이션이 크래쉬가 일어난다면? 그리고 POD 가 실패한다면?
+
+Users will no longer be able to access our application 
+사용자는 더이상 우리 어플리케이션에 접속할 수 없을 겁니다.
+
+(prevent:막다, 예방하다, 방지하다. 앞서서 처리하다)
+to prevent users from losing access to our application
+어플리케이션에 엑세스 할수 없는 유저들을 예방하기 위해서는
+
+We would like to have more than one instance or pod running at the same time.
+하나이상의 인스턴스를 갖거나 POD 가 그 시간에 돌고 있어야 합니다.
+
+That way, if one fails, we still have our application running on the other one.
+이럴경우, 하나가 실패해도, 우린 여전히 다른 하나에서 어플리케이션을 실행할 수 있습니다.
+
+
+[복제컨트롤러가 단일 POD 내에 인스턴스 실패시 이를 응급 조치함.]
+
+the replication controller helps us run multiple instances of a single pod in the Kubernetes cluster, those providing high availability.
+복제컨트롤러는 쿠버네티스 클러스터의 단일 POD에서 멀티플 인스턴스를 실행하도록 우리를 돕습니다. 그리고 복제컨트롤러는 고가용성을 제공합니다.
+
+So does that mean you can't use a replication controller if you plan to have a single pod?
+그럼, 이건 싱글 POD를 가질 계획이라면 복제 컨트롤러를 사용할 수 없다는 의미일까요?
+
+No.
+아닙니다.
+
+Even if you have a single pod, the replication controller can help by automatically bringing it up a new pod when the existing one fails.
+싱글POD를 가질지라고, 복제 컨트롤러는 자동으로 새POD를 기존에 존재하는 POD의 실패를 대체할 수 있게 도울수 있습니다.
+
+it does the replication controller ensures that the specified number of pods are running at all times. even if it's just one or hundred?
+복제컨트롤러는 1또는 100까지 특정 숫자의 POD가 항상 동작하도록 보장되어지나요?
+
+Another reason we need replication controller is to create multiple pods to share the load across them.
+또다른 이유로, 우린 복제 컨트롤러가 그들 사이에 부하를 줄이기 위해 다수의 POD를 생성할 필요가 있습니다.
+
+For example, in this simple scenario, we have a single pod serving a set of users.
+예를 들어 이 시나리오에서는, 우린 사용자 집합에 서비스중인 단일 POD 를 가지고있습니다.
+
+When the number of users increase, we deploy additional pod to balance the load across the two pods.
+사용자 수가 증가하면, 우린 두 POD 의 부하 균현을 이해 POD 를 배포할 수 있습니다.
+
+(demand:수요, 요구, 묻다, 구하다, 요구하다)
+If the demand further increases and if we were to run out of resources on the first node, 
+만약 수요가 더 증가하고 첫번째 노드의 자원량을 초과하게 된다면
+
+we could deploy additional pods across the other nodes in the cluster.
+우린 추가가능한 POD 를 클러스터의 또다른 노드에 배포할 수 있습니다.
+
+[클러스터 - 멀티플 노드]
+(spans:다리를 놓다, 닿다, 걸치다)
+As you can see, the replication controller spans across multiple nodes in the cluster.
+보시는것처럼, 복제컨트롤러는 클러스터에 다수의 노드를 놓을 수 있습니다.
+
+(as well as:마찬가지로)
+It helps us balance the load across multiple pods on different nodes as well as scale our application when the demand increases.
+이건 요청이 증가할때 어플리케이션의 스케일을 늘린 것과 마찬가지로 각기 다른 노드의 POD들의 부하 분산을 잡도록 우릴 돕습니다.
+
+(terms:용어)
+It's important to node that there are two similar terms. replication controller and replicas set both have the same purpose, but they are not the same.
+복제컨트롤러와 복제세트 둘 모두 같은 목적을 가집니다. 하지만 이 둘은 같은 것이 아니라는 것. 이건 노드에 중요한 부분 입니다.
+
+
+[레플리카 컨트롤과 레플리카 셋은 다르다는건 중요하다.]
+[레플리카 컨트롤은 구식 기술]
+Replication controller is the older technology that is being replaced by replicas set.
+복제 컨트롤러 라는건 레플리카 셋이라는게 등장하기 이전의 기술입니다.
+
+Replica set is the new recommended way to set up replication.
+레플리카 셋은 어플리케이션을 복제하는데 새롭게 권장되는 기술입니다.
+
+[However:하지만.. 하지만 몇 번 보는지..] 하, 하지만
+However, whatever(무엇이든) we discussed in the previous few slides remain applicable(해당되는) to both these technologies.
+이전 슬라이드에서 우리가 논의한게 무엇이건 이 두 기술 모두에 해당되는 것입니다.
+
+
+[레플리카 컨트롤과 레플리카 세의 미묘한 차이]
+
+There are minor differences in the way each works and we will look at that in a bit.
+이 둘은 작동 방식에 있어 미묘한 차이가 있씁니다. 그리고 그 미묘한 차이를 들여다 볼 겁니다.
+
+As such, we will try to stick to concepts in all of our demos and implementations going forward.
+우린 우리 모든 데모에 기존 방식을 고수하려 들겁니다. 그리고 계속해서 구현할겁니다.
+
+Let now look at how we create a replication controller, as with the previous lecture, we start by creating a replication controller definition file.
+이제 우리가 복제컨트롤러를 어떻게 만들었는지 봅시다. 
+이전 강의에 따라, 우리는 레플리카 컨트롤러 정의파일 생성부터 시작합니다.
+
+We will name it "rc-definition.yaml".
+이름은 rc-definition.yaml 이라고 지을겁니다.
+
+As with any Kubernetes definition file.
+다른 쿠버네티스 정의파일 처럼.
+
+We have four sections, the API version, kind, metadata and spec.
+4가지 섹션을 가집니다. apiVersion, kin, metadata, spec
+
+The API version is specific to what we are creating in this case.
+apiVersion 은 이 케이스에서 생성하려는 걸로 특정합니다.
+
+Replication controller is supported in Kubernetes API, version V1.
+복제컨트롤러는 쿠버네티스 API를 지원합니다. v1
+
+So we will set it as V1, the kind as we know is a replication controller.
+그래서 v1 을 설정할 것입니다. kind 는 우리가 아는것 처럼 replication controller 로.
+
+
+Under metadata, we will add a name and we will call it myapp-rc and we will also add a few labels, app and type and assign values to them.
+메타의 하부 속성으로, 
+name 을 추가할 겁니다. 그리고 myapp-rc 라고 부르죠.
+그리고 또 레이블을 추가할 겁니다.
+app 과 type 그리고 assign value 를 레이블에.
+
+(it has been:되었다.)
+So far, it has been very similar to how we created a pod in the previous section.
+이건 이전 강의에서 pod를 생성할때랑 매우 비슷하게 되었습니다.
+
+(crucial:중대한, 어려운, 결정적인)
+The next is the most crucial part of the definition file, and that is the specification written as spec.
+다음은 정의파일에서 가장 중요한 부분으로 스펙이라 쓰려진 사양입니다.
+
+For any Kubernetes definition file, the spec section defines what's inside the object we are creating.
+모든 쿠버네티스 정의파일의 경우, 스펙 섹션은 우리가 어떤 오브젝트를 생성하는지를 정의하는 부분입니다.
+
+In this case, we know that the replication controller creates multiple instances of a pods.
+이 경우, 그 POD 내 멀티플 인스턴스를 생성하는 복제 컨트롤러 오브젝트라는걸 우린 압니다.
+
+But what pod.
+하지만 어떤 POD?
+
+we create a template section under spec to provide a pod template to be used by the replication controller to create replicas.
+우린 SPEC 아래에 복제컨트롤러가 복제에 사용되기 위한 POD템플릿을 제공하기 위해 템플릿 섹션을 작성합니다.
+
+
+[POD 템플릿]
+
+Now, how do we define the pod template?
+그럼이제, POD 템플릿을 어떻게 정의할까요?
+
+It's not that hard because we have already done that in the previous exercise.
+이건 어렵지 않은게, 우린 이미 이전 연습문제에서 이걸 해보았기 떄문입니다.
+
+Remember, we created a pod definition file in the previous exercise.
+기억하세요. 우린 POD 정의파일을 이미 만들어보았습니다.
+
+(populate:채우다)
+We could reuse the contents of the file to populate the template section.
+우린 템플릿 섹션의 내용을 채우기 위해 파일의 내용을 재사용할 수도 있씁니다.
+
+Move all the contents of the pod definition, file into the template section of the replication controller,
+POD정의 파일에 있는 내용들을 모두 복제컨트롤러 파일에 있는 템플릿 섹션에 옮겨적으세요.
+
+except for the first few lines which are API version and kind.
+apiVersion과 Kind이 있는 몇 라인을 뺴고.
+
+
+[복제컨트롤러에 POD 는 metadata와 spec 만 넣으면 된다.]
+
+(intend:의미하다, !!의도하다!!, 작정하다, 생각하다, 방향이나 생각을~의도)
+Remember, whatever we move must be under the template section, meaning they should be intended to the right and have more spaces before them than the template line itself.
+기억하세요, 우리가 옮기는게 무엇이됐건 항상 템플릿 아래에 있어야 합니다.
+옮기는 것들이 오른쪽 방향을 향해 있어야 하고 템플릿 라인의 것보다 더 많은 스페이스를 가지고 있어야 한다는 의미입니다..
+
+
+
+They should be children of the template section.
+pod 정의는 템플릿섹션의 자식 속성으로 들어가 있어야 합니다.
+
+Looking at our file now, we now have two metadata sections.
+지금 우리 파일을 한번 보세요, 이제 우린 2개의 emtadata 섹션을 가지고 있습니다.
+
+One is for the replication controller and another for the pod.
+하나는 복제컨트롤러 거고, 다른 하나는 pod 것입니다.
+
+(aspect:양상, 관점, 면, 모습, 방향)
+And we have two spec sections, one for each.
+그리고 각자 하나씩 두개의 spec 섹션이 생겼습니다.
+
+[metadata와 spec 이 두개!!!!! 래.. 신기한듯 말하네]
+
+
+
+We have nested two definition files together.
+우린 두개의 정의파일을 하나로 중첩시켰습니다.
+
+the replication controller being the parent and the pod definition being the child.
+복제컨트롤러는 부모 속성이 되었고, pod 정의파일은 자식 속성이 되었습니다.
+
+Now, there is something still missing, we haven't mentioned how many replicas we need in the replication controller.
+지금, 저기에는 레플리카 컨트롤러 내 얼마나 많은 레플리카가 필요한지에 대해 논의한 바를 놓치고 있습니다.
+
+
+for that, add another property to the spec called replicas and input the number of replicas you need under hundred.
+그에 대해, spec에 replicas 라고 불리는 다른 속성을 추가합니다. 그리고 100이하로 원하는 숫자를 입력합니다.
+
+(direct:솔직한, 똑바른, 직접의, 정면의, 가리키다, 돌리다, 지도하다)
+Remember that the template and replicas are direct children of spec sections.
+기억하세요. 템플릿과 레플리카는 스펙 섹션에 자식속성을 가리킵니다.
+
+So there are siblings and must be on the same vertical line, which means having equal number of spaces before them.
+그래서 이 둘은 형제 속성이고 동일한 수직 라인에 위치해야 합니다. 이건 이둘 앞에 같은 수의 스페이스를 가지는걸 의미합니다.
+
+Once the file is ready, run the "kubectl create" command and input the file using the "-f" parameter,
+파일이 완료되면, kubectl create -f 파라미터를 사용해 입력합니다.
+
+the replication controller is created when the replication controller is created, it first creates the pods using the pod-definition template as many as required, which is three in this case 
+레플리케이션 컨트롤러가 요청에 의해 pod-definition 템플릿 사용해서 pod 가 생성될때
+복제컨트롤러는 생성 되어 집니다. 이 경우네는 3개가 되겠습니다.
+
+
+to view the list of created replication controllers, run the "kubectl get replication controller" command
+생성된 레플리카 컨트롤러 목록을 보는것은 kubectl get replication controller 커맨드를 입력하면 됩니다.
+
+and you will see the replication controller listed.
+그러면 복제컨트롤러 목록을 볼 수 있씁니다.
+
+We can also see the desired number of replicas or pod, the current number of replicas and how many of them are already in the output.
+원하는 레플리카 수 또는 POD 수를 볼 수 있습니다. 현재 replica수와 얼마나 많은 pod 가 이미 있는지 출력에 있습니다.
+
+(If you would like to see:당신이 보고 싶다면)
+If you would like to see the pod that were created by the replication controller, run the "Kubectl get pods" command and you will see three pod running.
+레플리케이션 컨트롤러에 의해 생성된 pod 를 보고 싶다면, kubectl get pods 커맨드를 입력하면 3개의 pod 가 실행중인걸 볼 수 있습니다.
+
+[복제 컨트롤러를 통해 생성된 노드를 관찰하는 중]
+
+(indicating:나타내다)
+Node that all of them are starting with the name of the replication controller, which is myapp-rc, indicating that they are all created automatically by the replication controller.
+모든 노드들은 복제컨트롤러의 이름과 함께 시작합니다. myapp-rc같은건 모두 복제컨트롤러에 의해 자동으로 생성된 것을 의미합니다.
+
+
+
+
+What we just saw was the replication controller.
+우리가 방금본 것은 복제 컨트롤러 였습니다.
+
+
+
+
+[레플리카 셋의 차례!!]
+[replicaset-defintion.yaml 을 생성하여 보여줌]
+
+Let us now look at replica set, it is very similar to replication controller.
+자 이제 레플리카 셋을 봅시다. 이건 레플리카 컨트롤과 아주 유사합니다.
+
+as usual.
+보통의 경우
+
+First, we have API version kind, metadata and spec.
+첫번쨰로, apiVersion, kind, metadata, spec을 작성합니다.
+
+(though)
+The API version, though, is a bit different.
+apiVersion 이건 약간 다릅니다.
+
+It is Apps-V1, which is different from what we had before for replication controller, which was just V1.
+apiVersion 은 apps-V1 입니다. 이전 레플리케이션 컨트롤러에서 v1 이라 작성했던 것과는 다릅니다.
+
+
+If you get this wrong, you are likely to get an error that looks like this.
+만약 이걸 잘못 작성하면, 다음과 같은 에러가 발생할 겁니다.
+
+(It would say:말할것입니다)
+It would say no match for kind replica set because the specified Kubernetes API version has no support for Replicas set.
+매칭되는 종류의 레플리카 셋이 없다고 나올 것입니다. 왜냐하면 v1이라고 적은 쿠버네티스 api version 은 레플리카 셋을 지원하고 있지 않게 때문입니다.
+
+
+The kind would be Replica set and we add name and labels in the metadata.
+kind 속성은 replica set 으로 합니다. 그리고 메타데이터에 name 과 레이블 속성을 추가합니다.
+
+
+The specification section looks very similar to replication controller.
+specification section 은 레플리케이션 컨트롤러와 매우 유사해보입니다.
+
+It has a template section where we provide pod definition as before.
+이 이전에 pod 정의부분을 제공하는것과 같은 템플릿 섹션을 가집니다. 
+
+(copy ~ over from ~ : ~에서 부터 ~을 복사해올 것이다.)
+So I'm going to copy contents over from our definition file.
+그래서 컨텐츠를 복사할 겁니다.
+
+And we have a number of replicas, which is set to three.
+그리고 레플리카 수는 3으로 설정합니다.
+
+However, there is one major difference between replication controller and replica set.
+하지만 여기에는 레플리카 컨트롤과 레플리카 셋의 한가지 큰 차이점이 있습니다.
+
+Replica set requires a selector definition.
+레플리카 셋은 셀렉터 정의가 필요합니다.
+
+
+The selector section helps the Replica set identify what pod fall under it.
+셀렉터 섹션은 레플리카셋이 어떤 pod 가 그 아래로 떨어지는지 식별되도록 돕습니다.
+
+But why would you have to specify what pods fall under it. if we have provided the contents of the pod-definition file itself in the template?
+하지만 만약 우리가 템플릿안에서 pod-definition파일이 스스로 제공되어 졌다면 왜 pod가 어떤 것 아래로 떨어지는지 정의를 해야하는 걸까요?
+
+It's because Replicaset can also manage pod that were not created as pod of the Replica set creation.
+레플리카 셋이 레플리카셋으로 생성된 pod가 아니여도 관리할 수 있기 때문입니다.
+
+왜냐하면 레플리카 셋은 레플리카 셋의 생성된 pod 처럼 만들어 지지 않은 pod또한 관리 할수 있도록 설정했기 때문입니다.
+
+say, for example, there were pods created before the creation of the Replica set that matcheLabels specified in The Selecter.
+예를 말해보자면, 저기 matchLabels로 정의한 레플리카 셋이 생성되기 이전에 생성된 POD들이 있습니다.
+
+(consideration:고려사항)
+The Replica set will also take those pods into consideration when creating the replicas.
+레플리카 셋은 복제본을 생성할떄에도 이런 pod 들을 고려합니다.
+
+(elaborate:공들인, 정교한, 애써 만들다, 갈고 닦다, 정교해지다)
+I will elaborate this in the next slide, but before we get into that, I would like to mention that The Selecter is one of the major differences between replication controller and replica set 
+다음 슬라이드에서 자세히 말해보겠습니다. 하지만 이전에, 이부분에 대해서 짚고 가겠습니다.
+셀렉터는 레플리카 컨트롤과 레플리카 셋이 크게 다른 부분중 하나입니다.
+
+the selector is not a required field in case of a replication controller, but it is still available 
+셀렉터는 레플리케이션 컨트롤러에서 필요항목이 아니였습니다. 하지만 계속 사용가능했습니다.
+
+when you skip it, as we did in the previous slide.
+이전의 슬라이드(복제컨트롤러 정의)에서 했던 것 처럼 이부분을 건너 뛰면,
+
+(assumes:가정하다)
+It assumes it to be the same as the labels provided in the pod definition file.
+이건 pod-definition 파일의 제공되는 레이블과 똑같이 된다는걸 가정합니다.
+
+In case of Replica set.
+레플리카 셋의 경우
+
+A user input is required for this property and it has to be written in the form of matchLabels as shown here
+셀럭터 속성의 사용자의 입력이 필수이고 여기에 보는것(front-end) 처럼 매칭되는 레이블에 쓰여집니다.
+
+the matchLabels selector simply matches the labels specified under it to the labels on the pod.
+matchLabels 셀렉터는 pod의 레이블 아래 특정된 레이블과 단순하게 매치시킵니다.
+
+
+The Replica set Selecter also provides many other options for matching labels that were not available in the replication controller.
+셀렉터는 또한 레플리케이션 컨트롤러에서 사용할 수 없었던 레이블을 찾기 위해 다양한 옵션을 제공합니다.
+
+(And as always:그리고 언제나 처럼)
+And as always, to create a replica set, run the "Kubectl create" command, providing the definition file as input 
+그리고 언제나 처럼 레플리카 셋을 만드는 것은 kubectl create 커맨드를 실행합니다. 글고 정의파일을 입력값으로 제공합니다.
+
+
+and to see the created replicas run the "Kubectl get replica set" command to get list of pods, simply run the Kubectl get pods" commands.
+그리고 kubectl get replicaset 을 치면 생성된 레플리카들을 볼 수 있습니다.
+그리고 kubectl get pods 를 치면 pod 목록을 볼 수 있습니다.
+
+
+(deal:거래, 분량, 정책, 가하다, 불법적으로 사다, 팔다, 행동하다)
+So what is the deal with labels and selectors, why do we label our pod and objects in Kubernetes?
+레이블과 셀렉터는 어떤 관계일까요? 왜 우리는 오브젝트와 pod 에 레이블링을 해야할까요?
+
+[나의 생각은 레이블을 보고 pod 를 집단으로 끄거나 켤수 있고 조정가능하기 때문에
+Replication Controller 보다 replica set 을 사용하려는 걸로 보인다.]
+
+[selector : 선택자]
+
+
+
+Let us look at a simple scenario.
+여긴 단순 시나리오를 살펴봅시다.
+
+Say we deployed three instances of our front end web application as three pods.
+우린 3개의 인스턴스를 3개의 웹 에플리케이션 pod 로 배포했씁니다.
+
+(We would like to create:우리는 만들고 싶습니다. 행동의 표현인듯)
+We would like to create a replication controller or replica set to ensure that we have three active pod at any time.
+우린 언제나 동작가능한 pod의 생성을 보장받기 위한 레플리카 컨트롤러나 레플리카 셋을 만들고 싶습니다.
+
+And yes, that is one of the use case of replica sets.
+예 맞습니다. 이게 레플리카 셋의 하나의 유스케이즈중 하나 입니다.
+
+You can use it to monitor existing pods, if you have them already created, as it is in this example,
+이 예시처럼 이것들을 이미 생성했다면 기존에 존재하는 pods 들을 모니터링 하는데 쓰실 수 있습니다.
+
+in case they were not created, the replica set will create them for you.
+그것들이 만들어지지 않은 케이스라면, 레플리카 셋은 당신을 위해 이것들을 만들어 줄 것입니다.
+
+
+The role of the replica set is to monitor the pods and if any of them were to fail, deploy new ones.
+레플리카셋의 역할이라면 POD를 모니터링 하고 만약 그들이 먹통일때 새로운 pod 를 배포하는 역할입니다.
+
+The replica set is in fact a process that monitors the pods.
+레플리카 셋은 사실 pods 를 모니터링 하는 프로세스 입니다.
+
+Now, how does the replica set know what pods to monitor?
+그럼 레플리카 셋은 모니터링 해야할 pod 를 어떻게 알까요?
+
+There could be hundreds of other pods in the cluster running different applications.
+각기 다른 어플리케이션 의 동작중인 POD 수백개가 있습니다.
+
+This is where labeling our pods during creation comes in handy.
+이게 바로 우리의 pod를 생성하는 동안 간편하게 레이블링 하는 곳입니다.
+
+We could now provide these labels as a filter for Replica Set under the Selecter section, we use to matchLabels, filter and provide the same label that we used while creating the pods.
+우린 이제 이런 레이블을 레플리카 셋을 위한 필터로 제공할 수 있습니다.
+우리가 POD 생성하는 동안 matchLabels 속성을 사용하여 필터링하고 동일한 레이블을 제공할 수 도 있습니다.
+
+this way, the replica set knows which pod to monitor.
+이 방법으로 레플리카 셋은 어떤 pod 를 모니터 해야하는지 압니다.
+
+The same concept of labels and selectors is used in many other places throughout Kubernetes.
+쿠버네티스 전체를 통틀어 다양한 장소에서 동일한 컨셉의 레이블과 셀렉터는 사용되어집니다.
+
+
+[레플리카 컨트롤은 셀렉터 명을 pod명과 동일하게 지정한다. - 자기가 생성한것만 관리하므로 == != 만 가능]
+[레플리카 셋은 특정 이름으로 matchLabels 를 지정할 수 있다. - 자기가 생성하지 않은것도 모니터링 하다가 쓰러지면 새 인스턴스를 제공할 수 있다., in exists지원]
+
+Now, let me ask you a question along the same lines 
+이제, 같은 라인에서 질문 하나 드리겠습니다.
+
+
+in the replica set specification section, we learned that there are three sections, template replicas and the selector.
+레플리카셋의 특징 섹션에서, 3개의 섹션을 ㄱㅇ부했습니다.
+템플릿, 레플리카, 그리고 셀렉터
+
+
+We need three replicas and we have updated our selector based on our discussion in the previous slide.
+우린 3개의 레플리카가 필요하고, 이전 슬라이드에서 논의했던것에 기초하여 우리는 셀렉터를 업데이트해줘야 합니다.
+
+Say, for instance, we have the same scenario as in the previous slide, where we have three existing pods that were created already and we need to create a replica set to monitor the pods to ensure there are a minimum of three running at all times.
+예를 들어 우린 이전 슬라이드에서 본것과 같은 시나리오, 이미 생성된 3개의 POD, 3개의 POD들이 항시 제대로된 동작을 보장하기 위해 생성이 필요한 레플리카 셋이 있습니다.
+
+
+[비교질 하기]
+
+When the replication controller is created, it is not going to deploy a new instance of pods.
+레플리카 컨트롤이 생성되었을 때, pod의 새 인스턴스는 배포되지는 않습니다.
+
+
+Three of them with matching labels are already created.
+레이블이 매칭되는 세개는 이미 생성되어있습니다.
+
+
+해석이 안된다.
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+(specification:사양)
+In that case, do we really need to provide a template session in the replica set specification. since we are not expecting the replica set to create a new pod on deployment?
+이 경우, 새로운 POD을 생성하기 위한 레플리카 셋을 기대할 수 없을 때 부터, 레플리카 셋 특징에 템플릿 세션을 제공하는 것이 정말 필요할까요?
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+
+
+Yes, we do, because in case one of the pods were to fail in the future, the replica set needs to create a new one to maintain the desired number of pods.
+예, 필요할 수 있습니다. 왜냐하면 미래 pod 중 하나가 실패한 상황인 경우, 레플리카 셋은 유지에 필요한 숫자의 POD를 유지하기 위해 하나의 POD 생성을 필요로 하게 됩니다.
+
+And for the replica set to create a new pod, the template definition section is required.
+그리고 레플리카 셋팅 새POD를 생성하기 위해, 템필릿 정의 섹션이 필요해집니다.
+
+Let's now look at how we scaled Replica set. say we started with three replicas.
+이제 레플리카셋이 얼마나 늘어나졌는지 봅시다.
+3개의 레플리카로 출발했다고 했습니다.
+
+in the future, we decided to scale to six.
+미래에는 6개의 레플리카가 필요하다고 결정됐습니다.
+
+How do we update our replica set to scale to six replicas?
+어떻게 레플리카 셋의 스케일을 6로 업데이트 할까요.?
+
+Well, there are multiple ways to do it.
+여기에는 다양한 방법이 있습니다.
+
+The first is to update the number of replicas in the definition, file to six.
+첫번째는 definition 파일을 6으로 업데이트 하는 방법입니다.
+
+
+[kubectl replace -f filename 는 속성을 업데이트 하는 명령어이다.]
+
+Then run the "Kubectl replace" command to specify the same file using the "-f" parameter, and that will update the replica set to have six replicas.
+그런 다음. 동일한 파일에 -f 파라미터를 사용하여 kubectl replace 커맨드를 실행합니다.
+그리고 나면 레플리카 셋은 6개로 업데이트 될 것입니다.
+
+
+
+The second way to do.
+두번째 방법은, 
+
+it is to run the "Kubectl scale" command used the replicas parameter to provide the new number of replicas and specify the same file as input.
+동일한 파일에 replica 숫자 파라미터를 사용해서 kubectl scale 커맨드는 실행하는 것입니다.
+
+[kubectl scale --replicas=6 -f replicaset-definition.yaml]
+
+You either input the definition file or provide the Replica set that name in the type name format.
+definition 파일을 입력하거나 type/name 포맷으로 레플리카 셋을 넣을 수도 있습니다.
+
+[kubectl scale --replicas=6 -f replicaset myapp-replicaset]
+
+
+However, remember that using the filename as input will not result in the number of replicas being updated automatically in the file.
+하지만 입력값으로 파일이름을 사용하는 것은 파일 내 레플리카의 숫자를 업데이트 결과는 발생하지 않는다는 것을 기억하세요.
+
+In other words, the number of replicas in the Replica set definition file will still be three, 
+다른 말로, 레플리카 셋의 숫자는 여전히 3개일 것입니다.
+
+even though you scaled your replica set to have six replicas using the "Kubectl scale" command and the file as input.
+kubectl scale 커맨드를 사용하여 레플리카 수를 6으로 설정한 경우에도 마찬가지입니다.
+
+
+There are also options available for automatically scaling the Replica set based on load, but that is an advanced topic and we will discuss it at a later time.
+부하에 기초하여 레플리카 셋을 자동 스케일링 하기 위한 옵션이 사용가능합니다.
+하지만 이건 좀더 고급 토픽입니다. 그리고 이건 나중에 다룰 것입니다.
+
+That is now review the command's real quick.
+여기까지 커맨드를 간략하게 살펴보았습니다.
+
+The "Kubectl create" command, as we know, is used to create a replica set or basically any object and Kubernetes depending on the file we are providing as input.
+우리가 알고 있는 kubectl create 커맨드는 레플리카셋 또는 기본적으로 모든 종류으 오브젝트와 쿠버네티스이 입력값으로 제공하는 것과 관련된 파일을 생성하는데 사용됩니다.
+
+you must provide the input file using the "-f" parameter.
+파일을 파라미터값으로 제공하는 경우 -f 파라미터를 꼭 사용하세요.
+
+Used to "Kubectl get" command to see list of Replica set created, used to "Kubectl delete replicaset" command followed by the name of the replica set to delete the replica set.
+kubectl get 커맨드는 모든 생성된 레플리카 셋을 보여줍니다. 
+kubectl delete replicaset 은 이 뒤에 적는 이름의 레플리카 셋을 삭제시켜줍니다.
+
+
+And then we have the "kubectl replaced" command to replace or update the replica set and also the "kubectl scale" command scale replica set simply from the command line without having to modify the file.
+
+kubectl replace 커맨드는 레플리카 셋을 교체하거나 업데이트 합니다. 그리고 kubectl scale 커맨드는 파일 수정 없이 해당 라인을 조정해 줍니다.
+
+
+That's it for this lecture.

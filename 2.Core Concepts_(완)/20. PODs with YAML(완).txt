@@ -1,0 +1,280 @@
+Hello and welcome to this lecture.
+
+My name is Beth, and we are learning Kubernetes for beginners in this lecture.
+제 이름은 베스이고요, 그리고 쿠버네티스 초급자 과정을 배울 겁니다.
+
+We will talk about creating a pod using a YAML based configuration file.
+YAML 설정파일을 기초로 POD를 설정하는 것에 대해 이야기 할 것입니다.
+
+In the previous lecture, we learned about YAML files in general.
+이전 강의에서 우린 일반적인 YAML 파일을 배웠습니다.
+
+Now we will learn how to develop YAML files specifically for Kubernetes 
+이제 우린 어떻게 쿠버네티스에 특화된 YAML 파일을 개발하는지에 대해 배울것입니다.
+
+Kubernetes uses YAML files as inputs for the creation of objects such as Pods replicas, deployments services, etc..
+쿠버네티스는 오브젝트 생성이나 POD복구, 서비스 배포등의 입력값으로 YAML파일을 사용합니다.
+
+(follow:따르다, 좇다, 밟다, 디에서 가다, 뒤 따르다.)
+All of these follow similar structure.
+이 모든건 비슷한 구조를 따르고 있습니다.
+
+Kubernetes definition file always contains four top level fields, 
+쿠버네티스 데피니션 파일은 항상 4가지 탑 레벨 필드로 구성됩니다.
+
+the apiVersion, kind, metadata and spec.
+apiVersion 과 kind, metadata, spec 이 그것입니다.
+
+These are the top level or root level properties.
+이건 가상 상위 또는 루트 레벨의 속성입니다.
+
+These are also required fields, so you must have them in your configuration file.
+이것들은 또한 필수 항목입니다, 때문에 설정파일에 무조건 포함해야 합니다.
+
+Let us look at each one of them.
+이제 이 각각에 대해 살펴보겠습니다.
+
+
+
+
+[apiVersion]
+
+The first one is the API version.
+첫번째는 apiVersion 입니다.
+
+This is the version of the Kubernetes API. 
+이건 쿠버네티스API 버전입니다.
+
+(depending:의존하다, ~에 따라)
+we are using to create the object depending on what we are trying to create.
+생성하고자 하는 것에 따라 오브젝트를 생성하는데 씁니다.
+
+We must use the right API version 
+항상 올바른 버전을 설정해야합니다.
+
+for now, since we are working on pods, we will set the API version as we want.
+지금은 pod에 작동한 시점으로부터, 우리가 원하는 API 버전을 설정할 것입니다.
+
+
+[apiVersion 은 v1 만 써도 무방, apps/v1도 존재]
+
+a Few other possible values for this config are "apps/v1, v1" etc..
+이걸 설정하기 위해 사용가능한 몇몇 값은 apps/v1 과 v1 이 있습니다.
+
+
+We will see what these are for later in this course.
+이게 무엇인지는 이코스 후반 강좌에서 알아보겠습니다.
+
+
+
+[kind]
+(refer:참조하다, 가리키다, 일임하다, 보내다)
+Next is the kind, the kind refers to, the type of object we are trying to create, which in this case happens to be a pod
+다음은 kind 입니다. kind 는 우리가 생성하고자 하는 오브젝트 유형을 참조합니다.
+이 경우에 pod 가 되겠습니다.
+
+so we will set it as pod.
+그래서 우린 pod 로 설정했습니다.
+
+Some other possible values here could be "replicas set or deployment or service"
+여기 몇몇 사용 가능한 값들이 있습니다. "replica set, deployment, service"
+
+which is what you see in the kind field in the table on the right.
+오른쪽 테이블에 kind 팔드에서 당신이 보는것 입니다.
+
+
+
+[metadata]
+
+The next is metadata.
+다음은 메타데이터 입니다.
+
+The metadata is data about the object, like its name labels, etc.
+메타데이터는 오브젝트에 관한 데이터 입니다. 네임라벨이라던가 등등.
+
+As you can see, unlike the first two where you have specified a string value, 
+보시다 시피, 
+당신이 스트립 값으로 특정지은 첫번째 두 벨류와 다르게.
+
+this is in the form of a dictionary.
+이건 딕셔너리 형태 입니다.
+
+
+(intend:이게 아닌거 같음...)
+So everything on the metadata is intended to the right a little bit, 
+그래서 메타 데이터의 모든건은 약간씩 인덴트 되어 있습니다.
+
+and so names and labels are children of metadata.
+그리고 이름과 레이블은 메타데이터의 자식들입니다.
+
+The number of spaces before the two properties, name and labels,doesn't matter,
+네임과 레이블과 같은 프로퍼티 이전의 공간의 수는 상관없습니다.
+
+(siblings:형제)
+but they should be the same as they are siblings, 
+하지만 저 둘은 형제처럼 동일한 스페이스 공간을 가져야 합니다.
+
+in this case, labels as more spaces on the left than name.
+이 케이스에서, 레이블은 네임보다 왼쪽 에 더 많은 스페이스가 있습니다.
+
+(instead of:~대신에)
+And so it is now a child of the name property instead of a sibling, which is incorrect.
+그래서 지금 형제 대신에 네임 프로퍼티의 자식이 되어있씁니다. 이건 잘못되어있습니다.
+
+
+Also, the two properties must have more spaces than its parent, which is metadata,
+또, 이 두 프로퍼티는 메타데이터같은 부모 속성보다 더 많은 스페이스를 가져야만 합니다.
+
+(intend:의도하다, 작정이다, 생각하다, 의미하다.)
+so that it's intended to the right a little bit in this case, all three of them have the same number of spaces before them.
+그래서, 이 경우 약간 오른쪽을 의도합니다./(어색한 해석)
+이 세가지 속성 모두 같은 스페이스 수를 가지고 있습니다.
+
+And so they are all siblings, which is not correct.
+그리고 이들 모두 형제가 되었고, 모두 올바르지 않습니다.
+
+
+on the metadata, the name is a string value, so you can name your pod, myapp-pod.
+메타 데이터에서 네임은 스트링 벨류 입니다, 그래서 POD 에 이름을 지어 줄 수 있습니다.
+
+And the labels is a dictionary, so labels is a dictionary within the metadata dictionary.
+그리고 레이블은 딕셔너리 타입입니다. 그래서 메타데이터의 딕셔너리 속의 딕셔너리 입니다.
+
+And it can have any key and value pairs, as you wish.
+여기 당신이 원한것과 같이 키-벨류 쌍으로 값을 가질 수 있습니다.
+
+
+For now, I have added a label app with the value of myapp.
+이제, 레이블-APP 이 myapp이라는 값과 함께 추가되었습니다.
+
+(Similarly:유사하게)
+Similarly, you could add other labels as you see fit, which will help you identify these objects at a later point in time.
+비슷하게, 나중에 식별하게 쉽도록 도와줄 적합한 레이블을 추가 할수도 있습니다.
+
+
+Say, for example, there are hundreds of pods running a front, an application and hundreds of pods running a backend application or a database.
+예를 말해보자면, 저기 어플러케이션 또는 백엔드 어플리케이션 또는 데이터 베이스 백여개의 POD가 동작중에 있습니다, 
+
+(it will be:~일 것입니다.)
+It will be difficult for you to group these pods once they are deployed.
+한번에 배포되도록 이 POD들을 그룹짓는게 당신에게 어려울 것입니다.
+
+If you label them now as front end, back end or database, you will be able to filter the pods based on this label at a later point in time.
+만약 당신이 프론트 앤드, 백엔드, 데이터 베이스 등과 같이 레이블링 한다면, 이 레이블에 기초하여 POD들을 필터링 할 수도 있습니다.
+
+It's important to node that on the metadata .
+이건 메타데이터에 있는 노드에게 중요합니다.
+
+you can only specify name or labels or anything else that Kubernetes expects to be on the metadata.
+이름이나 레이블을 지정하는 것, 또는 어떤걸로건 쿠버네티스가 메타데이터를 참조 하도록 할 수 있습니다.
+
+[메타데이터 만물론]
+
+
+You can not add any other property as you wish on the this.
+메타데이터에 당신이 원하는 아무 속성이나 추가 할 수는 없습니다.
+
+However, on the labels you can have any kind of key or value pairs as you see fit.
+하지만, 레이블에는 적합해보이는 키-벨류 종류의 어떤 값이건 가질 수 있습니다.
+
+
+[낙서는 레이블 에서만]
+
+So it's important to understand what each of these parameters expect.
+그래서 이것은 각각의 파라미터를 기대하는 것을 이해하는데 중요합니다.
+
+
+So far, we have only mentioned the type and name of the object 
+지금까지, 우린 오직 객체의 유형과 이름만 언급하였습니다.
+
+we need to create which happens to be a pod with a name, myapp-pod.
+우린 POD 의 이름을 myapp-pod로 정하여 생성하는 것이 필요합니다.
+
+(specified:특정된, 지정된)
+But we haven't really specified the container or image we need in the pod.
+하지만 POD에 속에 실제 지정될 컨테이너나 이미지를 가지고 있진 않습니다.
+
+
+(specification:흔히말하는 스펙, 사양)
+The last section in the configuration file is the specification section, which is written as spec depending on the object we are going to create.
+설정파일을 다룬 지난 섹션은 우리가 작성하고자 하는 오브젝트 속성에 의존적인 스펙같은 것이 쓰여진 사양섹션입니다.
+
+
+This is where we would provide additional information to Kubernetes pertaining to that object.
+여기가 우리가 해당 오브젝트에 쿠버네티스와 관련된 추가적인 정보를 제공하는 위치입니다.
+
+This is going to be different for different objects.
+이건 다른 오브젝트 마다 다르게 지정 됩니다.
+
+So it's important to understand or refer to the documentation section to get the right format for each.
+이건 이해하거나 각 항목에 올바른 포맷을 얻는 도큐멘테이션섹션을 참고하는데 중요합니다.
+
+Since we are only creating a pod with a single container in it, it is easy.
+우리가 싱글 컨테이너에 POD 를 여기(설정파일)에 생성하면서 부터, 이것은 쉽습니다.
+
+Spec is a dictionary, so add a property on the it called Containers.
+SPEC은 딕셔너리 입니다. 그래서 container 라는 속성을 추가합니다.
+
+Containers is a list or an array.
+컨테이너는 array 또는 목록입니다.
+
+The reason this property is a list is because the pods can have multiple containers within them, as we learned in the lecture earlier.
+해당 프로퍼티가 목록인 이유는 POD가 멀티플 컨테이너를 가질 수 있기 때문입니다. 이전 강의에서 우리가 배운것처럼
+
+In this case, though, we will only add a single item in the list 
+이번 경우에는 그냥 지나갑니다. 우린 싱글 아이탬 하나만 목록에 넣습니다.
+
+since we plan to have only a single container in the pod.
+POD 내에 싱글 컨테이너를 가질 계획을 하면서 부터
+
+(indicate:나타내다, 가리키다)
+The dash right before the name indicates that this is the first item in the list.
+dash(-) 오른쪽 이름 옆 데시는 이것이 리스트의 첫번째 항목임을 나타냅니다.
+
+The item in the list is a dictionary, so add a name and image property.
+리스트의 첫번째 아이탬은 딕셔너리 입니다. 때문에 이름과 이미지 프로퍼티를 추가합니다.
+
+The value for image is in nginx, which is the name of the Docker image in the Docker repository.
+이미지 벨류 값은 엔진X입니다. 이것은 도커 리파지토리에 있는 도커 이미지 네임입니다.
+
+Once the file is created from the command "kubectl create -f pod file name" which is "pod-definition.YAML" and Kubernetes create the pod.
+"kubectl create -f pod pod-definition.yaml" 명령어로 파일이 한번 생성되면, 쿠버 네티스는 Pod 를 생성합니다.
+
+
+
+
+
+
+
+-------------------------요약-------------------------
+So to summarize, remember the four top level properties API version, kind,  metadata and spec.
+그럼 요약 하자면
+이걸 기억하세요.
+apiVersion, kind, metadata, spec
+
+(start by:~로 시작하다)
+then start by adding value to those depending on the object you are going to create.
+그리고 당신이 생성하려는 오브젝트와 관련된 값을 추가하는것으로 시작하세요.
+
+Once we create the pod, how do you see it.
+pod 가 한번 생성된다면 어떻게 확인하겠습니까
+
+use the Kubectl get pods command to see a list of pods available 
+kubectl get pods 명령을 사용하여 사용가능한 pods 를 확인하세요.
+
+in this case, it's just One
+이번 경우엔 한개 뿐이군요.
+
+to see detailed information about the pod, run the Kubectl describe pod command.
+하나의 POD 에 좀 더 상세한 정보를 보고 싶다면
+"kubectl describe pod" 커맨드는 실행하세요.
+
+This will tell you information about the pod when it was created, what labels are assigned to it, what docker containers are pod of it, and the events associated(연관된) with that pod.
+이 명령어는 pod 가 생성되거나 레이블이 어떻게 할당되었는지 어떤 컨테이너가 POD 에 할당되어 있는지, 
+해당 POD와 연관된 이벤트등 관련된 정보를 알려줄 겁니다.
+
+
+
+That's it for this lecture.
+
+We will now head over to a demo and I will see you in the next lecture.

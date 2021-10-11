@@ -1,0 +1,419 @@
+We have now set up the nodes required to set up a kubernetes cluster.
+
+We have set up a master node and two worker nodes, node01 and node02.
+
+Let us now proceed to the kudeADM documentation page to install a kubernetes cluster.
+
+We will start with the prerequisites.
+전제조건부터 시작하겠씁니다.
+
+So we must have a supported operating system like, for example, uBuntu 16.04 higher, which we already do.
+우선 우리는 지원가능한 OS 가 있어야 합니다. 우분투 16.04 이상등이요.
+
+That's what we did in the previous demo.
+이것은 이전 비디오에서 진행하였습니다.
+
+We have some hardware requirements to have at least 2GB of RAM, 2 CPU and network connectivity between the VMs, which we have already taken care of in the previous video.
+그리고 하드웨어 요구사항이 있습니다. 2기가 바이트의 램과 2개의 CPU 그리고 VM 과의 네트워키 연결. 이것들은 이미 이전 비디오에서 다루었씁니다.
+
+Another thing is to make sure that our firewall and network security settings are in place.
+또다른 것으로 방화벽과 네트워크 보안 설정을 확인해야 합니다.
+
+(Otherwise:그렇지않으면)
+Otherwise, the nodes will run into connectivity issues.
+그렇지 않으면 노드에 연결 이슈가 발생할 수 있씁니다.
+
+For this, we must let IP tables see breached traffic.
+이를 위해 우리는 ip 테이블이 침해된 트래픽을 보아야 합니다.
+
+We must first make sure the "br_netfilter" module is loaded before the step.
+가장 먼저 br_netfilter 모듈이 로드되었는지 확인합니다.
+
+So we can do that by running the command.
+이작업은 명령어로 할 수 있습니다.
+
+So we see that it's not loaded as there is no result.
+보시면 결과가 없는 것에 따라 br_netfilter 가 아직 로드되지 않은걸 앐 있습니다.
+
+So we run the more probe command to load the kernel module.
+그래서 우리는 probe 명령을 더 실행합니다. kernel 모듈을 로드하기 위해서요.
+
+We now execute that on all the nodes.
+이제 모든 노드에서 이 작업을 실행합니다
+
+-----------------------------------------------------------------------
+## 마스터노드
+>> sudo modprobe br_netfilter
+>> lsmod | grep br_netfilter
+
+##노드01
+>> sudo modprobe br_netfilter
+>> lsmod | grep br_netfilter
+
+##노드02
+>> sudo modprobe br_netfilter
+## 커널 모듈을 추가하거나 제거하는 명령어
+
+>> lsmod | grep br_netfilter
+### lsmod : 리눅스 커널 모듈 정보
+-----------------------------------------------------------------------
+
+Once that is done, we run this set of commands to create the new kernel parameters.
+이것들이 완료되면, 우리는 새로운 커널 파라미터를 생성하기 위한 명령어 셋을 실행합니다.
+
+-----------------------------------------------------------------------
+>> cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+>> br_netfilter
+>> EOF
+
+k8s.conf 파일 생성
+
+
+>> cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+>> net.bridge.bridge-nf-call-ip6tables = 1
+>> net.bridge.bridge-nf-call-iptables = 1
+>> EOF
+>> sudo sysctl --system
+
+sysctl 에 파라미터 추가
+-----------------------------------------------------------------------
+
+We then do that on all the nodes.
+다음 해당 작업을 모든 노드에서 진행합니다.
+
+The next step is to install container runtime on the nodes.
+다음 단계는 노드에 컨테이너 런타임 엔진을 설치합니다(도커)
+
+We will be using Docker in this example 
+이예제에서 우리는 도커를 설치할 것입니다.
+
+for this We use the documentation link and click on Docker.
+도커 설치를 위해 우리는 도큐멘테이션 링크를 방문하여 도커를 클릭합니다.
+
+We will use these commands to install the latest table version of Docker.
+해당 명령어를 이용하여 최신 버전의 도커를 설치합니다.
+
+These need root privileges.
+이작업은 루트 권한이 필요합니다.
+
+So I will switch to Sudo to make the next steps easier by running the sudo -i command. 
+다음 스탭을 진행하기 위해 sudo -o 명령어으로 sudo 스위치 할 것입니다.
+
+I will now paste the command a copy to set up the software repositories.
+저는 이제 복사한 명령어를 붙여넣겠습니다. 소프트웨어 리파지토리를 설정하기 위해서.
+
+We will then proceed to execute the same on all the three machines.
+그런 다음 3개의 머신에 같은 작업을 진행합니다.
+
+OK, so that's done.
+좋습니다. 완료했습니다.
+
+The next step is to install Docker's official ZPG keys.
+다음 단계는 도커 공식 ZPG 키를 설치 하는 것입니다.
+
+So we will do that.
+
+Also on all the machines.
+
+
+
+
+The next step is to add the Docker APT repository.
+다음 단계는 Docker APT 리파지를 추가하는 것입니다.
+
+We will then do the same on all the systems.
+
+
+
+
+The next step is to install the docker runtime.
+다음은 도커 런타임을 설치하는 단계입니다.
+
+We run the commands to install the latest table version of Docker.
+
+As of this recording.
+
+If the version of Docker that is shown here has changed as you're watching this, then feel free to follow the latest version of documentation to install the latest version of docker..
+당신이 볼때 여기보디는 도커 버전이 변경되었다면 문서의 최근 버전으로 따라가도 무방합니다.
+
+
+Run that on all the nodes.
+모든 노드에서 실행합니다.
+
+This may take a few minutes, so wait for that to finish.
+이작업은 몇분 정도 소요됩니다.
+
+
+
+The next step is to set up the docker daemon.
+다음 단계는 도커 데몬을 설정 하는 단계입니다.
+
+For this, we create a daemon.json file and then create a directory for the doctor service.
+이를 위해 우리는 데몬json 파일을 만듭니다. 그리고 docer 서비스를 위한 디렉토리도 만듭니다.
+
+We then run the system a daemon reload and restart Docker command to load and start the Docker service.
+그런다음 데몬을 재로드 합니다. 그리고 도커를 재시작 합니다.
+
+To verify Docker's installed, run the systemctl status docker.service command and verify that it is running.
+도커 설치를 확인하기 위해 systemctl status docker.service 명령을 실행합니다. 그리고 이게 실행중인지 확인합니다.
+
+>> systemctl status docker.service
+systemctl status docker.service
+
+
+Confirmed that that's the case on all the three nodes.
+이것을 확인하고. 
+
+We now go back to the documentation page to proceed with the installation of kubernetes components using kubeADM.
+이제 다시 문서 페이지로 돌아가서 kubeadm 설치를 진행합니다. 
+
+The next step is to install the kubernetes related packages such as the kubeADM, kubelet and kubectl on all the nodes.
+다음 단계는 쿠버네티스와 관계된 패키지를 설치하는 단계입니다. kubeadm 이나 kubelet , kubectl 같은거
+
+
+The kubeADM tool is used to bootstrap the cluster.
+kubeadm 도구는 클러스터를 부트스트랩핑하는데 이용됩니다.
+
+kubelet is the process that's responsible to manage pods and containers on the node.
+큐블렛은 pod 와 노드에 올라간 컨테이너를 관리하는 프로세스 입니다.
+
+And the kubectl utility is the kubernetes command line tool for this run the commands to update repository and install the required packages.
+그리고 kubectl 유틸은 쿠버네티스 명령어 라인 툴입니다. 
+
+Run these on all the nodes and wait for it to finish.
+이작은 모든 노드에서 실행하고 완료되기를 기다립니다.
+-----------------------------------------------------------------------
+
+The next section about configuring cgroup driver is not applicable when using Docker as kubeADM automatically detect the group driver for the kubelet.
+다음 단계는 cgroup 드라이버 설정은 하지 않습니다. 도커가 kubeadm 같은 자동 담지 그룹 드라이버를 사용하고 있을때.
+
+
+If you're not using Docker, then we must follow the step to specify the secret driver 
+도커를 사용하지 않을때에는 이 단계를 따라해서 시크릿 드라이버를 지정해야 합니다.
+
+so we can skip this for now.
+그래서 우리는 이 단계를 건너 뛸수 있습니다.
+
+The next step is to configure the kubeADM cluster by clicking on this link.
+다음 단계는 kubeadm 클러스터를 설정하는 것입니다. 클릭킹 온더 링크 하여서,
+
+This takes us to the cluster creation process using KubeADM
+이작업은 우리는 데려갑니다. kubeadm 을 사용한 클러스터 생성 절차로
+
+The first phase is to initialize control plane node.
+첫번째 단계는 컨트롤 플레인 노드를 초기화 하는 것입니다.
+
+The first step in that is only applicable if we are deploying a highly available cluster.
+첫단계는 오직 HA 로 배포하려고 할때에만 적용가능합니다.
+
+In this demo, we are not.
+이번 데모에서는 아닙니다.
+
+We just have a single master node.
+우리는 싱글 마스터 노드이기 떄문입니다.
+
+So we will skip that for now.
+그래서 지금은 넘어 갑니다.
+
+The next step is to choose a pod network add on.
+다음은 pod 네트워크 addon 선택 단계입니다.
+
+And when we do that.
+그리고 이것들 할떄
+
+Decide what is network IP address range.
+어떤 네트워크 IP 대역인지를 결정해야합니다.
+
+We are going to use for the pod.
+우리는 POD 를 위해 사용할 것입니다.
+
+There are multiple network options available for networking between pods in a kubernetes cluster.
+여기에는 멀티플 네트워크 옵션이 이용가능합니다. POD 와 네트워크 사이에.
+
+So if you click on this link, which takes you down in that page today, pod network section,
+그래서 이 링크를 클릭하면 해당 페이지로 데려 갑니다. POD NETWORK SECTION
+
+you will see different options for configuring a network such as Calico, Cilium, Contiv-VPP, Kube-router, Weave Net, etc..
+여기 네트워크 설정을 위한 다양한 옵션을 볼수 있습니다. 칼리오, 씰륨, 콘티브VPP, 큐브라우터 위브 넷 등등
+
+In this case, we will make use of Weeve and we can choose a network range that does not conflict with the network of the nodes.
+이변 경우, 우리는 위브는 사용할 것입니다. 그리고 중첩되지 않은 네트워크 레인지를 선택합니다. 
+
+Remember that we configure the nodes to be in the 192.168.56.* network.
+기억하세요. 우리는 192.168.56.* 번대 대역을 설정 합니다.
+
+We will use a network sider that's different from that range 
+
+for pods We will use 10.244.0.0/16 network.
+
+
+
+
+-----------------------------------------------------------------------
+The third step can be ignored as well, since we are using Docker as our container runtime.
+세번째 단계는 우리는 도커를 사용하기 때문에 무시할 수 있는 것입니다. 
+
+But in case you're using a different one, you may use this option to specify that 
+하지만 당신이 다른 런타임엔진을 사용하는 경우 이 옵션을 사용할 수도 있씁니다.
+
+the fourth step is what we will configure.
+네번째 단계는 무엇을 설정 할지 입니다.
+
+We must specify the kubernetes API servers, IP address as the API server-advertize-address.
+우리는 쿠버네티스 API 서버를 설정 해야합니다. IP 주소를 API 서버광고주소로.
+
+This is so that the API server listens on that on the correct static IP address.
+이 IP 주소로 API 서버가 수신을 하게 됩니다.
+
+We have set on the master node which will make the API server accessible to the worker nodes on any other clients on that IP address.
+마스터 노드에 설정을 했습니다. api 서버가 워커 노드에 접근 가능 하기 만드는 설정을.
+
+Once we have decided the values for the options, we can proceed with initializing the cluster, using the kubeADM init command.
+한번 우리가 이 값을 지정합니다. 우리는 이니셜라이딩 클러스터를 이용하여 처리할 수 있습니다. 
+
+We will run this on the master node.
+마스터 노드에서 실행 할 겁니다.
+
+Remember, this step must only be run on the master node because that's where all the cluster components have to be installed and initialized.
+기억하세요. 이 네번째 단계는 마스터 노드에서만 실행해야 합니다. 왜냐하면 마스터 노드만이 모든 컴포넌트가 인스톨되고 초기화된 곳이기 때문입니다.
+
+We copy and paste the kubeadm in this command on the master node.
+우리는 이 명령어를 복사해서 마스터 노드에 붙여넣습니다. 
+
+We will then pass in all the required parameters such as the pod network spider, which will be 10.244.0.0/16.
+
+And the API server advertize address is going to be the static IP address of the master node.
+그리고 API 서버의 광고 주소는 마스터노드의 고정 IP 주소로 지정합니다.
+
+Which will be 192.168.56.2, which is the IP address of the master.
+
+Now if you're not sure about the IP address of the master node, we can double check that.
+마스터 노드의 IP 주소를 확신 할 수 없다면, 이중 체크 할 수 잇씁니다.
+
+So I will for now comment this command so that it is not executed and that I can later access it African from the IP address.
+
+
+I will then run the ifconfig command to confirm the IP address of the node.
+
+I can confirm that it is the correct IP address.
+
+I will now run the kubeadm init command.
+
+It runs a set of pre-flight checks to make sure all prerequisites are in place.
+
+So let's give it some time to run.
+
+The checks are complete and everything looks good.
+
+So we proceed with the creation of security certificates and installation of the various components.
+
+We give it some more time for the insulation to finish.
+
+Now the insulation is complete.
+
+We will now perform the post installation tasks 
+
+as the output states to start the cluster.
+
+You need to run the following as a regular user.
+
+So we have been running things as the root user.
+
+So we will run the logout command to log out and become the regular user.
+
+Once we are a regular user, we must create a directory under the user's home directly and copy the admin.conf file.
+
+The admin.conf file, has the necessary information and credentials required to access the kubernetes cluster using the kubectl command line utility.
+
+It must be placed in the user's home directory under the .kube directory.
+
+So we are on this command to create the .kube directory and copy the admin.conf file into it 
+
+and also set the right ownership on it.
+
+
+
+
+
+The next step is to deploy a pod network to the cluster.
+
+Earlier, we decided that we will use Weave as our pod network solution.
+
+So we need to do that.
+
+After the port network solution is set up, we will have the worker node's join the cluster using the command given here.
+
+Keep a out of the command that will be used to join the work.
+
+node the cluster.
+
+I'm just going to copy and echo the command to my screen terminal so that it is available in the terminal history and I can retrieve it later.
+
+Or you may just copy it to an external text editor.
+
+Let's run the kubectl get nodes command to check the status of the cluster now.
+
+we see that the cluster consists of the cube master node only.
+
+And the status is not ready.
+
+As of now, 
+
+the version is 1.18.3
+
+The reason is not ready is because we do not have a pod network solution for this.
+
+We go back to the documentation side and go to the pod network section, select Weave and copy the command to install Weave.
+
+Pasted on the master node and executed.
+
+We see that the pod network solution is being installed and all the required components are created.
+
+It creates a service account.
+
+Rolls, roll bindings, deamonn sets, etc..
+
+We discuss a lot about each of these in these certified kubernetes administrator course.
+
+We have a section just for networking where we go from the absolute basics of network all the way to how a weave solution works.
+
+So check that out. If you have time 
+
+
+
+for now, let's proceed with adding the worker nodes to the cluster.
+
+For this, we use the command we saved earlier.
+
+We will copy it and run it on both the worker nodes.
+
+We see that the node has successfully joined the cluster.
+
+Now we are on the kubectl get nodes command on the master node and we will check the status.
+
+It may take a few minutes for the worker nodes to be in a ready state.
+
+So let's monitor that.
+
+We now see that they are in a ready state.
+
+Our kubernetes cluster is now ready.
+
+We can now test by creating some objects.
+
+Let's create a pod using the kubectl run nginx command and specify the nginx image.
+
+
+
+
+We see it's created a pod by running the kubectl get pods command.
+
+The pods are still being created.
+
+So we wait for a few minutes and we will see that it's now in a running state.
+
+We will not delete it using the kubectl delete pod command.
+
+Well, that's it for this demo.
+
+Thank you for watching.

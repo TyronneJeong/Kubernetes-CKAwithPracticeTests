@@ -1,0 +1,101 @@
+------------------------------------------------------------
+연습문제 해답을 어떻게 찾는 것일까?
+path 를 어떻게 알고 있지?
+
+-- initContainers: 속성에 대해 알려줌
+spec:
+	initContainers:
+	  - command:
+		- sh
+		- -c
+		- sleep 5
+		image: busybox
+		imagePullPolicy: Always
+		name: init-myservice
+		resources: {}
+		terminationMessagePath: /dev/termination-log
+	
+
+멀티플 컨테이너를 디자인 하는 3가지 패턴
+- SIDECAR
+- ADAPTER
+- AMBASSADOR
+------------------------------------------------------------
+Hello and welcome to this section on multi container pods.
+안녕하세요 이번 섹션은 멀티플 컨테이너 입니다.
+
+The idea of decoupling a large monolithic application into sub-components known as microservices enables us to develop and deploy a set of independent small and reusable code 
+대규모 모놀리식 어플리케이션을 서브컴포넌트들(마이크로서비스)로 분리한다는 아이디어는 우리에게 독립된 작고 재사용 가능한 코드의 집합을 개발 및 배포 가능 하게 만들었습니다.
+
+(as well as:게다가) (opposed:반대, 대신에로 해석)
+this architecture can then help us scale up down as well as modify each service as required as opposed to modifying the entire application
+이 아키텍처는 우리에게 스케일 업&다운하는것을 도울 수있씁니다 게다가 전체 서비스를 수정하는 대신에 우리가 필요로 하는 서비스 개별로 수정 할 수 있게 돕습니다.
+
+however at times you may need two services to work together such as a web server and a logging service.
+하지만, 두개의 서비스가 동시에 동작하기를 원할때, 가령 웹서버나 로깅 서비스
+
+You need one agent instance per web server instance paired together.
+당신은 웹서버 인스턴스 하나마다 에이젼트 인스턴스가 필요합니다. 한쌍으로
+
+You don't want to merge and blocked the code of the two services as each of them target different functionalities
+각각 다른 기능을 대상으로 하므로 두 서비스의 코드를 병합하는걸 원치 않습니다.
+
+and you'd still like them to be developed and deployed separately 
+그리고 여전히 그 둘 서비스는 각각 개별되고 배포 되기를 원합니다.
+
+you only need the two functionality to work together.
+당신은 단지 두 기능이 같이 동작하기만을 바랄 뿐입니다.
+
+You need one agent per web server instance paired together that can scale up and down together 
+당신은 서로 쌍이 되도록 서버당 하나의 에이젼스가 필요합니다. 이 에이젼트는 서로 같이 스케일 업 하거나 다운될수 있습니다.
+
+and that is why you have multi-container pods that share the same lifecycle which means they are created together and destroyed together they share the same network space which means they can refer to each other as local host and they have access to the same storage volumes.
+그리고 이게 당신이 멀티플 컨테이너 POD를 가지는 이유입니다. (동일한 라이플 사이클과 동일한 네트워크 동간 그리고 동일한 스토리지를 엑세스 하는 것)
+
+(establish:설립하다)
+This way you do not have to establish volume sharing or services between the pods to enable communication between them to create a multi container pod.
+이 방법은 멀티플 컨테이너 POD를 생성하기 위해 POD와의 커뮤니케이션을 담당하는 볼륨 쉐어링이나 서비스를 구성할 필요가 없습니다.
+
+Add the new container information to the pod definition file.
+POD정의파일에 새로운 컨테이너 정보를 추가하면 됩니다.
+
+Remember the container section under the spec section in a pod definition file is an array.
+기억하세요. spec 아래에 컨테이너 섹션은 배열이라는 점을.
+
+And the reason it is an array is to allow multiple containers in a single pod.
+그리고 이것이 배열이 이유는 단일 POD 에 멀티플 컨테이너를 허락하기 위함입니다.
+
+In this case we add a new container named log agent to our existing pod.
+이 경우 우리는 새로운 컨테이너를 추가합니다. 기존에 존재하는 POD 를 위해 log agent라고.
+
+Well that's it for this lecture.
+
+Head over to the coding exercises section and practice configuring multi container pods.
+
+See you in the next lecture.
+
+
+----------------
+
+If any of them fails, the POD restarts.
+그들중 하나라도 실패하면 POD 는 재시작 됩니다.
+
+(at times:때때로)
+But at times you may want to run a process that runs to completion in a container. 
+하지만 때때로 컨테이너안에서 실행이 완료될때까지 프로세스가 동작하는걸 원할수도 있습니다.
+
+For example a process that pulls a code or binary from a repository that will be used by the main web application.
+예를들어 코드와 바이너리 파일을 리퍼지에서 뽑는 프로세스는 메인 웹 어플리케이션에서 사용될 것입니다.
+
+That is a task that will be run only one time when the pod is first created.
+POD가 시작될때 오직 단한번만 실행되는 타스크 입니다.
+
+Or a process that waits  for an external service or database to be up before the actual application starts. 
+또는 응용프로그램이 시작되기 전에 외부 서비스나 데이터 베이스가 작동 될 떄까지 기다리는 프로세스 입니다.
+
+That's where initContainers comes in.
+그곳이 initContainers 가 들어갈 자리입니다.
+
+An initContainer is configured in a pod like all other containers, except that it is specified inside a initContainers section,  like this:
+initContainer 는 pod 안에 구성되어 집니다.
+

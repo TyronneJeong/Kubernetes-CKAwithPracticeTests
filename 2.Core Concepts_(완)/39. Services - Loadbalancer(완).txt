@@ -1,0 +1,120 @@
+Let us now look at another type of service known as the load balancer type.
+이제 로드 밸런서라 불리는 또다른 유형의 서비스에 대해 살펴 봅시다.
+
+So we have seen the node-port service that helps us make an external facing application available on a port on the worker nodes
+우리는 외부에 제공되는 어플리케이션이 워커노드의 포트를 통해 이용가능해지게 만드는걸 돕는 노드포트 서비스를 보았습니다.
+
+so let's turn our focus to the front end applications, which are the voting app and the result app.
+그럼 이제 보팅앱과 결과 앱이 있는 프론트엔드 어플리케이션으로 포커스를 이동해 봅시다.
+
+Now, we know that these pods are hosted on the worker nodes in the cluster.
+현재, 해당 POD 들은 클러스터내 워커 노드에서 호스팅 되는것을 우리는 압니다.
+
+So let's say we have a four node cluster and to make the applications accessible to external users,
+그러니 말해 봅시다. 우린 4개의 노드가 있고, 외부 사용자가 이용가능한 어플리케이션을 만들수 있습니다.
+
+we create these services of type node port.
+우린 이런 노드 포트 타입의 서비스를 생성합니다.
+
+(respective:각각의)
+Now the services with type of node-port help in receiving traffic on the ports, on the nodes and routing the traffic to the respective ports.
+이제 그 서비스는 노드포트함께 각각의 포트에 트래픽 수신되는걸 돕습니다. 
+
+[노드포트는 외부에서 접근 가능한 주소를 제공하는 것]
+[클러스터IP는 내부에서 참조하는 고정된 주소 정보]
+[다수의 노드가 복제된 상황이라면 누가 연락하고 제어해야하는가?]
+
+But what URL would you give your end users to access the applications?
+하지만 엔드유저가 어플리케이션에 접근하기 위해 어떤 URL 를 줄 수 있습니까?
+
+You could access any of these two applications using IP of any of the nodes and the high port?
+당신은 모든 노드의 IP와 포트를 통해 이 두 어플리케이션 모두에게 접근할 수 있습니다.
+
+The services exposed on, 
+서비스가 노출 된 것입니다.
+
+so that would be four IP and port combinations, for the voting app and for IP and port combination for the result app, so not bad.
+보팅 앱과 리절트 앱을 위해 각 4쌍의 IP와 포트 조합이 될 수 있습니다. 뭐 이것도 나쁘지 않습니다.
+
+Even if your ports are only hosted on two of the nodes, they will still be accessible on the apps of all the nodes in the cluster.
+해당 포트가 단지 2개의 노트 에서만 호스팅 될떄 조차도, 여전히 클러스터내 모든 노드에서의 앱으로의 접근이 가능해집니다.
+
+Say the parts for the voting app are only deployed on the nodes with IP 70 and seventy one.
+보팅앱에 관해 말해보자면, 보팅앤은 IP 70번과 71번 포트로만 배포되었습니다.
+
+They would still be accessible on the ports of all the nodes in the cluster.
+그것들도 클러스터내 모든 노드의 포트에서 여전히 접근이 가능합니다.
+
+(configured:구성되다)
+So that's how a service is configured.
+그래서 새로운 서비스가 구성되었습니다.
+
+So you would share these you URLs to your users to access the application.
+이 URL 을 사용자가 어플리케이션에 접근 할 수 있도록 공유할 수 있습니다.
+
+But that's not what the end users want.
+하지만 이건 엔드유저가 원하는게 아닙니다.
+
+They need a single URL like example "voting-app.com" or the example a "result-app.com" to access the application.
+사용자들은 ~~~닷컴이나 ~~~~닷컴 같은걸로 접속하길 원합니다.
+
+
+So how do you achieve that now?
+그럼 우리는 어떻게 이걸 성취할까요.
+
+(suitable:적합한, 장착가능한?)
+One way to achieve this is to create a new VM for a load balancer purpose and install and configure a suitable load balancer on it like a proxy or engine X, etc.
+방법중 하나는, 로드 밸런서 목적에 맞게 새로운 VM을 생성하는 것입니다. 그리고 로드밸런서를 프록시나 엔진X 등등과 같은것을 설치하고 구성합니다.
+
+(route:경로를 지정하다, 경유지를 정하다, 길, 연도, 노선)
+(underlying:밑에 있는, 뒤에 숨은, 밑에있는)
+and then configure the load balancer to route traffic to the underlying nodes.
+그리고 나면 숨겨진 노드들의 트래픽을 경로를 지정하기 위해 로드 밸런서를 구성합니다.
+
+Now, setting all of that external load balancing and then maintaining and managing, that can be a tedious task.
+이제 모든 외부 로드 밸런싱과 유지와 관리를 셋팅합니다. 이건 지루한 작업일 수 있씁니다.
+
+(on a supported:지원이되는)
+However, if we were on a supported cloud platform like Google Cloud or A.W.S or Azure, I could leverage the native load balancer of that cloud platform.
+하지만 구글 클라우드나, 아마존 웹, 아쥴 같이 지원되는 클라우드 플랫폼이 있다면, 해당 네이티브 로드밸런서 등을 활용할 수 있습니다.
+
+(integrating:통합) (certain:확실한)
+Kubernetes has support for integrating with the native load balancers of certain cloud providers and configuring that for us.
+쿠버네티스는 유명한 클라우스 제공자의 네이티브 로드 밸런서와 구성을 지원합니다.
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+(instead of:~대신에)
+So all you need to do is set the service type for the front end services to load balancer instead of node port.
+따라서 프론트 엔드 서비스의 서비스 유형을 노드 포트 대신 로드 밸런서로 설정하기만 하면 됩니다.
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+
+Now remember that this only works with separate cloud platforms, so GCP, AWS and Azure are definitely supported.
+이건 오로지 별도의 클라우드 플랫폼에서만 작동합니다.
+그래서 GCP, AWS과 Azure 은 확실히 지원됩니다.
+
+So if you set the type of service to load balancer In an unsupportive environment like virtual box or any other environment, 
+그래서 버츄얼 박스나 기타 다른 환경등 지원되는 않는 환경에서 로드밸런싱을 위해 이런 유형의 서비스를 설정 한다면
+
+then it would have the same effect as setting it to Northport,
+그때 노드포트를 설정한것과 동일한 효과를 가질 것입니다.
+
+where the services are exposed on a high end port on the nodes 
+노드의 최상단 포트에 서비스가 노출 되어진 곳
+
+there it just won't do any kind of external load balancer configuration. 
+에서는 어떤 종류건 외부 로드 밸런서 구성은 되지 않습니다.
+
+Right.
+좋습니다.
+
+So later on, when we walk through the demos of deploying our application on cloud platforms, 
+그러니 나중에 우리의 데포를 클라우드 플랫폼에 디플로이 할 즈음에
+
+we will see this in action.
+우린 이 부분을 확인 할 수 있을 것입니다.
+
+Right.
+
+So that's it for now.
+
+I will see you in the next lecture.

@@ -1,0 +1,433 @@
+Hello and welcome to this lecture on Kubernetes POD`s
+
+[가정하고 진행하고 싶습니다.]
+
+(head:나아가다, 향하게 하다) (assume:가정하다) (would like to :~하고싶다)
+Before we head into understanding part, we would like to assume that the following have been set up already
+우선 해당 파트를 이해하기 전에, 다음 아래것들이 이미 셋업 되어있다고 가정하고 싶습니다.
+
+
+[어플리케이션이 이미 개발 되어있고 도커 이미지로 생성되어있다고 가정]
+
+At this point, we assume that the application is already developed and built into Dorker images
+이 부분에서는, 어플리케이션이 이미 개발 되어있고 도커 이미지로 생성되어있다고 가정합니다.
+
+and it is available on a docker repository like Docker Hub, 
+또 도커 허브같은 리파지토리에 사용가능하다고 가정합니다.
+
+so Kubernetes can pull it down.
+그래야 쿠버네티스가 내려받을 수 있습니다.
+
+We also assume that the kubernetes cluster has already been set up and is working.
+또한 쿠버네티스 클러스터가 이미 셋업되어 있고 동작중이다라고 가정합니다.
+
+(could be:~일수도 있습니다.)
+This could be a single node set up or a multi node setup.
+이건 싱글 노드 셋업 일수도 있고 멀티 노트 셋업 일 수도 있습니다.
+
+Doesn't matter.
+상관없는 부분입니다.
+
+[가정사항]
+- 어플리케이션 개발 완료 & 도커 이미지로 제공 중.
+- 도커허브 같은 곳에서 이미지를 다운로드 할 수 있음.
+- 쿠버네티스 클러스터는 셋업이 완료된 상태.
+
+All the services need to be in a running state.
+모든 서비스는 "RUNNING" 상태로 되어있어야 합니다.
+
+As we discussed before with Kubernetes, 
+our ultimate aim is to deploy our application in the form of containers on a set of machines that are configured as worker nodes in a cluster.
+이전에 쿠버네티스에 대해 논의했던것 처럼, 
+클러스터내 워커 노드로 구성되어진 머신에서 컨테이너 형태의 어플리케이션을 배포하기 위한 것이 최종적인 목표입니다.
+
+
+
+[컨테이너를 바로 배포하고 싶은 잼민이.]
+
+(However:하지만)
+However, it is does not deploy containers directly on the worker nodes.
+하지만, 어플리케이션을 컨테이너에 바로 배포하는 것은 하진 않습니다.
+
+The containers are encapsulated into a kubernetes object known as pods.
+컨테이너는 POD라 불리는 쿠버네티스 오브젝트안에 캡슐화 되어있습니다.
+
+[POD(컨테이너:Obj)]
+
+
+[POD 설명 : 가장 작은 오브젝트]
+
+A pod is a single instance of an application.
+파드는 단일 어플리케이션 인스턴스 입니다.
+
+A pod is the smallest object that you can create in Kubernetes.
+파드는 쿠버네티스에서 생성가능한 가장 작은 오브젝트 입니다.
+
+Here we see the simplest of simplest cases 
+여기 가장 단순한 사례를 보겠습니다.
+
+
+[술래잡기 : POD 안에 도커컨테이너에서 구동중인 어플리케이션의 단일 인스턴스를 감싸고 있는 단일 노드 위의 쿠버네티스 클러스터]
+where you have a single node kubernetes cluster 
+with a single instance of your application running in a single docker container encapsulated in a pod.
+싱글노드 쿠버네티스 클러스터를 가지고 있습니다. (POD안에 캡슐화된 도커 컨테이너로 구동중인 어플리케이션의 단일 인스턴스)
+
+
+
+DOCKER(NODE[POD[APP]])
+
+
+
+[Scale 공부 잘하고 갑니다.]
+
+(What if + S + V : 만약에 ~ 하면 어쩌지?)
+What if the number of users accessing your application increase
+만약 어플리케이션에 접근하는 사용자수가 증가하면 어쩌지?
+
+(scale:점진적으로 증가하여 완성하는 이미지, 물수제비 뜨다, 비늘을 벗기다, 기어오르다, 저울질하다.)
+규모, 저울, 등급, 음계, 비례, 율, 기수법 등
+
+and you need to scale your application,
+그리고 어플리케이션을 확장할 필요가 있다면.?
+
+
+(additional:추가적인(부사)) (load:(명)짐, 하중, 부하, (동사)짐을 싣다, 잔뜩 올려놓다.)
+you need to add additional instances of your Web application to share the load.
+부하를 나누기 위한 웹 어플리케이션 인스턴스를 추가해야합니다.
+
+
+[spin up 을 배움.]
+(spin up:start a new team or division in a compant with existing employees)
+Now, where would you spin up additional instances?
+그럼 이제 추가된 인스턴스를 어디에서 새출발 할수 있을까요?
+
+Do we bring up new container instance within the same pod?
+새 컨테이너 인스턴스를 같은 POD안으로 가져오는게 가능할까요?
+
+No, we create new pod all together with a new instance of the same application.
+안됩니다. 같은 어플리케이션의 새 인스턴스 모두 같이 새로운 POD를 만듭니다.
+
+
+
+APP[Instance]
+
+As you can see, we now have two instances of our Web application running on two separate pods on the same kubernetes system or node.
+보시는 바와 같이 이제 우린 하나의 쿠버네티스 시스템 또는 노드에 두개로 분리된 노드에 두개의 웹 어플리케이션 인스턴스를 가지고 있씁니다.
+
+
+[Furthuer 는 아리송하다.]
+
+(further:더 멀리, 그 이상의, 더 앞의, 더 나아가서, 게다가, 진행시키다, 기반하다.)
+What if the user base further increases 
+만약 사용자 기반이 더 증가하면 어떻게 할까요?
+
+and your current node has no sufficient(충분한) capacity?
+그리고 현재 노드가 충분한 용적량을 가지지 못한다면?
+
+Well, then you can always deploy additional pods on a new node In the cluster.
+그렇다면, 클러스터내 새 노드에 추가적인 POD를 항상 배포할 수 있습니다.
+
+you will have a new node added to the cluster to expand the clusters physical capacity.
+물리적 용적량의 확장을 위해 클러스터내 새 노드가 추가될 것 입니다.
+
+
+
+[클러스터 인스턴스가 노드로 확장하는구나..]
+
+
+
+So what I'm trying to illustrate in this slide is that 
+그렇다면 제가 이 슬라이드에서 그리려고 하는 것은 이것입니다.
+
+pods usually have a one to one relationship with containers running your application 
+어플리케이션이 동작중인 컨테이너와 POD는 보통 1:1 관계를 갖습니다.
+
+[1부1처의 POD-컨테이너]
+ 
+ 
+[POD 스케일 업 & 다운]
+to scale up. You create new pods 
+스케일을 키우기위해 새로운 파드를 생성하시고
+
+and to scale down. You delete existing pod.
+스케일을 내리려면, 기존의 POD를 삭제하면 됩니다.
+
+
+[스케일을 늘리기 위해 컨테이너를 같은 POD 에 넣기]
+
+You do not add additional containers to an existing pod to scale your application.
+어플리케이션의 스케일을 조정하기 위해 기존에 존재하는 POD 내에 추가가능한 컨테이너를 추가해서는 안됩니다.
+
+(wondering:궁금해하다, 의삼하다, ~이 아닐까 생각하다, 이상하게 여기다) (achieve:목적을 이루다)
+Also, if you're wondering how we implement all of this 
+또, 만약 우리가 어떻게 이 모든걸 구현하는지 궁금하다면,
+
+and how we achieve load balancing between the containers, etc., 
+그리고 우리가 컨테이너와 어떻게 부하균형을 맞추는지 등등이 궁금하다면.
+
+we will get into all of that in a later lecture.
+이 모든건 나중 강의에서 모두 다뤄 볼 것입니다.
+
+[어차피 지금 안 알려줌]
+
+For now, we are only trying to understand the basic concepts.
+지금 우리는 기본적인 컨셉을 이해하는것만 하겠습니다.
+
+
+
+
+[파드와 컨테이너의 관계가 1:1이 아닌 경우를 만들어 주마]
+
+We just said that parts usually have a one to one relationship with the containers,
+우리는 방금 컨테이너와의 1:1 관계를 가지는 것에 대해 말해보았습니다.
+
+(restricted:제한되어지다)
+but are we restricted to having a single container in a single pod?
+하지만, 싱글 컨테이너와 싱글 POD 로만 제한되어졌다면?
+
+
+[동일한 어플리케이션 두개는 안됩니다.]
+
+(except for:~제외하고는)
+No, a single pod can have multiple containers, except for the fact that they're usually not multiple containers of the same kind.
+안됩니다. 일반적으로 같은 종류의 컨테이터가 멀티플이 아닌 경우를 제외하면 싱글 POD 는 멀티플 컨테이너를 가질 수 있습니다.
+
+As we discussed in the previous slide.
+이전 슬라이드에서 우리가 다뤘던 것 처럼.
+
+
+[명확히 하자면, 컨테이너 수가 필요하다면 파드를 늘려야 해.]
+(intention:의도, 의지, 생각, 의미, 의향)
+If our intention was to scale our application, then we would need to create additional pods.
+만약 우리 의사가 스케일을 확장하는 거라면, 우린 추가적인 POD 를 생성할 필요가 있습니다.
+
+(may, might : 할수 있다, 좋다, 설사 할지라도, 할수 있도록) (scenario:대본, 각본)
+But sometimes you might have a scenario where you have a helper container that might be doing some kind of supporting task for our Web application.
+웹 어플리케이션을 지원하는 업무의 종류로 헬퍼 컨테이너를 가지는 시나리오가 가끔 있을 수 있습니다.
+
+such as processing a user, enter data, processing a file uploaded by the user, etc. 
+사용자 처리라던가, 데이터 입력, 파일 업로드 등등
+ 
+and you want these helper containers to live alongside(나란히) your application container.
+그리고 해당 헬퍼 컨테이너가 어플리케이션 컨테이너에 나란히 있었으면 하고 바랄수 있습니다.
+
+
+[도우미와 동거]
+
+In that case, you can have both of these containers, part of the same pod, 
+이 경우에는, 두 컨테이너를 같은 POD의 부분으로 모두 가질 수 있습니다.
+
+
+[같은 POD 에 할당 받은 컨테이너 라이프 사이클]
+
+so that, when a new application container is created, the helper is also created and when it dies, the helper also dies. Since they are part of the same pod.
+이런 경우에, 새 어플리케이션 컨테이너가 생성되어지만, 헬퍼 역시 생성 되고, 새 어플리케이션 컨테이너가 종료되면, 헬퍼 역시 종료되게됩니다. 그들이 같은 POD 에 부분이 되면서 부터요.
+
+[DB와 같이 컨테이너 종료와 관계 없이 단일 동작이 보장되어야 하는 컨테이너는
+동일 POD 로 묶으면 큰일이 납니다.]
+
+
+
+
+
+[로컬호스트 나옴]
+
+(referring to each other as localhost:로컬호스트로 서로 지칭하다.)
+
+the two containers can also communicate with each other directly by referring to each other as localhost, since they share the same network space.
+두개의 컨테이너가 동일한 네트워크 공간을 공유하면 서로를 로컬호스트로 지칭하면서 직접적인 소통을 할수 있습니다.
+
+Plus they can easily share the same storage space as well.
+추가로 동일한 스토리지 공간 역시 쉽게 공유 가능 해진다.
+
+
+
+[뭘 의심하는거지? 마피아인가?]
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★ 여전히 어려운 문장
+(doubts:의심, 의심스러움, 염려하다) 
+If you still have doubts in this topic, I would understand if you did, because I did the first time I learned these concepts, we could take another shot at understanding parts from a different angle.
+만약 여전히 이부분에(네트워크 스페이스 공유) 대해 의심스러운 부분이 있다면, 
+만약 그걸 했다면, 저는 이해할 수 있습니다.
+왜냐하면 내가 이부분을 공부하고 처음 해봤을때, 다른 각도로부터 이해하는 부분에 또다른 샷이 있을 수 있습니다.
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★ 여전히 어려운 문장
+
+
+
+
+
+[도커 컨테이너를 말하다.]
+
+Let's for a moment keep kubernetes out of our discussion and talk about simple docker containers,
+잠시 우리의 논의에서 쿠버네티스를 빼놓아 봅시다. 그리고 단순한 도커 컨테이너에 대해 말해봅시다.
+
+
+let's assume we were developing a process or a script to deploy our application on a Docker host.
+우리는 우리의 어플리케이션을 도커 호스트에 배포하기 위해 프로세스를 개발중이거나 작성중이라고 가정해 봅시다.
+
+Then we would first simply deploy our application using a simple "docker run python-app" command and the application runs fine and our users are able to access it.
+그럼, 우린 첫번쨰로 어플리케이션을 해당 커맨드를 이용해 배포 할것입니다. 그리고 어플리케이션은 잘 동작할 것이고, 우리의 유저들은 엑세스 할 수 있게 됩니다.
+
+When the load increases, we deploy more instances of our application by running the docker run commands many more times.
+부하가 증가할때면, 우린 동작중인 도커에 런 커맨드를 반복적으로 실행하여 더 많은 인스턴스를 배포합니다.
+
+This works fine and we are all happy.
+해당 작업은 잘 되고, 우리 모두는 행복합니다.
+
+
+
+
+[공상과학 시작]
+
+now sometime in the future.
+이제 미래 어떤 시점으로 가서
+
+(undergoes:받다, 견디다)
+Our application is further developed, undergoes architectural changes and grows and gets complex.
+우리 어플리케이션은 훨씬 더 발전되었습니다, 아키텍처의 변화를 겪고, 성장하고, 더 복잡해졌습니다.
+
+We now have a new helper container that helps our web application by processing or vetting data from elsewhere.
+이제 우린 프로세스나 다른 곳에서의 데이터 조사에의해 웹 어플리케이션을 돕는 새로운 헬퍼 컨테이너가 등장합니다.
+
+(maintain:지속하다, 계속하다, 유지하다, 후원하다, 주장하다)
+These helper containers maintain a one to one relationship with our application container 
+이 헬퍼 컨테이너들은 우리의 어플리케이션 컨테이너와 1:1 관계를 유지합니다.
+
+and those needs to communicate with the application containers directly and access data from those containers.
+그리고 이들은 그들의 컨테이너로부터 데이터를 엑세스 하고 어플리케이션 컨테이너들과 직접적으로 통신할 필요가 있습니다.
+
+
+[도우미 진급함]
+
+For this, we need to maintain a map of what app and help our containers are connected to each other.
+이를 위해, 우린 어플리케이션과 헬프 컨테이너가 각각 연결되어진 관리지도가 필요합니다.
+
+[이 모든게 지금 하나의 노드 안에서 일어나는 일입니다.]
+- 노드 안에 컨테이너를 중복해서 생성하고 각기 다른 어플리케이션의 헬퍼 컨테이너가 등장한 시나리오 입니다.]
+- 이때 노드안에서는 컨테이너들과 헬퍼들과 연결정보를 관리해야 하는데 이부분에 해당 매핑을 지적합니다.
+
+we would need to establish network connectivity between these containers ourselves using links and custom networks.
+해당 컨테이너들과 우리자신 사이에 링크와 커스텀 네트워크를 사용하여 네트워크 연결을 설립할 필요가 있습니다.
+
+We would need to create shareable volumes and shared among the containers.
+공유가능한 저장공간을 생성하고 컨테이너들간 공유가 필요합니다.
+
+We would need to maintain a map of that as well.
+그리고 이 지도 역시 관리할 필요가 있습니다.
+
+And most importantly, we would need to monitor the state of the application container.
+그리고 가장 중요하게, 이 어플리케이션 컨테이너들의 상태를 모니터링 할 필요가 있씁니다.
+
+And when it dies, Manually kill the helper container as well.
+그리고 만약 어플리케이션 컨테이너가 사망하면, 수동으로 헬퍼 컨테이너를 종료시켜야 합니다.
+
+as it's no longer required.
+헬퍼 컨테이너가 더이상 필요하지 않기 떄문입니다.
+ 
+When a new container is deployed, we would need to deploy the new helper container as well.
+새로운 컨테이너가 등장 했을때는, 새로운 헬퍼 컨테이너 역시 배포해줄 필요가 있습니다.
+
+with Pod
+Pod 와 함께
+
+kubernetes does all of this for us Automatically
+쿠버네티스를 이 모든 부분을 우릴 위해 자동으로 합니다.
+
+
+
+
+[쿠버네티스 영업당하다.]
+
+we just need to define what containers a port consists of and the containers in a Pod by default will have access to the same storage, the same network namespace and same fate as in They will be created together and destroyed together.
+우린 포트가 어떤 컨테이너로 구성되어 있는지 정의할 필요만 있습니다. 그리고 기본적으로 POD안의 컨테이너는 동일한 스토리와 동일한 네임스페이스 그리고 동일한 운명(나중에 함께 생성하고 파괴할 것들 같은 것)을 접근 가능합니다.
+
+
+[컨테이너는 동일 스토리지, 네임스페이스, 페이트에 접근가능하다.]
+
+
+[Even 의 의미]
+(Even:조차, 까지도, 조차도, 같은, 같은 높이로, 짝수의, 두개가 동일하게 서 있는 그림)
+Even if our application didn't happen to be so complex and we could live with a single container.
+우리는 어플리케이션이 그런 복잡한 상황이 발생하지 않거나, 싱글 컨테이너로만 살아야 할때 조차도
+
+Kubernetes still requires you to create pods.
+쿠버네티스는 새로운 POD 를 생성하기를 요청할 것입니다.
+
+
+[갑자기 왠 고백?]
+
+But this is good in the long run as your application is now equipped for architectural changes and scale in the future.
+하지만 미래에 아키텍쳐 변경이나 스케일 확장을 위핸 장착된 당신의 어플리케이션과 같이 장기적으로 운용될 땐 좋은 것입니다.
+
+
+
+[열심히 설명하곤 안씀 - 멀티플 컨테이너 인 어 노드]
+(stick to:방식을 고수하다)
+However, also node that multiple containers are a rare use case and we are going to stick to single containers per pod in this course.
+하지만, 이런 멀티플 컨테이너를 희귀한 사례입니다. 그리고 우린 이과정에서는 POD당 단일 컨테이너 방식을 고수할 것입니다.
+
+
+
+
+[Kubectl 의 등장]
+
+This is now look at how to deploy pods.
+이제 POD를 어떻게 배포하느냐 부분을 보겠습니다.
+
+Earlier, we learned about the kubectl run command, what does command really does is it deploys a docker container by creating a pod.
+일전에 우리 kubectl 커맨드에 대해 배웠습니다.
+POD를 생성함으로서 도커 컨테이너에 해당 커맨드가 실제 어떤 것을 하는 지.
+
+It first creates a pod automatically and deploys an instance of the nginX docker image.
+첫번쨰로 POD를 자동으로 생성합니다. 그리고 nginX도커 이미지 인스턴스를 배포 합니다.
+
+
+But where does it get the application image from 
+하지만 어디서 어플리케이션을 가져오는지.. 
+
+or that you need to specify the image name using the image parameter the application image.
+또는 어플리케이션 이미지의 이미지 파라미터를 사용하여 이미지를 특정할 필요가 있습니다.
+
+
+(discussed:토론하다, 담론하다, 질의하다)
+In this case, the NginX image is downloaded from the repository Docker hub, as we discussed.
+이 경우, NginX의 이미지가 도커 허브의 리파지토리로부터 다운로드 됩니다. 우리가 토론했던 것 처럼.
+
+it is a public repository where latest images of various applications are stored.
+도커허브는 다양한 어플리케이션들의 최신 이미지들이 저장되어있는 공공 리파지토리 입니다.
+
+(organization:조직, 단체, 체제, 편성)
+You could configure(구성) kubernetes to pull the image from the public or a private repository within the organization.
+쿠버네티스를 공공 또는 사조직의 리파지토리에서 부터 이미지를 가져오도록 구성 할 수 있습니다.
+
+
+Now that we have a port created, how do we see the list of ports available?
+이제 포트가 생성되었으므로, 어떻게 사용가능한 포트 목록을 볼 수 있을까요?
+
+
+The kubectl get part command helps us see the list of pods in our cluster.
+kubectl get part 커맨드는 클러스터에 파드의 목록을 볼수 있도록 도와줍니다.
+
+in this case, we see the pod is in a container creating state and soon changes to a running state when it is actually running.
+이 경우에, 이게 실제 동작할때, 컨테이너 생성 상태와 금방 변화하는 동작 상태속에 ???????? 파드가 안에 있는걸 볼 수 있습니다.
+
+
+Also, remember that we haven't really talked about the concepts on how a user can access the nginX Web server, and so in the current state, we haven't made the Web server accessible to external users.
+그리고 기억하세요. 우리는 엔진X서버에 유저가 어떻게 엑세스 하는가 같은 컨셉은 이야기 하지 않습니다. 그리고 현재 상태로 우리는 외부사용자가 접근가능한 웹서버를 만들지도 않습니다.
+
+You can access it internally from the node.
+노드에서 내부로 엑세스 할 수 있습니다.
+
+But for now, we will just the how to deploy a pod.
+하지만 지금은 POD를 어떻게 디플로이 하는가만 할 것입니다.
+
+And later, in a later lecture, once we learn about networking and services, we will get to know how to make the service accessible to end users.
+그리고 이후, 이후 강의에서 네트워킹과 서비스에 대해 한번 배울 것입니다. 엔드유저가 접근 가능한 서비스를 생성 할 수 있는 노하우를 배울수 있을 것입니다.
+
+
+
+
+
+
+Well, that's it for this lecture.
+
+Head over to a demo and I will see you in the next one.

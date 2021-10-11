@@ -1,0 +1,100 @@
+Hello and welcome to this lecture. In this lecture
+
+we will discuss about the various Kubernetes releases and versions.
+이번 강의에서는 다양한 쿠버네티즈 릴리즈와 버전에 대해 논의해 보겠습니다.
+
+So what do we know about API versions in Kubernetes so far?
+지금까지의 쿠버네티스 API 버전은 어떻게 알수 있을까요?
+
+We know that when we install a kubernetes cluster, we install a specific version of kubernetes.
+우리는 쿠버네티스 클러스터를 설치할때 우리가 어떤 버전의 지정하여 설치했는지 알수 있습니다.
+
+We can see that when we run the kubectl get nodes command.
+그리고 우리는 kubectl get nods 명령어를 쳤을때도 볼수 있습니다.
+
+In this case its v1.11.3.
+이 경우에 1.11.3 버전입니다.
+
+In this lecture we will see how kubernetes project manages software releases.
+이번 강의에서 우리는 쿠버네티스 프로젝트 매니지 소프트웨어 릴리즈의 방법에 대해 알아보겠습니다.
+
+Let's take a closer look at that version number.
+버전 넘버를 보기위해 가까이 오시지요.
+
+The kubernetes release versions consists of 3 parts.
+쿠버네티스 릴리즈 버전은 3개의 파트로 구성되어 있습니다.
+
+The first is the major version, followed by the minor version and then the Patch version. 
+첫번쨰는 메이저 버전이고, 뒤따르는 것은 마이너 버전, 그리고 나머지는 패치버전입니다.
+
+While minor versions are released every few months with new features and functionalities,
+마이너 버전은 매 월 주기로 새로운 특징과 기능으로 릴리즈 됩니다.
+
+patches are released more often with critical bug fixes. 
+패치는 좀 더 잦은 주기로 릴리즈 됩니다. 크리티컬한 버그 수정과 함께요.
+
+Just like many other popular applications out there,
+여타 다른 유명한 어플리케이션들 처럼
+
+kubernetes follows a standard software release versioning procedure. 쿠버네티스의 표준화된 소프트웨어 릴리즈 버져닝 프로시져가 있습니다.
+
+Every few month It comes out with new features and functionalities through a minor release.
+매월 마다 새로운 특징과 기능으로 마이너 릴리즈를 통해 발표됩니다.
+
+The first major version 1.0 was released in July of 2015.
+첫번째 메이저 버전 1.0은 2015년 7월에 발표되었습니다.
+
+(As of:현재)
+As of this recording the latest stable version is 1.13.0.
+현재 버전은 1.13.0의 안정화 버전까지 누적되었습니다.
+
+Whatever we have seen here are stable releases of kubernetes.
+여기서 본게 어떤 버전이건 그건 안정된 버전입니다.
+
+(Apart:따로, 분리하여, +from 이외에도)
+Apart from this you will also see alpha and beta releases 
+이외에도 알파와 베타 릴리스도 볼 수 있습니다.
+
+all the bug fixes and improvements first go into an alpha release tagged alpha in this release.
+모든 버그 수정 및 향상은 첫번째로 배포시 알파라고 태그된 알파 릴리즈에 담습니다.
+
+The features are disabled by default and maybe buggy.
+기능은 기본적으로 비활성화 되어 있으며, 버그가 있을 수 있습니다.
+
+(Then from:그런다음) (make their way to:~로 (논리적흐름)이동하다)
+Then from there they make their way to beta release where the code is well tested.
+코드 테스트가 잘 되고 나면, 베타 릴리스로 이동합니다.
+
+The new features are enabled by default.
+기본적으로 새 기능들이 활성화 됩니다.
+
+And finally they make their way to the main stable release.
+그리고 최종적으로 스테이블 버전으로 이동 합니다.
+
+You can find all the releases in the releases page of the Kubernetes Github repository.
+모든 릴리즈는 쿠버네티스 깃 헙 리파지토리에서 찾을 수 있습니다.
+
+Download the kubernetes.tar.gz file and extract it to find executables for all the kubernetes components.
+모든 쿠버네티스 컴포넌트들을 실행하기 위해 kubernetes.tar.gz 파일을 다운로드 받고 압축을 해제 합니다. 
+
+The downloaded package when extracted has all the control plane components in it.
+다운로드 패키지를 압축 해제 했을때, 모든 컨트롤 플레인 컴포넌츠들이 그 안에 있습니다.
+
+All of them of the same version.
+모든 것들은 같은 버전입니다.
+
+Remember that there are other components within the control plane that do not have the same version numbers.
+기억하세요. 컨트롤 플레인 속에는 서로 동일한 버전이 아닌 다른 컴포넌트들이 있습니다.
+
+The ETCD cluster and CoreDNS servers have their own versions as they are separate projects.
+ETCD클러스터와 CoreDNS 서버는 별도의 프로젝트로 고유 버전 넘버를 가지고 있습니다.
+
+The release notes of each release provides information about the supported versions of externally dependent applications like ETCD and CoreDNS etc.
+각각의 릴리즈 노트는 ETCD나 CoreDNS 같은 외부 어플리케이션의 지원가능한 버전정보 제공하고 있습니다.
+
+Check out the links for some references.
+참조가능한 해당 링크를 확인 하십시오.
+
+That was a quick overview of the release versions. In the upcoming lecture
+
+we will discuss how to upgrade from one version to another.

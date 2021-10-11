@@ -1,0 +1,180 @@
+Before we head into authorization it is necessary to understand about API groups in kubernetes.
+권한 부여를 시작하기 전에 쿠버네티스의 API 그룹에 대해 이해해야 합니다.
+
+But first, what is the Kubernetes API?
+하지만 그 전에. 쿠버네티스 API 는 무엇일까요?
+
+We learned about the Kube API server. Whatever operations we have done so far with the cluster,
+우리는 Kube API 서버에 대해 공부했습니다. 지금까지 클러스터에 작업이 무엇이든
+
+we have been interacting with the API server one way or the other. Either through the kubectl utility or directly.
+하나 또는 그이상의 방법으로 API 서버와 상호작용 했습니다. kubectl 유틸리티또는 직접적인 통신을 통해서도 말이죠.
+
+Say we want to check the version, 
+버전을 체크하길 원한다고 가정 해보죠.
+
+we can access the api server at the master nodes address followed by the port which is 6443 by default and the API version.
+우리는 기본 6443 포트와 api 버전을 덧 붙여 마스터 노드를 통해서 API 서버를 엑세스 할 수 있습니다.
+
+>> curl https://kube-master:6443/version
+
+It returns the version. Similarly to get the list of pods, you would access the url api/v1/pods.
+이 명령은 버정 정보를 리턴 합니다. 유사 하게. POD 목록을 얻기 위해 URL API/V1/PODS 도 접근 할 수 있씁니다.
+
+>> curl https://kube-master:6443/api/v1/pods
+
+Our focus in this lecture is about these API paths. The /version and /api.
+이번 강의에서의 주안점은 API 경로에 대한 것입니다. /version 과 /api 
+
+The Kubernetes API is grouped into multiple such groups based on their purpose. Such as one for apis, one for healthz, one for metrics and logs etc.
+쿠버네티스 API 는 다수의 목적에 기초에 그룹으로 그룹핑 되어 있습니다. API용 하나, 헬스체크용 하나, 메트릭스와 로그등등으로 하나 등등.
+
+The version API is for viewing the version of the cluster as we just saw The Matrix and healthz api are used to monitor the health of the cluster.
+version API 는 클러스터의 버전을 보기 위한 것 입니다. 우리가 방금 본 매트릭스와 헬스 API가 클러스터의 건강을 모니터링하기 위한 것 처럼.
+
+The logs for integrating with third party logging applications.
+/logds 는 써드파티 로깅 어플리케이션들을 통합 하기 위한 것입니다.
+
+In this video we will focus on the API is responsible for the cluster of functionality
+이 비디오에서 우리는 API가 클러스터의 기능을 담당하는 것 에 집중 할 것입니다.
+
+These APIs are categorized into two. The core group and the named group. The core group is where all core functionality exists. Such as namespaces, pods, replication controllers, events, endpoints, nodes, bindings, Persistent volumes, persistent volume claims, configmaps, secrets, services etc.
+이 APIs 는 두개의 카테고리로 분류 됩니다. [코어 그룹]과 [네임드 그룹]입니다.
+코어 그룹은 모든 코어들이 존재하는 장소 입니다. 예를들어 네임스페이스, PODS, 레플리카 컨트롤러, 이벤트, 엔드포인트, 노드, 바인딩, 퍼시스턴트 볼륨, 설정맵, 시크릿, 서비스 등등
+
+
+The named group API is are more organized and going forward all the newer features are going to be made available to these named groups.
+네임드 그룹 API 는 조금 더 조직화 되고 모든 새로운 특징이 네임드 그룹으로 사용가능해 지도록 진행하는 그룹 입니다.
+
+It has groups under it for apps, extensions, networking, storage, authentication, authorization certificates etc. 
+네임드 그룹으로는 APPS, EXTENDIONS, 네트워킹, 스토리지, 인증, 인증서 인증 등등이 있습니다.
+
+Shown here are just a few. 
+보여지는 것은 단지 조금일 뿐입니다.
+
+Within apps, you have deployments, replicasets, statefulsets. 
+apps 안에는 디플로이먼츠, 레플리카셋, 스테이트풀셋
+
+within networking you have network policies 
+네트워킹 안에는 네트워크정책이.
+
+certificates have these certificates sign requests that we talked about earlier in the section.
+인증서 섹션에는 우리가 이전 강의에서 다뤘던 인증서 서명 요청 CSR 이.
+
+so the ones at the top are API groups and the ones at the bottom are resources in those groups.
+가장 상위는 API 그룹이고. 가장 하위는 그룹의 리소스 입니다.
+
+Each resource in this has a set of actions associated with them.
+API 그룹에 속한 각각의 자원들은 API 그룹과 관련된 작업집합들을 가지고 있습니다.
+
+Things that you can do with these resources 
+이 리소스들을 가지고 할 수 있는 것은.
+
+such as list the deployments get information about one of these deployments , create a deployment, delete a deployment update a deployment watch a deployment etc.
+디플로이먼츠는 디플리오치먼츠 중에 하나의 정보를 얻을 수 있고, 디플로이먼츠를 생성할 수 있고, 삭제 및 갱신, 조회등등을 할 수 있습니다.
+
+These are known as verbs. 
+이들은 동사로 알려져 있습니다. (create, delete, update, modify, etc..)
+
+The Kubernetes API reference page can tell you what the API group is for each object.
+Kube API 참고 페이지는 API 그룹의 각 리소스에 대해 알려줄 수 있씁니다.
+
+select an object and the first section in the documentation page shows its group details .
+오브젝트를 선택하고 도큐멘테이션 페이지의 첫번째 섹션은 그룹의 상세정보를 보여 줍니다.
+
+----------------------------------------------------------------
+v1/core is just v1.
+v1 core 는 그냥 v1 입니다.
+
+You can also view these on your Kubernetes cluster. 
+당신은 똰 해당 정보를 쿠버네티스에서도 볼 수 있습니다.
+
+Access your kube-api server at port 6443, without any path 
+당신의 kube API 서버:6443에 별 다른 경로 없이 접속 합니다.
+
+and it will list you the available api groups. And then within the named api groups it returns all supported resources groups.
+그러면 이용가능한 API 그룹들이 나열될 것입니다. 그런 다음 네임드그룹은 그룹의 모든 지원가능 리소스를 리턴 합니다.
+
+(note:참고사항)
+A quick note on accessing the cluster API like that.
+클러스터 API 에 엑세스 할때의 참고 사항입니다.
+
+If you were to access the API directly through curl as shown here,
+여기 보여진것 처럼 curl 을 통해 API 서버에 직접 접촉하는 경우.
+
+>> curl http://localhost:6443 -k
+
+then you will not be allowed access except for certain APIs like version, 
+그럴땐 현재 버전을 제외하고는 엑세스가 승인되지 않을 것입니다.
+
+as you have not specified any authentication mechanisms. So you have to authenticate to the API using your certificate files by passing them in the command line like this.
+당신이 인증 매커니즘 같은것을 가지고 있지 않으므로, 따라서 인증서 파일을 아래의 명령과 같이 전달하여 API 에 인증 해야만 합니다.
+
+>> curl http://localhost:6443 -k
+>>		--key admin.key
+>>		--cert admin.crt
+>>		--cacert ca.crt
+
+An alternate option is to start a kubectl proxy client. 
+대체가능한 옵션은 큐브프록시 클라이언트를 시작하는 것입니다.
+
+The kubectl proxy command, launches a proxy service locally on port 8001 and uses credentials
+큐브 프록시 명령을 통해 로컬에 서비스를 실행 합니다. 그리고 인증서를 이용합니다.
+
+>> kubectl proxy
+
+and certificates from your kubeconfig file to access the cluster.
+그리고 클러스터에 엑세스 하기 위해 config 파일로 인증을 받습니다. 
+
+That way you don’t have to specify those in the curl command.
+이 방법은 curl 명령어에 다른 무언가를 지정하지 않아도 됩니다.
+
+Now you can access the kubectl proxy service at port 8001 
+이제 kubectl proxy 서비스를 8001 포트로 접근 할 수 있습니다.
+
+and the proxy will use the credentials from kube-config file to forward your request to the kube api server.
+그리고 큐브 프록시는 당신의 요청을 Kube API 서버에 전달하기 위하여 kubeconfig 파일에서 인증서를 사용할 것입니다. 
+
+This will list all available APIs at root. 
+그리고 curl 명령은 루트의 모든 이용가능한 API 를 나열할 것입니다.
+
+so hear are 2 terms that kind of sound the same.
+여기 2개의 같은 소리가 나는 용어가 있습니다.
+
+The Kube proxy and kubectl proxy well they are not the same.
+큐브 프로시 와 큐브 컨트롤 프록시 입니다. 하지만 이들은 같은게 아닙니다.
+
+We discussed about kube-proxy earlier in this course.
+우리가 이전 강의에서 다뤘던 것 처럼.
+
+It is used to enable connectivity between pods and services across different nodes in the cluster.
+큐브 프로시는 POD 와 서비스가 서로 연결 되지 위해 이용하는 것입니다.
+
+We discuss about kube-proxy in much more detail later in this course.
+우린 큐브프록시를 상세정보는 강의 후반에 더 자세히 다루겠습니다.
+
+Whereas kubectl proxy is an HTTP proxy service created by kubectl utility to access the kube-api server.
+큐브 컨트롤 프록시는 http 프록시 서비스로 kubectl 유틸리가 kube api 서버에 접근하기 위해 만들어 졌습니다.
+
+So what to take away from this.
+그럼 무엇을 이로부터 떼어 낼 까요?
+
+All resources in Kubernetes are grouped into different api groups. 
+쿠버네티스내 모든 리소스 그룹은 서로다른 API 그룹입니다.
+
+At the top level you have core api group and named api group. 
+탑 레벨에 당신은 Core API 그룹과 네임드 API 그룹을 가지고 있습니다.
+
+Under the named api group. You have one for each section under this API group.
+API 그룹 아래에는 이 API 그룹 아래 각 섹션들이 하나씩 있습니다.
+
+You have the different resources and each resource has a set of associated actions known as verbs in 
+여기 각 다른 리소스 들이 있고 각 리소스들은 그들이 가진 기능들이 동사형태로 얽혀 있습니다.
+
+the next section on authorization.
+인증의 다음 섹션에는
+
+We can see how we use these to allow or deny access to users.
+어떻게 사용자를 승인하고 거절 할 수 있는지를 알아볼 것입니다.
+
+Well that’s it for this lecture. I will see you in the next.

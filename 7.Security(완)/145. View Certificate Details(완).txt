@@ -1,0 +1,231 @@
+------------------------------------------------------------------
+# ROOT CA
+>> openssl x509 -in /etc/kubernetes/pki/ca.crt -text -noout
+
+# API SERVER
+>> openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout
+
+# ETCD 서버
+>> openssl x509 -in /etc/kubernetes/pki/etcd/server.crt -text -noout
+
+# 코어 컴포넌트가 다운되었을때 시스템 진단 명령어
+>> docker ps -a
+>> docker logs container-ID
+
+## 인증서 오류 로그 보기
+
+
+
+
+
+/etc/kubernetes/pki/ca.crt
+/etc/kubernetes/pki/apiserver-etcd-client.crt
+/etc/kubernetes/pki/apiserver-kubelet-client.crt
+/etc/kubernetes/pki/front-proxy-client.crt
+/etc/kubernetes/pki/apiserver.crt
+------------------------------------------------------------------
+Hello and welcome to this lecture 
+
+in this lecture we see how we can view certificates in an existing cluster.
+이번 강의에서는 어떻게 클러스터에 존재하는 인증서를 볼 수 있는지에 대해 강의하겠습니다.
+
+So you join a new team to help them manage their kubernetes environment.
+음. 당신은 그들의 쿠버네티스 환경에서 관리를 돕기 위해 새로운 팀에 합류 하였습니다.
+
+Your new administrator to this team is being told that there are multiple issues related to certificates in the environment 
+이 팀의 새로운 관리자는 말했습니다. 여기에는 인증서과 관련된 다양한 문제들이 있다고.
+
+so you're asked to perform a health check of all the certificates in the entire cluster.
+그래서 당신은 전체 클러스터에 모든 인증서의 헬스 체크를 수행하도록 요청 하였습니다.
+
+What do you do. 
+무엇을 하시겠습니까?
+
+first of all.
+가장 먼저
+
+it's important to know how the cluster was set up.
+클러스터가 어떻게 설정 되어있는지 하는 것은 매우 중요합니다.
+
+There are different solutions available of deploying a kubernetes cluster and they use different methods to generate and manage certificates. 
+쿠버네티스 클러스터의 배포에 따라 이용가능한 솔루션이 달라집니다. 그리고 솔루션은 인증서를 생성하고 관리하는 방법이 다릅니다.
+
+If you were to deploy a kubernetes cluster from scratch
+만약 스크래치를 통해 쿠버네티스 클러스터를 배포 하였다면.
+
+you generate all the certificates by yourself as we did in the previous lecture 
+모든 인증서는 본인이 스스로 생성해야 합니다. 우리가 이전 강의에 했던 것 처럼요.
+
+or else if you were to rely on an automated provisioning tool like kubeadm, 
+또는 당신이 자동 프로비저닝 툴을 이용한다고 하면은 kubeadm 같은
+
+it takes care of automatically generating and configuring the cluster for you 
+kubeadm 이 당신을 위해 자동으로 생성과 구성을 해 줄 것입니다.
+
+while you deploy all the components as native services on the nodes in the hard way, the kubeadm tool deploys these as PODs.
+당신이 모든 컴포넌트를 노드에 네이티브 서비스로 어렵게 배포 하는 동안 kubeadm 도구는 POD 처럼 이들을 배포 합니다.
+
+So it's important to know where to look at to view the right information 
+올바른 정보를 보기 위한 장소(위치)를 아는것은 중요합니다.
+
+in this lecture. we are going to look at a cluster provisioned by kubeadm as an example.
+이번 강의에서 우리는 kubeadm 가 프로비저닝한 클러스터를 예제로 살펴 볼 것입니다.
+
+In order to perform a health check.
+헬스 체크를 하기 위한 한 절차 입니다.
+
+Start by identifying all the certificates used in the system.
+시스템에서 사용되고 있는 모든 인증서의 식별로부터 시작합니다.
+
+I have created a sample Excel spreadsheet for you. Check out the resources link at the end of this lecture to access it 
+여기 엑셀 스프레드 시트를 생성했습니다. 강의 말이에 엑세스 하기 위한 해당 자원의 링크를 확인하세요.
+
+so the idea is to create a list of certificate files used their pods the names configured on them.
+아아디어는 그들의 POD 에서 구성된 이름에 따라 사용되는 인증서 파일의 리스트를 생성하는 것입니다.
+
+The "alt names" configured if any the organisation the certificate account belongs to
+ALT NAMES 는 인증서 계정이 소속된 조직이 있는 경우 구성된 대체 이름입니다.
+
+the "issuer" the certificate and the expiration date on the certificate.
+ISSUER 는 인증서의 인증 또는 만료일 입니다.
+
+So how do you get these.
+그럼 이걸 어떻게 얻을까요.
+
+Start with the certificate files used. 
+인증서 파일 부터 시작합니다.
+
+For this, in an environment setup by kube-adm
+이를 위해 kubeadm 환경 설정 안에서
+
+look for the kube-apiserver definition file under /etc/kubernetes/manifests folder.
+
+해당 경로 아래 kube-apiserver 정의파일을 찾습니다.
+>> /etc/kubernetes/manifests
+------------------------------------------------------------------
+[kube-apiserver.yaml]
+spec:
+	containers:
+		- command:
+			# CA 인증서 파일 위치
+			- --client-ca-file=/etc/kubernetes/pki/ca.crt
+			
+			# KubeAPI서버가 ETCD 와 통신을 하기 위한 클라이언트 인증서파일
+			- --etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt
+			- --etcd-certfile=/etc/kubernetes/pki/api-etcd-cli.crt
+			- --etcd-keyfile=/etc/kubernetes/pki/api-etcd-cli.key
+			
+			# 큐블렛들의 클라이언트 인증서 파일
+			- --kubelet-client-certificate=/etc/.../apiapi-kub.crt
+			- --kubelet-client-key=/etc/.../apiapi-kub.key
+			
+			# TLS 인증을 위한 인증서와 키 파일
+			- --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+			- --tls-private-key-file=/etc/.../pki/apiserver.key
+------------------------------------------------------------------
+
+The command used to start the api server has information about all the certificates it uses. 
+api 서버가 시작할때 사용하는 명령어는 모든 인증서 사용에 관한 정보를 가지고 있습니다.
+
+Identify the certificate file used for each purpose and node it down.
+각각의 목적에 맞게 사용될 인증서 파일을 정의합니다.
+------------------------------------------------------------------
+next.
+다음으로
+
+take each certificate and look inside it to find more details about that certificate.
+인증서에 좀 더 많은 정보를 찾기 위해 각각의 인증서를 살펴 보세요.
+
+For example, we will start with the apiserver certificate file. 
+예를들어 api 서버의 인증서파일로 시작합니다.
+
+Run the openssl x509 command and provide the certificate file as input to decode the certificate and view details.
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+>> openssl x509 -in /etc/kubernetes/pki/apiserver.crt
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+
+openssl x509 명령을 실행하고 인증서를 디코드하고 상세 정보를 출력하기 위해 파일을 입력값으로 지정 하십시오.
+
+Start with a name on the certificate under the subject section.
+서브젝트 섹션 아래 인증서의 이름부터 시작 하겠습니다.
+
+In this case.
+이 파일의 경우 이름은
+
+its kube-apiserver. Then the alternative names. 
+>> Subject:CN-kube-apiserver
+Kube-APISERVER입니다. 그리고 대체 이름들입니다.
+
+The kube-api server has many.
+KubeAPI 서버는 많이 가지고 있습니다.
+
+so you must ensure all of them are there 
+따라서 저것들은 건드리지 마세요.
+
+and then check the validity section of the certificate to identify the expiry date
+그런 다음. 인증서의 만료일자를 검증 하기위한 유효성 섹션을 체크 합니다.
+------------------------------------------------------------
+>> Certificate:
+>>	Validaity
+>>		Not After : Feb 11 05:39:20 2020 GMT
+------------------------------------------------------------
+and then the issuer of the certificate.
+그리고 인증서 발생자를 체크합니다.
+
+This should be the CA who issued the certificate. 
+인증서의 발생자는 CA 여야 만 합니다.
+
+Kubeadm names the kubernetes CA as kubernetes itself. 
+KubeADM 은 Kubernetes CA 에 kubernetes 자체 로 이름을 붙입니다.
+
+Follow the same procedure to identify information about all the other certificates.
+다른 모든 인증서에도 정보를 확인하기 위해 동일한 절차를 밟습니다.
+
+things to look for 
+찾아야 하는 것은.
+
+check to make sure you have the right names 
+당신이 올바른 이름을 가지고 있는지 확인을 해야 합니다.
+
+the right alternate names make sure the certificates are part of the correct organization and most importantly you are issued by the right issuer and that the certificates are not expired.
+올바른 대체 이름은 조직의 올바른 구성원을 만듭니다. 그리고 가장 중요하게 올바른 발행자로 부터 발생되었는지 그리고 해당 인증서가 만료되진 않았는지입니다.
+
+[인증서에 확인할것 : 올바른 대체이름, 발행자이름, 만료일자]
+
+The certificate requirements are listed in detail in the Kubernetes Documentation page. 
+인증서 요구사항은 쿠버네티스 도큐멘테이션 페이지에 자세히 나열되어 있습니다.
+
+Check the references section for the link 
+링크를 통해 참고 하세요.
+
+when you run into issues you want to start looking at logs 
+문제 상황이 발생 했을때, 당신은 로그를 확인하길 원할 것입니다.
+
+if you set up the cluster from scratch by yourself and the services are configured as native services in the OS
+만약 당신이 스크래치로 클러스터를 구성 했다면 그리고 서비스가 OS 의 네이티브 서비스로 구성되어졌다면
+
+you want to start looking at the service logs using the operating systems logging functionality 
+당신은 운영 체제의 로긍 기능을 이용하여 서비스 로그를 찾아보것을 원할 것입니다.
+
+in case you setup the cluster with kubeadm, then the various components are deployed as PODs. 
+이 경우 KubeADM 으로 구성 할 경우, 다양한 컴포넌트들이 POD처럼 배포 되어 있습니다.
+
+So you can look at the logs using kubectl logs command followed by the pod name. 
+떄문에 당신은 Kubectl Log <POD이름> 명령어를 통해서만 로그를 볼 수 있습니다.
+
+Sometimes if the core components such as the kubernetes api server or the etcd server are down, the kubectl commands wont function. 
+때때로 KubeAPI 서버나 ETCD 서버같은 코어 컴포넌트가 다운되면, Kubectl 명령어도 동작하지 않습니다.
+
+In that case you have to go one level down to docker to fetch the logs. 
+이럴 경우 당신은 한 단계 아래 도커로 내려가 로그를 탐색 합니다.
+
+List all the containers using the docker ps –a command. And then view the logs using docker logs command followed by the container ID.
+docker ps -a 명령어로 모든 컨테이너를 나열 합니다. 그런 다음 docker logs <컨테이너ID> 명령어로 로그를 확인합니다.
+
+>> docker ps -a
+>> docker logd container-ID
+
+well that's it for this lecture.
+
+Head over to the practice test and practice viewing information about existing cluster.

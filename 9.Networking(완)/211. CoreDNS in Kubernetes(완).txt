@@ -1,0 +1,221 @@
+---------------------------------------------------------------------
+[explore CoreDNS]
+
+[Corefile 위치]
+>> kubectl -n kube-system describe deployments.apps coredns | grep -A2 Args | grep Corefile
+
+[Web APP 설정]
+>>kubectl edit deploy webapp
+
+[서비스명으로 입출력 IP 다 나옴]
+>> nslookup 
+
+[HR 서비스에서 nslookup 실행 후 이를 다른 네임스페이스에 저장시키기]
+kubectl exec -it hr -- nslookup mysql.payroll > /root/CKA/nslookup.out
+---------------------------------------------------------------------
+In this lecture we will discuss how Kubernetes implements DNS in the cluster.
+이번 가으이에서는 쿠버네티스가 어떻게 DNS 를 구현하는지에 대해 논의해볼것입니다.
+
+In the previous lecture we saw how you can address a service or pod from another pod. 
+이전 강의에서 우리는 어떻게 pod 에서 또다른 pod 로 서비스를 처리하는지를 보았습니다.
+
+In this lecture we will see how kubernetes makes that possible.
+이번 강의에서 우리는 쿠버네티스가 가능하게 만들어 지는 방법을 살펴 볼 것입니다.
+
+Say you were given two pods with two IP addresses.
+두개의 POD 와 IP 가 있다고 가정 합시다.
+
+How you do it.
+그것을 하는 방법.
+
+How would you do it. <-- 조동사가 앞으로 와서 의문형으로 만들어 준다.
+어떻게 하시겠씁니까?
+
+Based on what we learned in the prerequisite lectures on DNS,
+DNS 선수강의에서 우리가 아는 것에 기초하여 
+
+an easy way to get them to resolve each other is to add an entry into each of their /etc/hosts files. 
+서로를 해결하는 수운 방법은 서로의 /etc/hosts 파일에 엔트리를 추가 하는 것입니다.
+
+On the first pod I would say the second pod web is at 10.244.2.5 and on the second pod I would say the first pod test is at 10.244.1.5.
+첫번째 POD 에서는 두번째 POD 를 web 10.244.2.5로 약속합니다.
+그리고 두번째 POD 에서는 첫번째 POD 를 test 10.244.1.5 로 약속 합니다. 
+
+But of course, when you have 1000s of PODs in the cluster, and 100s of them being created and deleted every minute.
+하지만 당연하게도. 당신의 클러스터에 1000개의 POD 가 있을때 100개의 POD 는 매분 생성되고 삭제 됩니다.
+
+This is not a suitable solution.
+이것은 적합한 솔루션이 아닙니다.
+
+So we move these entries into a central DNS server. We then point these PODs to the DNS server by adding an entry into their /etc/resolv.conf file specifying that the nameserver is at the IP address of the DNS server, which happens to be 10.96.0.10 in this case. 
+그래서 우리는 이 엔트리를 중앙 DNS 서버로 옮겼습니다. 그런 다음 우리는 엔트리 목록을 /etc/hosts 파일에 추가하여 POD가 DNS 서버를 가리키도록 하였습니다. 이경우 IP 가 10.96.0.10 이 됩니다.
+
+
+Every time a new pod is created, we add a record in the DNS server for that pod so that other pods can access the new POD, and configure the /etc/resolv.conf file in the POD to the DNS server so that the pod can resolve other pods in the cluster.
+새로운 POD 가 생성될 때마다, 우리는 이 POD 가 다른 POD 들과 엑세스가 가능 하도록 DNS 서버에 레코드를 추가합니다. 그리고 /etc/hosts/conf 파일을 설정 합니다. 그래서 새로 생성된 pod 는 다른 pod 들에게 접근 할 수 있습니다.
+
+This is kind of how kubernetes does it. Except that it does not create similar entries for PODs to map podname to its IP address as we have seen in the previous lecture.
+이런 종류의 방법을 쿠버네티스는 수행합니다. 유사한 엔트리가 생성되지 않은 경우를 제외하고,
+
+It does that for services. For pods it forms host names by replacing dots with dashes in the IP address of the pod. 
+서비스를 위해 그렇게 합니다. POD 의 경우 POD 의 IP주소에서 점을 대시로 치환하여 호스트 이름으로 지정 합니다.
+
+Kubernetes implements DNS in the same way. It deploys a DNS server within the cluster.
+쿠버네티스는 DNS 를 동일 방법으로 구현합니다. 이것을 DNS 서버에 배포합니다.
+
+Prior to version v1.12 the DNS implemented by kubernetes was known as kube-dns. 
+이전 버전 1.12에서 DNS 는 쿠버네티스에 의해 구현되어졌습니다. kube-dns 라는 이름으로.
+
+With Kubernetes version 1.12 the recommended DNS server is CoreDNS. We took a brief look at a core DNS in one of the prerequisite lectures.
+1.12 버전에서부터는 DNS 서버로 CoreDNS 가 권장 됩니다. CoreDNS 에 관해서는 이전 강의해서 살펴보았습니다.
+
+So how is the core DNS setup in the cluster.
+그러면 CoreDNS 는 클러스터에 어떻게 설정 할까요.
+
+The CoreDNS server is deployed as a POD in the kube-system namespace in the kubernetes cluster.
+코어 DNS 서버는 쿠서시스템 네임스페이스의 POD 형태로 배포 됩니다.
+
+Well they are deployed as two pods for redundancy, as part of a replicaset.
+이것들은 중복을 위해 두개의 POD 로 배포 됩니다. 
+
+they are actually a replicaset within a deployment. But it doesn’t really matter. 이것들은 사실 디플로이먼트에 있는 레플리카 셋입니다. 하지만 이것은 문제가 되지는 않습니다.
+
+We’ll just see CoreDNS as a POD in this lecture.
+우리가 단지 coreDNS 를 POD 처럼 봅니다,
+
+This POD runs the coreDNS executable, the same executable that we ran when we deployed CoreDNS ourselves.
+이 POD 는 CoreDNS실행파일을 실행 합니다. 동일한 실행파일입니다. 우리가 CoreDNS 를 직접 배포 할때와
+
+CoreDNS requires a configuration file. In our case
+CoreDNS 는 설정 파일을 필요로 합니다. 우리의 경우에는
+
+we used a file named Corefile. 
+coreFile 이라는 이름을 사용했습니다.
+
+So does kubernetes.
+
+It uses a file named Corefile located at /etc/coredns. 
+그래서 쿠버네티스는 /etc/coredns 에 위치한 Corefile 이라는 파일을 사용합니다.
+
+>> cat .etc.coredns.Corefile
+
+Within this file you have a number of plugins configured. 
+이 파일 속에서 몇몇 플러그인을 구성 합니다.
+
+The ones highlighted in orange. 
+주황색으로 강조한 부분!!
+
+Plugins are configured for handling errors, reporting health, monitoring metrics, cache etc. 
+플러그인들은 핸들링 에러로 설정됩니다. 리포팅 헬스나 모니터링 메트릭스 캐시 등등.
+
+The plugin that makes CoreDNS work with Kubernetes, is the kubernetes plugin. 
+플러그인은 CoreDns 가 작동하도록 만들어야 합니다. 
+
+And this is where the top level domain name for the cluster is set. In this case cluster.local. 
+그리고 이건 탑 레벨의 도메인 네임이 위치하는 곳 입니다. 
+
+So every record in the coredns DNS server falls under this domain. 
+CoreDNS 서버의 모든 레코드들은 이 도메인에 속합니다.
+
+Within the kubernetes plugin there are multiple options.
+쿠버네티스 플러그인에서 이것은 멀티플 옵션입니다.
+
+The pods option you see here, is what is responsible for creating a record for PODs in the cluster.
+여기 보이는 POD 옵션은 POD 를 위한 레코딩 생성을 담당 하는 옵션입니다.
+
+Remember we talked about a record being created for each POD by converting their IPs into a dashed format that's disabled by default.
+기억하세요. 우리는 지금 POD 마다 레코드가 생성되어 지는것에 대해 이야기 하였습니다. IP 에 . 을 -로 변환하는 포맷은 기본적으로 비활성화 되어 있습니다.
+
+But it can be enabled with this entry here.
+하지만 이것은 이 엔트리에서 활성화 할 수 있씁니다.
+
+Any record that this DNS server can’t solve, for example say a POD tries to reach www.google.com
+이 DNS 서버의 모든 레코드들은 연결이 불가능 합니다. 예를 들어 POD 가 www.google.com 에 접근한다고 가정 하면.
+
+it is forwarded to the nameserver specified in the coredns pods /etc/resolv.conf file. 
+이 호출은 coreDns Pods에서 정의된 네임서버로 전달됩니다. 
+
+The /etc/resolv.conf file is set to use the nameserver from the kubernetes Node. Also note, that this core file is passed into the pod has a configMap object. 
+etc/resolv.conf 파일은 쿠버네티스 노드의 네임 서버를 이용하도록 설정 되어 있습니다. 또한 core file 은 configMap 객체로 pod 에 전달됩니다.
+
+That way if you need to modify this configuration you can edit the ConfigMap object.
+이방법으로 해당 설정에 수정이 필요하면 configMap 객체를 수정할 수 있습니다.
+
+We now have the coredns pod up and running using the appropriate kubernetes plugin.
+우리는 이제 coreDns pod 가 생겼습니다. 그리고 적절한 쿠버네티스 플러그인을 ㅇ용합니다.
+
+It watches the kubernetes cluster for new PODs or services, and every time a pod or a service is created it
+이것은 새로운 POD 또는 서비스를 위해 쿠버네티스 클러스터를 감시합니다. 그리고 POD 와 서비스가 생성될때 마다.
+
+it adds a record for it in its database.
+레코드를 데이터베이스에 추가합니다.
+
+Next step is for the pod to point to the coreDNS server.
+다음 단계로 POD 가 CoreDns 를 가리키는 것입니다.
+
+What address do the PODs use to reach the DNS server? 
+어떤 주소가 POD 가 DNS 에 닿는데 사용되어야 합니까?
+
+When we deploy CoreDNS solution, It also creates a service to make it available to other components within a cluster.
+우리가 CoreDns 솔루션을 배포 했을때, 서비스 또한 생성했습니다. 서비스를 다른 컴포넌트들이 이용가능 하도록 만들었습니다.
+
+The service is named as kube-dns by default. 
+서비스 이름은 kube-dns 가 기본으로 지어집니다.
+
+The IP address of this service is configured as nameserver on the PODs.
+이 서비스의 IP 주소는 POD 의 네임서버처럼 구성됩니다.
+
+Now you don’t have to configure this yourself. The DNS configurations on PODs are done by kubernetes automatically when the PODs are created.
+이제 이런 설정을 직접 할 필요가 없습니다. POD 의 DNS 설정은이제 쿠버네티스에 의해 pod 가 생성될때마다 자동으로 됩니다.
+
+Want to guess which kubernetes component is responsible for that? 
+어떤 컴포넌트가 이를 담당하는지 추측하고 싶으싶니까?
+
+The kubelet.
+바로 큐블렛입니다.
+
+If you look at the config file of the kubelet you will see the IP of the DNS server and domain in it.
+만약 당신이 큐블렛의 config file 을 찾고 있다면, 당신은 DNS 서버의 IP를 볼 것입니다. 그리고 도메인 도요.
+
+Once the pods are configured with the right nameserver, you can now resolve other pods and services.
+한번 POD 가 올바른 네임서버로 구성되면 당신은 이제 다른 POD 와 서비스를 닿을 수 있습니다.
+
+You can access the web-service using just web-service, or web-service.default or web-service.default.svc or web-service.default.svc.cluster.local.
+당신은 web-service 를 이용하여 web-service 에 접근 할 수 있습니다. 또는 web-service.default 또는 web-service.default.svc 또는 web-service.default.svc.cluster.local
+
+
+If you try to manually lookup the web-service using nslookup or the host command web-service command, 
+만약 수작업으로 web-service 를 찾으려고 한다면 nslookup 을 이용하거나 호스트 커맨드로 web-service 를 이용하세요.
+
+it will return the fully qualified domain name of the web-service, which happens to be web-service.default.svc.cluster.local.
+이것은 web-service 의 전체 도메인 이름을 리턴 할 것입니다.
+
+But you didn't ask for that you just set up service.
+하지만 이것을 묻는게 아니라면 그냥 서비스를 설정 하시면 됩니다.
+
+So how did it look up for the full name.
+그럼 어떻게 풀 네임을 찾을 수 있을까요?
+
+It so happens, the resolv.conf file also has a search entry which is set to default.svc.cluster.local as well as svc.cluster.local and cluster.local.
+이것은 resolv.conf 파일을 통해 합니다. 검색 엔트리가 있습니다. default.svc.cluster.local 로 설정된. svc.cluster.local 과 cluster.local 도 마찬가지로.
+
+This allows you to find the service using any name. web-service or web-service.default or web-service.default.svc.
+이것들은 당신이 서비스를 찾는데 사용되는 이름을 허용합니다. web-service 또는 web-service.defaul 또는 web-service.default.svc
+
+However, note that it only has search entries for service. So you won’t be able to reach a pod the same way.
+하지만 주목하세요. 이것은 단지 검색 엔트리일 뿐이라는 걸. 그래서 당신은 pod 에 동일한 방법으로 닿을 수가 없습니다.
+
+For that you need to specify the full FQDN of the pod.
+이것을 위해서는 POD 지정이 필요합니다.
+
+
+
+
+
+Well that's it for this lecture.
+
+Head over to the practice test and practice working with DNS on our kubernetes cluster. 
+
+I will see you
+
+in the next lecture.

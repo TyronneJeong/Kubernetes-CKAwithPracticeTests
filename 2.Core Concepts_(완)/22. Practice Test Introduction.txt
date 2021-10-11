@@ -1,0 +1,145 @@
+Hello.
+
+Before you head into a practice test, which follows this video, 
+
+I wanted to spend a few minutes on walking you through the Practice Test Portal. 
+
+Once this lecture is complete, you will find a link to the practice
+
+test the practice tests are hosted on another platform so follow the link.
+
+If you run into any issues once you're on that portal report directly to me you must be accessing the practice test on a laptop or a desktop system as you will require a keyboard to work hands on 
+
+the page you will be taken to will load and interface read through the instructions and click on Start scenario when you're ready.
+
+You will then see a live terminal to a master node in the kubernetes cluster.
+
+You can run commands here and interact with the cluster in any way you like.
+
+This cluster consists of a single master and worker node.
+
+There are two parts to the practice test.
+
+One is this terminal where you will be working and you will run commands to view and configure the kubernetes cluster.
+
+The second is a quiz portal.
+
+You can access the quiz portal by clicking on this link at the top of your terminal.
+
+This will fire up a separate browser session with the questions each topic covered in the lecture has a practice test associated with it that consists of anywhere from 5 to 15 questions.
+
+You can see the total number of questions at the bottom and as and when you progress through this 
+
+it will be marked accordingly.
+
+The questions are of different kind.
+
+Sometimes you're asked to look for information in the environment and select the right answer.
+
+We will perform changes in the environment such as deploy a set of pods or services and ask you to look for information within it or you may be asked to perform a configuration task using a given spec.
+
+We then test your work to ensure you completed it successfully.
+
+Sometimes you are given a set of kubernetes definition files and asked to use them to create configurations.
+
+Use the vi editor to edit these files.
+
+Remember in the certification test the actual exam you will have to use one of the editors that come within the provide system.
+
+So practice working with it.
+
+We also have some scenario based multiple choice questions you won't have these in the actual certification exam.
+
+We just added these to test your knowledge and ensure your learning 
+
+
+when you're given a spec remember to create a configuration that matches it exactly.
+
+You can skip any questions by clicking on this button at the top.
+
+But remember you cannot come back as the questions follow a particular flow.
+
+We're working on a feature to improve this experience.
+
+At times you can access the application you deploy on the cluster by clicking on the Web portal link given above your terminal.
+
+This is however subject to your application having a web portal 
+
+for some reason. You need to open a new terminal.
+
+Click on the button above your current terminal and select open a new terminal to host 1.
+
+Now, remember this is not a replica of the actual kubernetes certification exam.
+
+So the interface and your experience in the actual exam is going to be different than this.
+
+This is a custom solution we built to help you practice.
+
+For it to test your skills to guide you and to prepare you for the actual exam 
+
+you can take this test over and over as many times as you like until you feel confident.
+
+Remember this is a temporary environment and is only available for one hour after which it is deleted
+
+so your work will not be saved out of the two windows.
+
+You can refresh the quiz portal window anytime but you must not refresh the terminal window 
+
+as that will provision a new environment.
+
+If you do that then remember to open the new quiz portal associated with that terminal using the link above your terminal.
+
+Also note that you must not use or store any personal credentials or persistent work in this environment
+
+finally.
+
+Remember that the practice tests are not just to test your skills and the concepts you learned in the lecture.
+
+They're designed for you to learn the concept and gain hands on practice 
+
+
+so there may be topics that are not discussed in the lecture.
+
+There might be times where you're stuck and if you're stuck.
+
+Please do reach out to me.
+
+Do not worry.
+
+Try the test again to push you to read the documentation find information and implementing it is the
+
+idea behind these practice tests as always.
+
+If you need additional explanation on any topic please do reach out to me.
+
+If you run into any issues follow these guidelines 
+
+in case you see some error in the initial screen.
+
+As soon as you load the portal try refreshing the browser ones to open a new environment.
+
+If the issue persists.
+
+Reach out to us if the issue is with your work.
+
+Follow the signs given in the spec results and try to fix it.
+
+If you do not know the answer try to skip the question and move forward and drop us a note at the same time.
+
+If there are capacity issues please wait and try after some time.
+
+For any other issues please do drop us a note.
+
+Also this is the first time I am putting up a solution like this.
+
+These are the first set of exercises I am working on.
+
+More of these and improving and making these more challenging and fun.
+
+I hope you like it.
+
+I hope it helps you gain practice if you come across any issues.
+
+Please please do report it to me and please bear with me until I fix it.
+
+Thank you once again for your support and cooperation and I wish you good luck in the upcoming practice tests.

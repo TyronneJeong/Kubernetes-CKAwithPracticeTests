@@ -1,0 +1,27 @@
+Hello and welcome to this lecture. 
+
+In this lecture we discuss about configuring Kubernetes scheduler.
+안녕하세요. 이번 강의에서는 쿠버네티스 스케쥴러 설정에 관해 알아보겠씁니다.
+
+(Throughout:전체의, 통틀어)
+Throughout this section We have seen different ways of configuring the scheduler.
+이 강의를 통 틀어 우리는 스케쥴러를 설정하는 다른 방법을 보았습니다.
+
+We saw how to setup scheduler manually and how kubeadm tool does it.
+우린 스케쥴러를 수동으로 설정 하는 방법과 kubeadm 도구를 이용해서 설정하는 방법을 보았습니다.
+
+We saw how to create additional schedulers and have PODs pick the new scheduler.
+우린 추가적인 스케쥴러를 생성하는 방법과 POD 에 새로운 스케쥴러를 할당하는것도 보았습니다.
+
+We also looked at some of the options such as these scheduler name and pod name used while configuring the scheduler. 
+우린 또한 약간의 옵션 --scheduler-name 과 스케쥴러 설정시 pod 이름사용에 대해서도 알아보아씁니다.
+
+Well, that’s all there is about configuring schedulers in a kubernetes cluster under the scope of this course and the exam.
+좋습니다. 이것이 스케쥴러 설정의 모든 것입니다.
+
+If you are interested checkout the links and some of the interesting blog posts about advanced scheduling in kubernetes.
+만약 만약 진화된 쿠버네티스 스케쥴링에 관한 링크와 블로그 포스트에 관심이 있다면
+
+References
+
+주소가 있는데 동영상임......

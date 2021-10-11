@@ -1,0 +1,5 @@
+Reference Notes for lectures and labs
+
+We have created a repository with notes, links to documentation and answers to practice questions here. Please make sure to go through these as you progress through the course:
+
+https://github.com/kodekloudhub/certified-kubernetes-administrator-course

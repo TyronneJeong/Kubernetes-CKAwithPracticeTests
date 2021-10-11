@@ -1,0 +1,135 @@
+Hello and welcome to this lecture 
+안녕하세요
+
+in this lecture We look at Container networking interface.
+이번 강의에서는 CNI Container Networking Interface 에 대해 알아보겠습니다.
+
+So far, we saw how network namespace work as in how to create an isolated network namespace environment within our system.
+여기까지 우리는 네트워크 네임스페이스가 작동하는 방법을 보았씁니다. 
+
+we saw how to connect multiple such namespaces through a bridge network,
+다수의 네임스페이스가 브릿지 네트워크를 통해 연결하는 방법도 보았습니다.
+
+how to create Virtual cables, or pipes with virtual interfaces on either end, and then how to attach each end to a namespace and the bridge.
+가상 케이블 또는 파이프(가상 인터페이스) 생성하는 방법과 각각의 네임스페이스와 브릿지를 연결 하는 방법.
+
+We then saw how to assign ip and bring them up. 
+다음 우리는 IP 를 할당하고 가져오는 방법을 보았습니다.
+
+And finally enable NAT or IP Masquerade for external communication etc.
+그리고 마지막으로 외부와 통신을 위한 NAT 활성화 또는 IP 마스커레이드(가장, 사징) 등
+
+We then saw how Docker did it for its bridge networking option.
+다음 우리는 도커에서 브릿지 네트워킹 옵션을 어떻게 하는지
+
+It was pretty much the same way 
+이것들은 매우 비슷한 방식들이였습니다.
+
+except that it uses different naming patterns.
+이것들이 다른 네이밍 패턴을 사용할때는 제외하고는 말이죠.
+
+Well other container solutions solve the networking challenges in kind of the same way
+다른 컨테이너 솔루션들은 이런 동일한 방식의 네트워크 첼링지들을 해결 합니다.
+
+like rocket or Mesos Containerizer or any other solutions that work with containers and requires to configure networking between them like Kubernetes.
+롸켓이나 메소스 컨테이너라이저 또는 다른 컨테이너 솔루션들과 
+
+
+If we are all solving the same networking challenges by researching and finally identifying a similar approach with our own little minor differences. why code and develop the same solution multiple times?
+만약 우리가 동일한 네트워킹 챌린지를 연구를 해결 한다고 하면, 그리고 최종 적으로 비슷한 접근법이 식별된다면, 왜 동일한 해결법을 다수의 방식으로 코딩하고 개발 할까요?
+
+Why not just create a single standard approach that everyone can follow?
+모든이가 따라갈수 있는 하나의 표준화된 접근법을 생성하는것이 왜 안되나요?
+
+So we take all of these ideas from the different solutions and move all the networking portions of it
+그래서 우리는 이 아이디어를 다양한 솔루션에서 가져옵니다.. 그리고 모든 네트워킹 부분을 이관하겠습니다.
+
+into a single program or code And since this is for the bridge network we call it bridge.
+
+So we created a program or a script that performs all the required tasks to get the container attached to a bridge network.
+
+For example you could run this program using its name bridge and specify that you want to add this container to a particular network namespace.
+
+The bridge program takes care of the rest so that the container runtime environments are relieved of those tasks.
+
+For example, whenever rkt or kubernetes creates a new container, they call the bridge plugin and pass the container id and namespace to get networking configured for that container.
+
+So what if you wanted to create such a program for yourself? May be for a new networking type. 
+
+If you where doing so.
+
+What arguments and commands should it support.
+
+How do you make sure the program you create will work correctly with these run times.
+
+How do you know container run times like kubernetes or rkt will invoke your program correctly.
+
+That’s where we need some standards defined. A standard that defines , how a programe should look, how container runtime will invoke them so that everyone can adhere to a single set of standards and develop solutions that work across runtime.
+
+
+
+
+---------------------------------------------------------------------------------------
+That’s where container network interface comes in. 
+여기가 CNI 가 등장 할 곳입니다.
+
+The CNI is a set of standards that define how programs should be developed to solve networking challenges in a container runtime environment.
+CNI 는 표준 집합 입니다. 
+
+The programs are referred to as plugins.
+
+In this case bridge program that we have been referring to is a plugin for CNI. 
+
+CNI defines how the plugin should be developed and how container run times should invoke them. 
+
+CNI defines a set of responsibilities for container run times and plugin. 
+
+For container runtimes CNI specifies that it is responsible for creating a network namespace for each container.
+
+It should then identify the networks the container must attach to container runtime must then invoke the plugin.
+
+When a container is created using the ADD command and also invoke the plugin when the container is deleted using the Del command. 
+
+It also specifies how to configure in network plugin on the container runtime environment using a JSON file. On the plugin side, it defines that the plugin should support Add, Del and check command line arguments and that these should accept parameters like container and network namespace.
+
+The plugin should take care of assigning IP addresses to the PODs and any associated routes required for the containers to reach other containers in the network.
+
+At the end the results should be specified in a particular format.
+
+As long as the container runtime and plugins adhere to these standards they can all live together in harmony.
+
+Any runtime should be able to work with any plugin.
+
+CNI comes with a set of supported plugins already. 
+
+Such as bridge, VLAN, IPVLAN, MACVLAN, one for windows.
+
+As well as IPAM plugins like host-local and dhcp.
+
+There are other plugins available from third party organizations as well.
+
+Some examples are weave, flannel, cilium, Vmware NSX, Calico, Infoblox etc. 
+
+All of these container runtimes implement CNI standards. 
+
+So any of them can work with any of these plugins. But there is one that is not in this list. 
+
+Docker does not implement CNI. 
+
+Docker has its own set of standards known as CNM which stands for Container Network Model which is another standard that aims at solving container networking challenges similar to CNI but with some differences. 
+
+Due to the differences these plugins don’t natively integrate with Docker.
+
+meaning you can’t run a docker container and specify the network plugin to use is CNI and specify one of these plugins but that doesn't mean you can't use Docker with CNI at all.
+
+You just have to work around it yourself.
+
+For example create a docker container without any network configuration and then manually invoke the the bridge plugin yourself. 
+
+That is pretty much how kubernetes does it.
+
+When kubernetes creates docker containers it creates them on the none network.
+
+It then invokes the configured CNI plugins who takes care of the rest of the configuration.
+
+We talk about CNI in Kubernetes in the upcoming lectures.

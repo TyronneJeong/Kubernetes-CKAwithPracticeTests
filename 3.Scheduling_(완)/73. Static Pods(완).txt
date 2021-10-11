@@ -1,0 +1,332 @@
+---------------------------------------------
+Static POD Path 찾기
+>> ps -ef | grep kubelet | grep "\--config"
+에서 --config 항목의 설정파일 경로 찾기  
+ex) --config=/var/lib/kubelet/config.yaml
+>> grep -i static /var/lib/kubelet/config.yaml
+---------------------------------------------
+>> rm -rf filename
+f:force(강제)
+r:root(하위폴더모두삭제)
+
+Hello and welcome to this lecture in this lecture we discuss about static pods in Kubernetes. 
+안녕하세요. 이번에는 정적인 POD 에 대해 알아 보겠습니다.
+
+Earlier, in this course we talked about the Architecture and how the kubelet functions as one of the many control plane components in Kubernetes.
+일전에이 강의에서 아키텍처와 큐블렛이 어떤 기능을 하는지에 대해 대해 이야기 했었습니다. 
+
+(relies:의존하다)
+The kubelet relies on the kube-apiserver for instructions on what PODs to load on its node, which was based on a decision made by the kube-scheduler which was stored in the ETCD datastore.
+결정은 ETCD 저장소에 저장된 스케쥴러의 결정에 따라 큐블렛은 큐브API서버에 의존하여 POD를 NODE 에 옮깁니다.
+
+What if there was no kube-apiserver, and kube-scheduler and no controllers and no ETCD cluster.
+만약에 큐브API서버와 큐브스케쥴러 그리고 노드컨트롤러와 ETCD클러스터까지 없다면 어떻게 될까요?
+
+What if there was no master at all.
+만약에 마스터노드가 없다면
+
+What if there were no other nodes.
+만약에 다른 노드들이 없다면
+
+What if you're all alone in the sea by yourself not pod of any cluster.
+만약에 망망대해에 당신말고는 아무도 없다면?? 어떤 클러스터에도 pod 가 없이.
+
+Is there anything that the kubelet can do as the captain on the ship?
+큐블렛이 배의 선장으로써 할수 있는것이 어떤것이 있을까요?
+
+Can it operate as an independent node?
+큐블렛으 독립된 하나의 노드를 운영할 수 있나요?
+
+If so who would provide the instructions required to create PODs?
+만약에 큐블렛에 POD 생성에 필요한 지시를 제공한다면?
+
+Well, the kubelet can manage a node independently. On this ship. host,
+좋습니다. 큐블렛은 노드를 독립적으로 관리를 할 수 있습니다.
+
+
+we have the kubelet installed. And of course we have Docker as well to run containers.
+우리는 큐블렛이 설치되어 있습니다. 그리고 당연하게도 컨테이너를 실행시키기 위한 도커 역시 설치되어 있습니다.
+
+There is no Kubernetes cluster. 
+여기에는 쿠버네티스 클러스터가 존재하지 않습니다.
+
+So there are no Kube API server or anything like that.
+고로 여기에는 API 서버나 그 비슷한것도 존재하지 않습니다.
+
+
+
+
+
+The one thing that the kubelet knows to do is create PODs. 
+단 하나. POD를 생성하는 것이 큐블렛이 해야할 일임을 알고 있습니다.
+
+But we don’t have an API server here to provide POD details.
+하지만 POD의 상세정보를 제공해줄 API 서버가 우리는 없습니다.
+
+By now we know that to create a POD you need the details of the POD in a POD definition file. 
+지금 우리는 POD정의파일을 통해 원하는 세부사항으로 POD를 생성하는 것을 알고 있습니다.
+
+But how do you provide a pod definition file to the kubelet without a kube-api server?
+하지만 어떻게 POD 정의파일을 큐블렛에게 전달할수 있을까요? API 서버 없이.
+
+
+
+------------------------------------------------------------
+(designated:지정)
+You can configure the kubelet to read the pod definition files from a directory on the server designated to store information about pods.
+당신은 POD정의파일을 POD에 관한 정보가 저장되도록 지정된 서버의 디렉토리에서 큐블렛이 읽을 수 있도록 구성할 수 있습니다.
+
+The pods definition files in this directory 
+POD정의파일은 이 디렉토리에 있습니다.
+
+the Kubelet periodically checks this directory for files reads these files and creates pods on the host.
+큐블렛은 해당 디렉토리에서 파일을 읽고 호스트에 POD를 생성하기 위해 주기적으로 확인합니다.
+
+Not only does it create the pod it can ensure that the pod stays alive.
+POD생성하는 것 뿐만 아니라. 큐블렛은 POD 가 계속 살아있도록 보장할수 있습니다.
+
+(attempts:시도하다)
+If the application crashes, the kubelet attempts to restart it.
+만약 어플리케이션이 충동하게 되면, 큐블렛은 재시작을 시도 합니다.
+
+If you make a change to any of the file within this directory, the kubelet recreates the pod for those changes to take effect.
+만약 해당 디렉토리의 파일에 변경사항이 발생되면 큐블렛은 POD 에 변경사항이 적용되도록 재 생성합니다.
+
+If you remove a file from this directory the pod is deleted automatically.
+만약 당신이 파일을 삭제한다면 POD 역시 자동으로 삭제됩니다.
+
+
+
+
+[Static POD 의 정의가 이제야...]
+(intervention:간섭)
+So these PODs that are created by the kubelet on its own without the intervention from the API server or rest of the kuberentes cluster components are known as Static PODs.
+API서버의 간섭없이 큐블렛에 의해 생성된 POD들을 정적 POD 라고 합니다.
+
+Remember you can only create PODs this way.
+기억하세요. 해당 방법으로는 POD 만이 생성할 수 있습니다.
+
+You cannot create replicasets or deployments or services by placing a definition file in the designated directory.
+지정 디렉토리를 안에 위치한 파일로 레플리카 셋, 디플로이, 서비스는 생성가능하지 않습니다.
+
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★ 문장이 이상함
+they are all concepts pod of the whole Kubernetes architecture, that requires other Cluster plane components like the replication and deployment controllers etc. 
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+
+The kubelet works at a POD level and can only understand PODs.
+큐블렛은 POD 레벨에서 일을 합니다. 그리고 오직 POD 만 이해가능 합니다.
+
+Which is why it is able to create static pods this way.
+이 방법으로 스태틱 POD 를 생성 가능한 이유 때문입니다.
+
+So what is that designated folder and how do you configure it.
+그럼 지정 폴더는 무엇이고 어떻게 설정 하는 걸까요?
+
+It could be any directory on the host. 
+이것은 호스트내 어떤 디렉토리건 가능합니다.
+
+And the location of that directory is passed in to the kubelet as a option while running the service.
+그리고 디렉토리 위치는 큐블렛에세 전달이 됩니다. 서비스가 동작하는 동안 OPTION 으로
+
+The option is named pod manifest path and here it is set to /etc/Kubernetes/manifests. 
+그 옵션은 POD MANIFEST PATH 라고 이름 붙여졌습니다. 그리고 그 파일은 아래 경로에 설정되어있습니다.
+/etc/Kubernetes/manifests
+
+>> kubelet --pod-manifest-path=""
+
+There is also another way to configure this
+저기에는 또하나의 설정 방법이 있습니다.
+
+Instead of specifying the option directly in the kubelet.service file,
+큐블렛 서비스 파일에 직접적으로 옵션을 지정하는 대신에
+
+you could provide a path to another config file using the config option, 
+config 옵션을 사용하여 또다른 설정 파일의 경로를 전달 할 수 있습니다.
+
+and define the directory path as staticPodPath in that file.
+그리고 파일내 디렉토리 Path 를 staticPodPath로 지정합니다.
+
+Clusters setup by the kubeadmin tool uses this approach. 
+kubeadm 도구를 이용한 클러스터 셋업은 이 접근법을 사용합니다.
+
+If you are inspecting an existing cluster, 
+만약 기존에 존재하는 클러스터를 검증 하는 경우
+
+you should inspect this option of the kubelet to identify the path to the directory.
+디렉토리 경로를 식별하기 위해 큐블렛의 해당 옵션을 검증해야만 합니다.
+
+You will then know where to place the definition file for your static pods.
+그런 다음 당신의 스태틱 PODS 정의파일이 위치한 곳을 알수 있습니다.
+
+So keep this in mind 
+그러니 명심하세요.
+
+(irrespective:상관없이)
+when you go through the labs. You should know to view and configure this option irrespective of the method used to set up the cluster 
+문제 풀러 가실때, 클러스터를 설정한 방법과 관계없이 해당 옵션을 보고 설정하는 것을 알아야 합니다.
+
+first check the option pod manifest path in the Kubelet service file 
+가장 먼저 큐블렛 서비스 파일의 POD-MANIFEST-PATH 옵션을 확인하세요.
+
+if it's not there then look for the config option and identify the file used as the config file 
+만약 경로가 없다면, config 옵션을 찾으세요. 그리고 config 파일로 사용된 파일을 식별하세요.
+
+and then within the config file look for these static pod path option.
+그런 다음. 설정파일 안에서 스태틱 POD 경로를 찾으세요.
+
+(Either:어느하나)
+Either of these should give you the right path 
+이 둘중 하나가 올바른 경로를 제공해야 합니다.
+
+once the static pods are created.
+스태틱 POD 가 생성되면
+
+you can view them by running the Docker ps command. 
+docker ps 명령어로 이들을 볼 수 있습니다.
+
+So why not the kubectl command as we have been doing so far.
+그럼 왜 그동안 계속 써왔던 kubectl 커맨드는 안되는 걸까요?
+
+Remember we don’t have the rest of the Kubernetes cluster.
+기억하세요. 우리는 쿠버네티스 클러스터의 나머지 구성요소가 없습니다.
+
+Kubectl utility works with the kube-apiserver.
+kubectl 유틸리티는 API서버를 통해 작동합니다.
+
+Since we don’t have an API server now, no kubectl utility. which is why we're using the docker command.
+API서버가 없는 순간 부터 우리는 kubectl 유틸리티도 없습니다. 이것이 docker 커맨드를 쓰는 이유 입니다.
+
+
+---------------------------------------------------------------
+So then how does it work when the node is pod of a cluster.
+그럼 노드가 클러스터의 POD 일때 이것은 어떻게 동작할까요.
+
+When there is an API server requesting the Kubelet to create pods.
+API 서버가 POD 생성을 위해 큐블렛에 요청을 할때
+
+Can the kubelet create both kinds of PODs at the same time?
+큐블렛은 동시간에 두가지 종류의 POD 를 생성할 수 있나요?
+
+Well, the way the kubelet works is it can take in requests for creating pod from different inputs.
+큐블렛이 작동하는 방식은 이것 입니다. 이것은 다른 입력으로 부터 pod 생성을 요청 받을 수 있다는 것입니다.
+
+The first is through the POD definition files from the static pods folder as we just saw.
+처음은 우리가 방금 본 것 처럼 스태틱 POD 폴더의 POD 정의파일을 통하는 것 입니다.
+
+The second is through an HTTP API endpoint. 
+두번째는 http api 를 통한 것입니다. 
+
+And that is how the kube-apiserver provides input to kubelet. 
+그리고 이것은 api 서버가 큐블렛에 입력값을 전다라는 방법이기도 합니다.
+
+The kubelet can create both kinds of PODs – the staticpods and the ones from the api server - at the same time.
+큐블렛이 스태틱 POD 와 API 서버로 부터 전달 받은 두 종류의 POD 를 동시에 생성할 수 있습니다.
+
+Well,
+
+(aware:알고 있는, 알아차리고, 의식이 있는, 빈틈없는)
+in that case is the API server aware of the static pods created by the kubelet?
+이 경우 API 서버는 큐블렛에 의해 생성된 정적 POD 를 인식 할까요?
+
+Yes it is.
+예 인식 합니다.
+
+If you run the kubectl get pods command on the master node, the static pods will be listed as any other pod.
+만약 당신이 kubectl get pods 명령을 마스터 노드에서 실행한다면, 스태틱 POD 역시 다른 POD 들과 함께 리스트 될 것입니다.
+
+Well how is that happening? 
+어떻게 이것이 가능 할까요?
+
+When the kubelet creates a static pod,
+큐블렛이 정적 POD 를 생성할때
+
+if it is part of a cluster, it also creates a mirror object in the kubeapi server.
+큐블렛이 클러스터의 한 부분이라면 미러 오브젝트를 API 서버에 생성 하기 때문입니다.
+
+What you see from the kube-apiserver is just a read only mirror of the pod. 
+API 서버에서 볼수 있는 것은 단지 읽기전용의 미러 POD 입니다.
+
+You can view details about the pod but you cannot edit or delete it like the usual pods.
+당신은 POD의 상세내용을 볼 수 있습니다만, 수정이나 삭제는 할 수 없습니다. 보통의 다른 POD들처럼.
+
+You can only delete them by modifying the files from the nodes manifest folder.
+당신은 오직 node-manifest 폴더에서 발생한 수정으로만 삭제할 수 있습니다.
+
+
+
+
+Node that the name of the pod is automatically appended with the node name.
+이때 POD 네임은 NODE네임과 함께 자동으로 추가 됩니다.
+
+In this case node01. So then why would you want to use Static PODs?
+이번 경우에는 node01 그럼 왜 스태틱 POD 를 쓰고 싶어 하는 걸까요?
+
+Since static pods are not dependent on the Kubernetes control plane, 
+스태틱 POD 가 Kubernetes Control Plane 에 의존하지 않으면서 부터
+
+you can use static pods to deploy the control plane components itself as pods on a node.
+스태틱 POD 를 control plane 컴포넌트 스스로 deploy 하기 위해 사용할 수 있습니다. 마치 노드속 POD 처럼.
+
+Start by installing kubelet on all the master nodes.
+모든 마스터 노드 위에 큐블렛을 설치하여 시작하십시오.
+
+Then create pod definition files that uses Docker images of the various control plane components such as the api server, controller, etcd etc.
+그런 다음.  다양한 컨트롤 플레인 컴포넌트(API서버나 컨트롤러 ETCD 등등)의 도커 이미지를 사용하기 위해 POD 정의파일을 생성하세요.
+
+Place the definition files in the designated manifests folder.
+지정된 폴더에 정의파일을 위치하세요.
+
+And kubelet takes care of deploying the control plane components themselves as PODs on the cluster.
+그리고 큐블렛은 컨트롤 플레인 컴포넌트 스스로 배포처리르 합니다.. 마치 클러스터 위에 POD 처럼
+
+This way you don't have to download the binaries configure services or worry about so the service is crashing.
+이 방법으로 당신은 바이너리 파일을 다운로드 받을 필요도 없고, 서비스 설정이나 서비스 충동을 걱정할 필요도 없습니다.
+
+If any of these services were to crash since it's a static pod it will automatically be restarted by the kubelet. 
+만약 해당 서비스가 스태틱 POD 된 이후로 충돌이 발생한다면, 큐블렛에 의해 자동으로 재시작 하게 됩니다.
+
+(Neat:산뜻한, 적절한, 싱싱한, 솜씨좋은, 균형이 잡힌)
+Neat and simple.
+깔끔하고 심플 합니다.
+
+That’s how the kubeadmin tool set’s up a Kubernetes cluster.
+이것이 kubeadm 도구로 쿠버네티스 클러스터를 설정하는 방법입니다.
+
+Which is why when you list the pods in the kube-system namespace, you see the control plane components as PODs in a cluster setup by the kubeadmin tool.
+kube-system 네임스페이스에 POD를 나열할때 Kubeadm 도구에 의해 클러스터를 설정할때 POD 처럼 컨트롤 플레인 컴포넌트를 볼 수 있는 이유입니다.
+???? 무슨 말인지 모륵ㅆ음.
+
+We will explore that setup in the upcoming practice test. 
+우리는 다음 연습문제에서 해당 셋업을 탐험해 볼 것입니다.
+
+Before I let you go,
+보내기 전에
+
+one question that I get often is about the different between Static PODs and DaemonSets.
+Static POD 와 데몬셋 간의 차이에 대해 종종드는 의문이 있습니다.
+
+DaemonSets as we saw earlier are used to ensure one instance of an application is available on all nodes in the cluster.
+데몬셋은 모든 곳에 어플리케이셔 인스턴스가 사용가능해지도록 보장하기 위해 사용한다고 보았습니다.
+
+It is handled by a daemonset controller through the kube-api server. 
+이것은 API서버를 통해 데몬셋 컨트롤러에 의해 조작됩니다.
+
+(Whereas:반면)
+Whereas static pods, as we saw in this lecture, are created directly by the kubelet without any interference from the kube-api server 
+스태틱 POD 는 우리가 이 강의에서 본바와 같이 큐블렛에 의해 바로 생성됩니다. API 와는 별다른 간섭없이.
+
+or rest of the Kubernetes control plane components. 
+
+
+Static pods can be used to deploy the Kubernetes control plane components itself.
+스태틱 POD 은 쿠버네티스 컨트롤 플레인 컴포넌트 스스로 배포되도록 사용될 수 있습니다.
+
+Both static pods and pods created by daemonsets are ignored by the kube-scheduler.
+데몬셋에 의해 생성된 스태틱과 일반 POD 양쪽 모두 스케쥴러에게는 무시됩니다.
+
+The kube-scheduler has no affect on these pods. 쿠버스케쥴러는 이들 POD 에 영향력을 끼칠수가 없습니다. 1.18이후로 바뀌었다고 함.
+
+Well that’s it for this lecture.
+
+Head over to the practice test and practice working with Static Pods.

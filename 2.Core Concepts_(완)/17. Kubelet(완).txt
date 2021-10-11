@@ -1,0 +1,75 @@
+Hello and welcome to this lecture. In this lecture
+
+we will look at kubelet.
+쿠버렛을 살펴 보겠습니다.
+
+Earlier we discussed that the kubelet is like the captain on the ship. They lead all activities on a ship.
+일전에 말했다 시피 쿠버렛은 배의 선장과같습니다.
+쿠버렛은 배의 모든 활동을 주관합니다.
+
+They're the ones responsible for doing all the paperwork necessary to become part of the cluster,
+쿠버렛들은 클러스터의 부분이 되는데 필요한 모든 서류작업들을 처리하는 책임이 있는 사람입니다.
+
+They're the sole point(연락지점) of contact from the master ship.
+그들의 마스터 함선에서 부터 연락되는 연락지점입니다.
+
+They load or unload containers on the ship as instructed by the scheduler on the master.
+쿠버렛들은 마스터노드에서 스케쥴에 짜여진대로 배에서 컨테이너들을 선적또는 출고합니다.
+
+They also send back reports at (regular intervals:정기적) on the status of the ship and the containers on them.
+그리고 쿠버렛들은 선박및 컨테이너의 상태에 대한 보고서를 마스터에 정기적으로 보냅니다.
+
+
+[큐블렛이 하는 일 - 워커 노드의 선장]
+- 쿠버API서버를 통해 마스터와 연결하는 접점
+- 마스터에서 정한 스케쥴에 따라 컨테이너를 내리거나 올리는 역할을 한다.
+- 그리고 정기적으로 배의 상태와 컨테이너의 상태를 보고 하는 역할을 한다.
+- 
+
+The kubelet in the kubernetes worker node, registers the node with the kubernetes cluster.
+워크노드에 속한 큐블렛은 쿠버네티스 클러스터에 노드를 등록합니다.
+
+
+
+[컨테이너 런타임 엔진]
+
+(instructions:지침)
+When it receives instructions to load a container or a POD on the node, it requests the container run time engine, which may be Docker.
+컨테이너를 선적하거나 파드를 노드에 올리는 지침을 전달 받으면, 이 지침을 컨테이너 런타임 엔진에 요청을 보냅니다. 도커 같은것.
+
+to pull the required image and run an instance.
+요청받은 이미지를 추출하고 인스턴스를 실행합니다.
+
+The kubelet then continues to monitor the state of the POD and the containers in it 
+그리고 큐블릿은 POD와 컨테이너의 상태를 모니터링하는 것을 지속합니다.
+
+and reports to the kube-api server on a timely basis.
+그리고 큐버API 서버에 시분초 단위로 해당 내용을 보고 하고 있습니다.
+
+
+
+
+[큐블렛 설치방법]
+
+So how do you install the kubelet? If you use kubeadm tool to deploy your cluster, it does not automatically deploy the kubelet.
+만약 당신이 큐베드민을 사용해서 클러스터에 디플로이하고 있다면, 큐블릿은 자동으로 배포 되지 않을 겁니다.
+
+Now that's the difference from the other components.
+이것은 다른 컴포넌트들과 다른점입니다.
+
+
+[수동 설치해야하는 큐블렛]
+
+You must always manually install the kubelet on your worker nodes. Download the installer, extract it and run it as a service.
+워크 노드에 큐블렛 설치는 수동으로만 설치해야합니다.
+인스톨러를 다운로드 하고 압축해제 하고 서비스를 실행하세요.
+
+You can view the running kubelet process and the effective options by listing the process on the worker node and searching for kubelet.
+워커노드의 프로세스 목록출력과 쿠버렛의 검색을 통해 동작중인 쿠버렛 프로세스와 효과적인 옵션를 볼 수 있습니다. 
+
+We will look more into kubelets, how to configure kubelets, generate certificates, and finally how to TLS bootstrap kubelets later in this course.
+이제 좀더 살펴 볼 것입니다. 어떻게 쿠버렛을 설정하고, 인증을 생성하고, 최종적으로 TLS 부트스트랩 하는지 등을 이과정 후반에.
+
+That's it for now.
+
+Will see you in the next lecture.

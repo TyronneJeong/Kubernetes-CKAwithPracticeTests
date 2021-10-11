@@ -1,0 +1,245 @@
+So far, we talked about authentication.
+그동안 우리는 인증에 대해서 이야기 하였습니다.
+
+we saw how someone can gain access to a cluster.
+우리는 누군가가 클러스터에 엑세스 할 수 있는 방법을 보았습니다.
+
+We saw different ways that someone, a human or a machine, can get access to the cluster.
+우리는 사람이든 기계든 누군가가 클러스터에 엑세스 할 수 있는 다양한 방법을 보았습니다.
+
+once they gain access.
+그들이 엑세스 권한을 얻으면
+
+What can they do?
+그들은 무엇을 할 수 있을까요?
+
+That's what authorization defines.
+그것은 권한 부여가 하는 일 입니다.
+
+First of all, why do you need authorization in your cluster 
+가장 먼저, 왜 클러스터내에서 권한을 얻으려고 하나요?
+
+(sort:종류)
+as an administrator of the cluster, we were able to perform all sorts of operations in it, such as viewing various objects like pods and nodes and deployments, creating or deleting objects such as adding or deleting pods or even nodes in the cluster.
+클러스터의 관리자로써, 우리는 모든 종류의 작업들을 수행 할 수 있었습니다. POD 나 디플로이먼트, 노드등 다양한 오브젝트를 보는 것이라던가. POD 또는 노드의 생성 또는 제거 를 할 수 있었습니다.
+
+As an admin, we are able to perform any operation.
+관리자로써 우리는 모든 작업을 수행 할 수 있습니다.
+
+But soon we will have others accessing the cluster as well, such as the other administrators, developers, testers or other applications like monitoring applications or continuous delivery applications like jenkins', etc..
+하지만 곧 다른 사람들도 또다른 관리자나 개발자나 테스터 또는 기타 어플리케이션 등으로 클러스터에 엑세스 하게 될 것입니다. 
+
+So we will be creating accounts for them to access the cluster by creating usernames and passwords or tokens or scientia certificates or service accounts, as we saw in the previous lectures.
+따라서. 우리는 그들이 클러스터에 엑세스하기 위해 이전 강의에서 본 것 처럼 그들의 이름과 패스워드 또는 토큰이나 인증서 또는 서비스 계정등을 이용해 계정을 생성해야 합니다.
+
+But we don't want all of them to have the same level of access as us.
+하지만 우리는 그들이 모두 동일한 레벨의 접근권한을 가지는걸 원하지는 않습니다.
+
+For example, we don't want the developers to have access to modify our cluster configuration, like adding or deleting nodes or the storage or networking configurations.
+예를들어, 우리는 개발자가 우리 클러스터의 설정을 변경하는걸 원하지는 않습니다. 가령 POD 를 추가하거나 스토리지나 네트워크 설정등을 수정하는 것.
+
+We can allow them to view, but not modify, but they could have access to deploy applications, the same goes with service accounts.
+우린 그들에게 조회권한은 부여하지만 수정은 못하게 할 수 있습니다. 하지만 그들에게 어플리케이션 배포는 접근할 수 있습니다. 서비스 계정도 마찬가지로.
+
+We only want to provide the external application.
+우리는 오직 외부 프로그램만 제공만 원합니다.
+
+The minimum level of access to perform is required operations.
+작업을 수행하기 위한 가장 최소의 엑세스 레벨은 필요한 작업입니다.
+
+(restrict:얽매다, 제한하다)
+When we share our cluster between different organizations or teams by logically partitioning it using name spaces, we want to restrict access to the users, to their name spaces alone.
+네음스페이스를 사용하여 이를 논리적인 분할을 통해 우리의 클러스터를 다른 조직 또는 팀과 공유 할때 우리는 유저별로 그들의 네임스페이스 만으로 엑세스 영역을 제한하고 싶습니다.
+
+That is what authorization can help you within the cluster.
+이것이 클러스터내 권한 부여가 도움 되는 것 입니다.
+
+There are different authorization mechanisms supported by kubernetes such as node authorization, attribute based authorization, rule-based authorization and web hook.
+저기에 쿠버네티스에서 지원하는 다른 인증 매커니즘들이 있습니다. 가령 노드 인증, 속성 베이스드 인증, 룰 베이스드 인증 그리고 웹 훜.
+
+Let us go through this now.
+이제 이것들을 통과해 봅시다.
+
+We know that the KubeAPI server is accessed by users like us 
+API 서버는 우리 같은 유저들이 접근하는 것을 우리는 압니다.
+
+for management purposes as well as the Kubelet on node, 
+관리목적의 노드속 큐블렛과 마찬가지로
+
+within the cluster for management purposes, within the cluster.
+클러스터 내 관리를 위한 목적으로.
+
+the Kubelet that accesses the API server to read information about services and points node and pod. 
+그 큐블렛은 API 서버에 접근 합니다. 서비스와 서비스가 가리키는 노드 와 POD 의 정보를 읽기 위해서.
+
+the kubelet also reports to the KubeAPI server with information about the node such as its status.
+큐블렛은 또한 API 서버에 노드 상태 같은 정보를 보고를 합니다. 
+
+These requests are handled by a special authorizer known as the node authorizer.
+이런 요청들은 노드 권한 부여자 라 불리는 스페셜 어쏠라이저가 관리합니다.
+
+in the early lecture's.
+이전의 강의에서
+
+When we discussed about Certificate's, we discussed that the kubelet should be part of this system node group and have a name prefixed with system node.
+우리가 인증서에 대해 이야기 할때. 큐블렛은 시스템 노드 그룹의 일부라서 system 이라는 접두어를 붙여야만 한다는 것에 대해 논의했었습니다.
+
+So any requests coming from a user with the name "system node" and part of the system node group is authorized by the node authorizer 
+따라서 시스템 노드라고 이름 지어진 노드로부터 온 모든 요청들 그리고 시스템 노드 그룹의 부분은 노드 어쏠라이저에게 승인 받아야 합니다.
+
+and are granted these privileges the privileges required for a kubelet
+그리고 권한이 필요한 큐블렛에세 권한이 부여 됩니다.
+
+so that access within the cluster.
+이렇게 해서 클러스터에 엑세스 합니다.
+----------------------------------------------------------------
+[attribute based authorization : 속성 기반 승인]
+
+(associate:연관짓다, 한패가 되다, 연상하다, 연합시키다, 결합시키다, 교제하다)
+Let's talk about external access to the API, for instance, a user attribute based authorization is where you associate a user or a group of users with a set of permissions.
+이제 API 를 통한 외부 접근에 대해 이야기 해 봅시다. 예를 들어 사용자 속성 기반 승인은 연관된 유저 혹은 사용자의 그룹에 권한을 부여하는 곳 입니다.
+
+In this case, we say the dev-user can view, create and delete pod.
+이 경우, 우리는 dev-user가 보고 쓰고 삭제가 가능 하다고 가정 합니다.
+
+You do this by creating a policy file with a set of policies defined in a JSON format.
+JSON 형식으로 정의된 정책 세트로 정책 파일을 생성하여 이를 수행 합니다.
+
+This way you pass this file into the API server.
+이런식으로 파일을 API 서버에 전달 합니다.
+
+Similarly, we create a policy definition file for each user or group in this file.
+유사하게 우리는 각 사용자 또는 그룹을 위해 정책 정의파일을 생성합니다.
+
+Now, every time you need to add or make a change in the security, you must edit this policy file manually and restart the server.
+이제 보안사항의 추가 또는 변경이 필요할 때마다, 해당 정책 파일을 수동으로 수정 하고 서버를 재기동 하면 됩니다.
+
+As such, the attribute based access control configurations are difficult to manage.
+마찬가지로, 속성 기반 접근 통제 설정은 관리하기가 어렵습니다.
+
+
+[Role Based Access Control]
+We will look at role based access control to next.
+우리는 이제 다음으로 롤 기반의 접근 제어를 보겠습니다.
+
+Role based access controls make this much easier 
+규칙기반 접근 제어는 훨씬 쉽게 생성 가능 합니다.
+
+with role based access controls, instead of directly associating a user or a group with a set of permissions,
+규칙기반 접근 제어는 직접적으로 얽인 사용자나 그룹과 관계된 설정 정보를 지정하는 대신에
+
+we define a role.
+우리는 규칙만 정의합니다.
+
+in this case for developers.
+이 경우에 developer 를 위해
+
+We create a role with the set of permissions required for developers.
+우리는 개발자를 위한 권한 셋을 생성 합니다.
+
+Then we associate all the developers to that role.
+그런 다음 모든 개발자를 해당 규칙으로 엮습니다.
+
+Similarly, create a role for security users with the right set of permissions required for them, 
+유사하게 보안 유저를 위해 규칙을 생성합니다. 그들에 알맞은 권한으로.
+
+then associate the user to that role going forward whenever a change needs to be made to the users access.
+그런 다음 사용자 접근 권한에 변경이 필요할 때마다. 그 롤을 사용자에게 연결 합니다.
+
+We simply modify the role and it reflects on all developers immediately.
+아주 간단히 롤을 수정 합니다. 그리고 이 롤은 모든 개발자들에게 즉시 반영됩니다.
+
+Role based access control to provide a more standard approach to managing access within the kubernetes Cluster.
+규칙 기반 접근 제어는 쿠버네티스 접근 관리에 보다 표준화된 접근 법을 제공 합니다.
+
+We will look at role based access controls in much more detail in the next lecture.
+규칙기반 접근 제어에 관한 더 상세한 정보는 다음 강의에서 보겠습니다.
+---------------------------------------------------------------
+# 승인 3대장
+[Node Authorizer]
+[Attribute Based Authorization]
+[Role based Access Control]
+---------------------------------------------------------------
+For now, let's proceed with the other authorization mechanisms.
+지금은 다른 승인 매커니즘을 진행해 봅시다.
+
+Now, what if you want to outsource all the authorisation mechanisms, 
+지금 만약 모든 승인 캐머니즘을 아웃 소싱 하길 원한다면??
+
+say you want to manage authorization externally and not through the built in mechanisms that we just discussed?
+우리가 방금 말했던 것 처럼 외부적으로 그리고 빌트인 매너키즘을 통하지 않고 승인 관리를 원한다고 가정 해 봅시다.
+
+For instance, Open Policy Agent is a third party tool that helps with admission control and authorization.
+예를 들어 오픈 폴리시 에이젼트는 써드 파일 도구 입니다. 우리의 승인제어 및 승인을 돕는 도구 입니다.
+
+You can have kubernetes make an API call to the open policy agent with the information about the user 
+당신은 사용자 정보와 함께 오픈 폴리시 에이젼트라고 불리는 API 를 가질 수 있습니다.
+
+and his access requirements and have the open policy agent decide if the user should be permitted or not.
+그리고 그는 접근 요구 사항과 해당 사용자가 권한이 부여되어야 하는지 아닌지 결정하는 Open Police Agent 를 가지고 있습니다.
+
+Based on that response, the user is granted access.
+응답을 기초로 하여, 사용자는 권한을 획득 합니다.
+
+Now, there are two more modes, in addition to what we just saw, 
+저기에는 두 가지 모드가 더 있습니다. 방금 본 것 외에도.
+
+always allow and always deny,
+항상 허용과 항상 거절이 있습니다.
+
+as the name states always allow allows all requests without performing any authorization checks,
+항상 허용은 모든 승인 검증 수행을 하지 않고 모든 요청을 허용 합니다. 
+
+always deny denies all requests.
+항상 거절은. 모든 요청을 거절 합니다.
+
+So where do you configure these modes?
+그럼 어디에서 이 모드를 설정 할 까요?
+
+Which of them are active by default?
+어떤것이 기본으로 활성화 되어 있을까요?
+
+Can you have more than one at a time?
+한번에 하나이상 가질 수 있을까요?
+
+How does authorization work if you do have multiple ones configured?
+한번에 여러개를 구성한다면 어떻게 승인이 작동 할까요?
+
+The modes are set using the "authorization-mode" option on the Kube API server, 
+모드는 Kube-apisert.yaml 의 실행명령에 --authorization-mode 옵션을 통해 설정합니다.
+
+if you don't specify this option, it is set to always allow by default.
+만약 이 옵션을 설정 하지 않는다면, 항상 허용을 기본으로 설정 되게 됩니다.
+
+You may provide a comma separated list of multiple modes that you wish to use.
+만약 콤마를 이용한다면 당신이 원하는 만큼의 복수개의 모드를 이용할 수도 있습니다.
+
+In this case, I want to set it to node, RBAC and webhook.
+이번 경우에는 "node", "RBAC", "webhook"을 설정 합니다.
+
+When you have multiple modes configured, your request is authorized using each one in the order it is specified.
+당신이 멀티플 모드로 구성 한 경우 당신의 요청은 순서대로 하나씩 사용됩니다.
+
+[NODE]
+For example, when a user sends a request, it's first handled by the node authorizer.
+예를 들어 사용자가 요청을 보냈을때, 가장 처음 노드 어쏠라이저가 핸들링 합니다.
+
+The node authorizer handles only node request.
+노드 어쏠라이저는 오직 노드 요청만 핸들 합니다.
+
+So it denies the request, whenever a module denies a request, it is forwarded to the next one in the chain.
+때문에 요청은 기각 됩니다. 모듈은 요청을 기각할때 마다, 체인의 다음 순서로 이관 되게 됩니다.
+
+[RBAC]
+The role based access control module performs its checks and grants The user permission.
+규칙기반 접근 제어 모듈은 유저의 권한 확인과 부여를 수행합니다.
+
+authorization is complete and user is given access to the requested object.
+승인은 완료됩니다. 그리고 유저에게 요청된 객체에 대한 접근 권한이 주어 집니다.
+
+And as soon as a module approves the request, no more checks are done and the user is granted permission.
+그리고 요청을 승인 하자마자 어디상의 체크는 없어집니다. 그리고 유저는 권한이 부여 됩니다.
+
+Well, that's it for this lecture.
+
+In the upcoming lectures, we will discuss more about rule-based access controls.

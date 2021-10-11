@@ -1,0 +1,269 @@
+Hello and welcome to the certified cabinet administrators course, my name is Moonshot, my number,
+
+and I will be your instructor for this course.
+
+So about me, I'm a solutions architect.
+
+I specialize on cloud automation and develops technologies.
+
+I have other several bestseller and top rated courses on technologies like Dr. Coburn and is an open
+
+shift, as well as automation technologies like Ansible, Chef and Puppet.
+
+This course is the third installment in the series on communities and focuses on the administrators
+
+certification.
+
+Let's take a look at the structure of this course.
+
+We start with a series of lectures on various topics in coroneted, where we simplify complex concepts
+
+using illustration, animation and some fun analogies.
+
+We have optional quizzes that test your knowledge.
+
+After each lecture, we have hundreds of practice questions that will help you practice what you learned
+
+on a real live environment right in your browser.
+
+Yes, you don't need to have your own environment.
+
+We give you the required labs that are real and that can be accessed by you anywhere, any time and
+
+as many times as you want.
+
+That is, certification is hands on.
+
+So the practice test will give you enough experience and practice on getting ready for it.
+
+More on this coming soon.
+
+We also have a dedicated channel that you had exclusive access to were experts and other students gather
+
+to help you clear your doubts and get instant support on your queries.
+
+We will also discuss some tips and tricks throughout this course to help you crack the certification
+
+exam.
+
+And as always, if you have any questions, you will reach out directly to us through our Q&A section
+
+or to select channel.
+
+Now, this is one of the course in the series on Cabernets and focuses on getting the community's administrators
+
+certification, so having a basic understanding to some of the concepts and prerequisites will help
+
+knowing basics of soccer and some basics of clarinettist itself, such as parts, deployments and services,
+
+and having a good understanding of the Yamal language.
+
+Setting up a basic lab environment using morschel books can all help in the journey.
+
+We do discuss setting up a carbon atoms cluster in detail in this course, and we also have online labs
+
+and practice tests for a lot of these concepts.
+
+But if you're an absolute beginner, I highly recommend taking the carbon atoms for the absolute beginners
+
+course first, which is a short, quick introduction to some of the basic concepts.
+
+Now look at the course objectives.
+
+The objectives of this course are aligned to match the certified carbon that is administrators exam
+
+curriculum.
+
+We will discuss about details around the certification itself in one of the upcoming lectures before
+
+heading into any of these topics.
+
+However, remember, this is not just a course to clear the certification.
+
+We discuss a number of other related topics.
+
+And the intent of this course is to get you to be good at installing, configuring and troubleshooting
+
+equipment that is cluster with the where the candidates are organized.
+
+In this course, we do not start the course by building a cluster from scratch.
+
+We actually do that towards the end of the course.
+
+In the installation configuration and validation section.
+
+You will be working on pre-built live clusters throughout the earlier sections in this course, and
+
+I think that makes sense.
+
+Think of this as learning to engineer and build a car.
+
+It would be much easier if you have already driven a car, know how it works, what the wheels are for,
+
+what the transmission is for, what the brakes are for and how to fill fuel, etc. That way you would
+
+be able to relate those to the underlying concepts better when you learn them.
+
+And that is why I think practicing on pre-built clusters and learning the basic concepts first will
+
+help you understand how to build a cluster from scratch.
+
+Towards the end of this course.
+
+We start with the core concepts where we look at the various components that form the cognitive architecture.
+
+We then discuss some of the API primitives here.
+
+We mostly recap what we learned in the beginners course about part replica sets, deployment's, name
+
+spaces, etc..
+
+We then look at services and other network primitives.
+
+In the next section we look at scheduling.
+
+We start with labels and selectors, followed by deman sets and how resource limits can affect pod placements.
+
+We look at ways of manually scheduling apart and configuring multiple schedulers and how to view the
+
+scheduler events in the logging and monitoring section.
+
+We look at different ways of monitoring and logging the cluster of components, as well as applications
+
+hosted on the Cluster and the Application Lifecycle Management Section.
+
+We look at rolling updates and rollbacks and various ways of configuring applications, scaling applications
+
+and the primitives necessary to create a self healing application.
+
+In the cluster maintenance section, we look at the different options available to take down a node
+
+in the cluster for maintenance purposes.
+
+We then look at how software releases are organized and that is followed by the cluster upgrade process.
+
+We will perform an upgrade to a live cluster yourself in the practice test without taking down the application.
+
+And finally we look at the different backup and restore methodologies.
+
+We then move to security.
+
+We start by looking at different ways of authenticating into the cluster.
+
+We take good look at certificates.
+
+We start all the way from the absolute basics of tearless certificates into how exactly a cluster can
+
+be secured with these.
+
+So there are many practice exercises around that.
+
+You will be asked to troubleshoot and fix issues related to certificates, which I believe will give
+
+you confidence in working with certificates.
+
+You look at the new certificates API, we then look at role based access controls and attribute based
+
+access controls for authorization.
+
+We then look at network policies and security context in the networking section.
+
+We start with some optional networking prerequisite lectures.
+
+This will help you understand and troubleshoot networking and capabilities in depth.
+
+So we start by understanding the basics of networking in Linux, basics of switching and routing and
+
+birth networks.
+
+In a Linux system, we try and understand the basics of TMS, what core DNS is.
+
+We then look at network names, faces and then relate those concepts to networking in Docker.
+
+We then start with networking in a Cuban cluster.
+
+We look at CNI and what they are.
+
+We look at one of the nine networks in depth and how it functions.
+
+We look at how service networking works under the hood.
+
+Then look at DNS and clarinettist cluster and finally increase networking, and of course, the section
+
+is filled with practice exercises where you will practice viewing and gathering networking information
+
+from a cluster, implementing network configurations and troubleshooting network related issues in a
+
+cluster.
+
+We then look at designing, installing, configuring and validating equipment at his cluster from scratch.
+
+We understand how a high availability cluster works and how and it could cluster works and the best
+
+practices in deploying and cluster, you look at two ways of bootstrapping a worker, not one the usual
+
+way and the other using the bootstrap approach.
+
+We finally perform End-To-End tests on the cluster we deployed using the cornetist testing infrastructure.
+
+With all of this, you should have gained enough knowledge on how the various components work together
+
+in this cluster.
+
+So troubleshooting piece should come to you.
+
+Naturally, we look at some techniques that can be followed while troubleshooting a cluster and applications
+
+running on them.
+
+Again, we have a number of practice tests where we give you a broken cluster and you troubleshoot and
+
+fix them, but that's a lot.
+
+And we plan to add more relevant topics to this list going forward.
+
+Finally, a word about practice tests.
+
+The coroneted certification exam is a practical hands on exam, so it is very important to practice
+
+what you learn, which is why we have got a custom solution that will give you access to a real coronets
+
+environment right in your browser, along with a quiz portal that provides fun and challenging problems
+
+for you to solve, you're required to gain a set of different skills working with communities such as
+
+how to look for information, how to troubleshoot issues.
+
+That is why we have questions where you will be asked to find information within an environment.
+
+You will also be asked to perform configuration tasks where you will be required to configure and deploy
+
+applications and services on the cluster.
+
+We will test your work and provide feedback instantly.
+
+People occasionally make changes to the environment or break stuff and ask you to troubleshoot and fix
+
+them.
+
+These are common issues that one would face while working with communities, and these exercises will
+
+help you troubleshoot and fix issues quickly.
+
+When you see an error message, you should be able to understand what that means and where to look for
+
+information related to that error message and how to fix it.
+
+One of the major challenges in a practical test, like the one in the coroneted certification, is time.
+
+Even simple issues like a typo or an indentation error in a Yemen file can take a beginner hours to
+
+fix.
+
+This is why we have hundreds of such exercises in this course that will make you an expert and give
+
+you enough practice to help you clear the exam.
+
+Well, let's hope for now.
+
+Thank you for enrolling and I'll see you in class.

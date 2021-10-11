@@ -1,0 +1,151 @@
+Hello and welcome to this lecture 
+
+In the previous lecture. we discussed the basics of ETCD. 
+이전 강의에서 우리는 ETCD의기본에 대해 다뤘습니다.
+
+In this lecture we will talk about ETCD’s role in kubernetes. 
+이번 강의에서 우리는 ETCD 의 역할에 대해 알아보려 합니다.
+
+The ETCD data store stores information regarding the cluster such as the nodes, pods, configs, secrets, accounts, roles, bindings and others.
+ETCD 데이터 저장소는 (노드, 포드, 설정, 보안, 계정, 롤, 바인딩, 기타등등 같은)클러스터에 관한 정보를 저장합니다.
+
+Every information you see when you run the kubectl get command is from the ETCD server. 
+kubectl get 커맨드를 실행했을때 보이는 모든 정보는 ETCD 서버로 부터 옵니다.
+
+Every change you make to your cluster, such as adding additional nodes, deploying pods or replica sets are updated in the ETCD server. 
+당신의 클러스터에서 발생한 모든 변화(추가가능한 노드를 추가, 파드배포 또는 복원 세트)는 ETCD서버에 업데이트 됩니다.
+
+☆★
+(consider:숙고하다, 생각하다, 중히 여기다)
+Only once it is updated in the ETCD server is the change considered to be complete.
+ETCD서버에서 업데이트 된 후에만 변경이 완료 된 것으로 간주 됩니다.
+☆★
+
+
+[Scratch & KubeADM]
+
+Depending on how you setup your cluster, ETCD is deployed differently.
+당신이 당신의 클러스터를 어떻게 셋업했는지에 따라, ETCD 는 다르게 배포 되어 집니다.
+
+(Throughout:동안, 시종, 도처에, 처음부터 끝까지)
+Throughout this section we discuss about two types of kubernetes deployment. 
+이 섹션동안 우리는 두 가지 유형의 쿠버네티스 배포를 알아볼것입니다.
+
+One deployed from scratch and other using kubeadm tool.
+하나는 스크래치를 통한 배포이고 다른 하나는 큐브ADM도구를 사용하는 것입니다.
+
+The practice test environments are deployed using the kubeadm tool and later in this course when we set up a cluster we set it up from scratch. 
+연습문제환경으 KubeADM를 사용하여 배포되었습니다.
+그리고 이 과정 후반에서 클러스터를 셋업 할때, 스크래치로 셋업을 해볼 것입니다.
+
+so it's good to know the difference between the two methods.
+그럼 두가지 방법의 차이에 대해 알수 있습니다.
+
+
+
+[Scratch 배포방법]
+
+If you set up your cluster from scratch then you deploy ETCD by downloading the ETCD binaries yourself.
+만약 당신의 클러스터를 스크래치로 부터 셋업했다면, ETCD바이너리 파일을 직접 다운로드 받은 후 ETCD를 배포해야합니다.
+
+
+[ETCD.service 파라미터]
+installing the binaries and configuring ETCD as a service in your master node yourself. 
+마스터 노드레 바이너리 파일을 설치하고 ETCD설정을 하는것을 직접 해야합니다.
+
+There are many options passed into the service.
+서비스에 전달되는 많은 옵션이 있습니다.
+
+A number of them relate to certificates.
+그중 다수는 인증과 관련되어있습니다.
+
+
+
+
+[TLS 인증 예고편]
+
+we will learn more about these certificates how to create them and how to configure them later in this course
+우리는 이 과정 후반에 이 인증에 대해서도 더 많이 알아볼것입니다. (어떻게 생성하는지 그리고 그것들이 어떻게 구성되어 있는지.)
+
+we have a whole section on TLS certificates. 
+TLS인증에 대해서는 전체섹션이 준비되어있씁니다.
+
+
+
+
+[ETCD 를 클러스터로 구성하기 예고편]
+
+The others are about configuring ETCD as a cluster. 
+그리고 나머지는 ETCD를 클러스터로 구성하는것에 관한 것입니다.
+
+We will look at those options when we set up high availability in kubernetes.
+쿠버네티스를 좀더 능숙하게 다룰 때 이 옵션들을 살펴 볼 것입니다.
+
+the only option to node for now is the "advertised client urls".
+지금 당장 노드에 선택가능한 옵션이라면 "advertise-clien-urls" 뿐입니다.
+
+This is the address on which ETCD listens. 
+(드래그된경로)가 ETCD 가 수신받는 주소입니다.
+
+It happens to be on the IP of the server and on port 2379, which is the default port on which etcd listens.
+리스너는 ETCD의 서버의 IP주소와 기본포트 2379에서 수신받습니다. 해당 포트는 수신 기본 포트 입니다.
+
+(should be ~ 해야만 하는)
+This is the URL that should be configured on the kube-api server when it tries to reach the etcd server.
+ETCD 서버에 연결을 시도할때는 해당 URL을 큐브API 서버에 설정 해야 합니다.
+
+
+
+
+[큐베ADM with POD]
+
+If you setup your cluster using kubeadm then kubeadm deploys the ETCD server for you as a POD in the kube-system namespace.
+만약 클러스터가 큐베ADM를 사용중이라면, 큐베ADM은 당신을 위해 큐브시스템의 네임스페이스에 POD 형태로 배포를 해줍니다.
+
+>> kubectl get pods -n kube-system
+You can explore the etcd database using the etcdctl utility within this pod.
+또 당신은 해당 POD 내에서 ETCD 데이터베이스를 etclctl 유틸리티를 통해 탐험할 수 있습니다.
+
+
+
+[etcl get 커맨드의 등장.]
+
+To list all keys stored by kubernetes, run the "etcdctl get" command like this. 
+쿠버네티스에 의해 저장된 모든 키 목록을 뽑으려면, etcl get 커맨드를 다음과 같이 실행하세요.
+(커맨드:etcdctl get / --prefix -kets-only)
+
+Kubernetes stores data in the specific directory structure.
+쿠버네티스는 특정 디렉토리 구조에 데이터를 저장합니다.
+
+
+
+[디렉토리 구조]
+
+the root directory is a registry and under that you have the various kubernetes constructs such as minions or nodes, pods, replicasets, deployments etc. 
+루트 디렉토리는 [레지스트리] 입니다. 그리고
+그 아래 다양한 쿠버네티스 미니언즈나, 노드, 파드, 레플리카세트, 배포등등과 같은 구조물들이 있습니다.
+
+In a High Availability Environment you will have multiple master nodes in your cluster 
+고수준의 환경에서는 다양한 마스터 노들들을 클러스터에 가질 수 있습니다.
+
+then you will have multiple ETCD instances spread across the master nodes.
+그러면 다수의 마스터노드들 전체에 ETCD 인스턴스을 가질 수 있습니다.
+
+
+(make sure : 확실히 하다, 확인하다)
+In that case, make sure to the ETCD instances know about each other by setting the right parameter in the ETCD service configuration.
+이 경우, ETCD서비스 설정의 바른 파라미터 설정하여 ETCD 인스턴스 서로에 대해 알고 있는지 확인해야합니다.
+
+
+[ETCD 가 다수일때 기본 클러스터 지정]
+
+The "initial-cluster" option is where you must specify the different instances of the ETCD service.
+기초 클러스터 옵션은 당신이 ETCD서비스 인스턴스를 지정해야하는 장소 입니다.
+
+We talk about high availability in much more detail later in this course 
+이 코스 후반에 고에 대한 좀 더 다양한 이야기를 대해 다루게 됩니다.
+
+but I thought its worth while to point it out here.
+하지만 생각에 이부분을 꺼낸것은 가치있다고 봅니다.
+
+Well, that's it for this lecture and I will see you in the next.

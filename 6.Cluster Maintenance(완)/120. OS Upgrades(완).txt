@@ -1,0 +1,162 @@
+----------------------------------------
+POD는 어플리케이션내에서 롤링 업데이트를 하면 됩니다.
+하지만 NODE를 업데이트 하려면 노드를 재시작해야할 필요가 있는데.
+이를 위해서는 POD 를 다른 노드에 잠시 옮겨 두어야 합니다.
+
+NODE 내 POD 종료 -> 이후 cordon 자동으로 됨
+>> kubectl drain node-1
+>> kubectl drain node01 --force
+
+NODE 에 POD 할당 금지
+>> kubectl cordon node-2 
+
+NODE 내 POD 할당 금지 해제
+>> kubectl uncordon node-1 
+----------------------------------------
+
+Hello and welcome to this lecture. 
+
+
+In this lecture we will discuss about scenarios 
+안녕하세요. 이번 강의에서 우리는 (해당 시나리오)에 대해 이야기해볼 것입니다.
+
+where you might have to take down node as part of your cluster say for maintenance purposes like upgrading a base software or applying patches like security patches etc on your cluster. 
+만약 당신의 클러스터중의 일부 노드를 운영 목적으로 종료해야 하는 상황을 닥쳤다는 가정입니다. 소프트웨어 업그래이드나 보안 패치적용이나 등등으로요.
+
+
+In this lecture We will see the options available to handle such cases.
+이번 강의에서는 그러한 경우에 이용가능한 옵션에 대해 알아볼 것입니다.
+
+So you have a cluster with a few nodes and pods serving applications.
+당신은 어플리케이션을 서비스 하기 위한 몇 노드와 POD가 있습니다.
+
+What happens when one of these nodes go down.
+노드중 하나가 종료되면 무슨일이 생길까요
+
+Of course the pods on them are not accessible. 
+당연하게도 그들중 일부 POD 들에 접속이 불가능 해 질 것입니다.
+
+(upon:~에, ~위에,~향하여, ~으로, ~하고, ~더하여)
+Now depending upon how you deployed those PODs your users may be impacted.
+이제 이러한 배포 방법에 따라 사용자들은 영향을 받을 수 있습니다.
+
+(since:이래 쭉~, 이므로, 한지, 한때부터, 이래)
+For example, since you have multiple replicas of the blue pod, the users accessing the blue application are not impacted as they are being served through the other blue pod that's on line.
+예를들어 당신이 블루POD 에 다수의 레플리카를 가지고 있은 이후로 사용자들은 블루 어플리케이션에 접근하는데 아무런 영향을 받지 않습니다. 블루의 다른 POD 를 통해 서브 됩기 떄문입니다.
+
+However users accessing the green pod, are impacted as that was the only pod running the green application.
+하지만 유저들이 그린 POD 에 접근을 하면 단일 POD 로 동작중이기 때문에 영향이 발생 합니다.
+
+Now what does kubernetes do in this case?
+그럼 이런 경우 쿠버네티스는 무엇을 알 수 있을까요?
+
+If the node came back online immediately, then the kubectl process starts and the pods come back onine.
+만약 노드가 온라인 상태로 긴급하게 돌아온다면, kubectl 프로세스는 pod 를 온라인으로 복귀시키는 절차를 시행합니다.
+
+However, if the node was down for more than 5 minutes, then the pods are terminated from that node.
+하지만 노드가 다운된지 5분이 지나게 되면, 그땐 POD 가 노드로 부터 소멸 됩니다.
+
+Well, kubernetes considers them as dead.
+맞습니다. 쿠버네티스는 그들이 죽었다고 생각합니다.
+
+If the PODs where part of a replicaset then they are recreated on other nodes.
+만약 POD 가 복제셋의 일부라면 그땐 노드에 다른 POD를 재생성 합니다.
+
+The time it waits for a pod to come back online is known as the pod eviction timeout 
+POD가 돌아오기 까지 기다리는 시간을 우리는 POD Eviction Timeout 이라고 합니다.
+
+and is set on the controller manager with a default value of five minutes.
+그리고 이건 컨트롤 매니저에 기본 값으로 5분이 지정되어 있습니다.
+
+(whenever:때마다))
+So whenever a node goes offline, the master node waits for upto 5 minutes before considering the node dead.
+그래서 노드가 오프라인 상태가 될 때마다, 마스터 노드는 노드가 사망했다고 판단하기 전에 5분간을 대기합니다.
+
+When the node comes back on line after the pod eviction timeout
+만약 노드가 POD 에빅션 타임아웃이 지나고 돌아온 경우
+
+it comes up blank without any pods scheduled on it.
+해당 POD 는 스케쥴링이 없는 상태로 돌아오게 됩니다.
+
+Since the blue pod was part of a replicaset, it had a new pod created on another node. 
+블루POD 는 복제셋의 일부이므로, 다른 노드에 새로운 POD 가 생성되게 됩니다.
+
+However since the green pod was not part of the replica set it's just gone.
+하지만 그린 노드 처럼 복제셋의 일부가 아니라면, POD 는 날아가게 됩니다.
+
+Thus if you have maintenance tasks to be performed on a node 
+따라서 당신이 노드에서 동작하길 바라는 유지보수 작업이 있다면
+
+if you know that the workloads running on the Node have other replicas 
+그리고 만약 당신이 워크로드가 노드에서 동작중이며 다른 복제셋을 가지고 있다는걸 안다면
+
+and if it's okay that they go down for a short period of time.
+그리고 그 노드가 잠깐동안 다운되어도 괜찮다면
+
+And if you're sure the node will come back on line within five minutes. you can make a quick upgrade and reboot.
+그리고 노드가 5분이내에 돌아올수 있다면 당신은 빠르게 업그레이드 하고 재부팅 할 수 있습니다.
+
+However you do not for sure know if a node is going to be back on line in five minutes.
+하지만 만약 노드가 5분 이내에 온라인 상태로 돌아올수 있을지가 확실히 알수가 없을수 있습니다.
+
+Well you cannot for sure say it is going to be back at all.
+이것들이 모두 돌아온다고 가정할 수 없습니다.
+
+So there is a safer way to do it.
+저기 더 안전한 방법이 있습니다.
+
+(purposefully:의도적으로)
+You can purposefully drain the node of all the workloads so that the workloads are moved to other nodes in the cluster.
+당신은 의도적으로 모든 워크 로드의 노드를 드레인 할 수 있습니다. 그래서 그 워크로드는 클러스터내 다른 노드로 이동하게 됩니다.
+
+Well technically they are not moved. 
+기술적으로 그들은 옮겨지진 않습니다.
+
+(gracefully:우아하게, 정상적으로)
+When you drain the node the pods are gracefully terminated from the node 
+당신이 노드를 드레인 하면 POD는 노드에서 정상적으로 종료됩니다.
+
+that they're on and recreated on another.
+그리고 그 POD는 다른 노드에서 재생성 됩니다.
+
+(cordoned:봉쇄)
+The node is also cordoned or marked as unschedulable. 
+노드는 또한 봉쇄 또는 스케쥴 불가로 마킹 됩니다.
+
+Meaning no pods can be scheduled on this node until you specifically remove the restriction.
+당신이 제한을 풀때까지 어떤 POD도 이 노드에 스케쥴 할 수 없다는 뜻입니다.
+
+Now that the pods are safe on the others nodes, you can reboot the first node. (노드에 업그레이드를 하는 것. POD 가 아님)
+이제 그 POD들은 다른 노드들에서 안정 합니다. 그리고 첫번째 노드를 재시작 할 수 있습니다.
+
+When it comes back online it is still unschedulable.
+어플리케이션이 온라인으로 복귀될때에도 NODE 는 여전히 스케쥴이 불가합니다.
+
+You then need to uncordon it, so that pods can be scheduled on it again.
+봉인해제를 해줘야 합니다. 그래야 저 PODS 들을 다시 스케쥴링 할 수 있게 됩니다.
+
+Now, remember the pods that were moved to the other nodes, don’t automatically fall back. 
+이제 기억하세요. PODS 들은 다른 노드에 옮겨 집니다. 자동으로 옮겨지진 않습니다.
+
+If any of those pods were deleted or if new pods were created in the cluster Then they would be created on this node.
+가량 POD 가 삭제되었거나 새로운 POD 가 클러스터내에 새로 생기거나 해도 대상 노드에서 생성됩니다.
+
+(Apart from : ~외에)
+Apart from drain and uncordon, there is also another command called cordon.
+드레인과 언코동 외에, 거기엔 또한 코돈이라 불리는 다른 명령이 있씁니다.
+
+Cordon simply marks a node unschedulable.
+코돈은 간단하게 스케쥴이 불가능한 상태로 노드를 마킹합니다.
+
+Unlike drain it does not terminate or move the pods on an existing node.
+POD를 파괴하거나 노드에서 이동시키는 드레인과 다르게요.
+
+It simply makes sure that new pods are not scheduled on that node.
+코동은 간단하게 새로운 POD를 NODE에 스케쥴 하기 못하게 만듭니다.
+
+
+Well that's it for this lecture.
+
+Head over to the practice test and practice draining, cordoning and uncordoning a node.
+
+I will see you in the next lecture.

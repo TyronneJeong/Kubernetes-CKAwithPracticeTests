@@ -1,0 +1,208 @@
+Hello and welcome to this lecture. In this lecture
+생략
+
+[쿠버 컨트롤 매니저]
+we will talk about Kube Controller Manager. 
+쿠버 컨트롤 매니저에 대해 알아보겠습니다.
+
+As we discussed earlier, the kube controller manager manages various controllers in Kubernetes.
+일전에 다루었던것과 같이, 쿠버 컨트롤러 매니저는 다양한 컨트롤러들을 관리합니다.
+
+A controller is like an office or department within the master ship that have their own set of responsibilities.
+컨트롤러는 각자의 역할이 있는 배안에 사무소나 부서와 같습니다.
+
+[쿠버 컨트롤러 매니저]
+[내부에 다양한 컨트롤러가 있음. 노드컨트롤러, 복구컨트롤러 등..]
+
+(would be:~있을 것입니다.(가정))
+Such as an office for the Ships would be responsible for monitoring and taking necessary actions about the ships.
+선박의 사무실 같은 경우, 선박을 모니터링 하고 필요한 작업들을 해야하는 책임이 있을 것입니다.
+
+(Whenever:~할 떄마다)
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+Whenever a new ship arrives or when a ship leaves or gets destroyed 
+새로운 배가 도착하거나 배가 떠나거나 파괴될 떄마다.
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+(could be : ~ 될 수 있다.(가정))
+another office could be one that manages the containers on the ships.
+또 다른 오피스가 배의 컨테이너를 관리 할 수 있습니다.
+
+they take care of containers that are damaged or full of ships.
+그들은 손상되거나 가득찬 컨테이너들을 관리합니다.
+
+So these officers are number 1, continuously on the lookout for the status of the ships and 2, take necessary actions to remediate the situation. 
+이 담당자들은 넘버 1. 입니다.
+주기적으로 배의 상태를 살핍니다.
+그리고 넘버 2. 상황을 개선시키기 위해 필요한 일을 합니다.
+
+
+(term : 용어)
+[쿠버네티스 용어에서 컨트롤러는 시스탬 내부에서 다양한 컴포넌트들을 주기적으로 모니터링 하는 프로세스 입니다.]
+
+In the kubernetes terms a controller is a process that continuously monitors the state of various components within the system 
+쿠버네티스 용어에서 컨트롤러는 시스탬 내부에서 다양한 컴포넌트들을 주기적으로 모니터링 하는 프로세스 입니다.
+
+(towards:~쪽으로, 쪽에있는, ~을 위하여)
+and works towards bringing the whole system to the desired functioning state.
+그리고 전체 시스템을 원하는 기능의 상태로 옮겨 오는 쪽으로 작동합니다.
+
+
+[노드 컨트롤러 등장!!]
+
+For example the node controller is responsible for monitoring the status of the nodes and taking necessary actions to keep the application running.
+예를 들면 노트 컨트롤러는 노드의 상태를 모니터링 하고 어플리케이션의 실행이 유지될수 있도록 필요한 일을 담당하고 있습니다.
+
+It does that through the kube-api server.
+이작업은 쿠버API를 통해 이뤄집니다.
+
+The node controller checks the status of the nodes every 5 seconds.
+이 노드 컨트롤러는 매 5초마다 노드의 상태를 체크하는데
+
+That way the node controller can monitor the health of the nodes.
+이 방법으로 노드 컨트롤러는 노드의 건강 상태를 모니터링 할 수 있습니다.
+
+if it stops receiving heartbeat from a node. 
+만약 노드로 부터 생명 신호가 멈춘다면
+
+(unreachable:수신불가, 연락할수 없는, 닿을수 없는)
+the node is marked as unreachable but it waits for 40 seconds before marking it unreachable 
+노드는 응답없음으로 마킹 됩니다만, 응답없음으로 마킹전 40초간 대기합니다.
+
+after a node is marked unreachable, it gives it five minutes to come back up.
+응답없음으로 마킹된 이후, 응답이 돌아올때 까지 5분간의 시간이 부여됩니다.
+
+if it doesn’t, 
+5분이 지나도 응답이 없는 경우
+
+(provision : 공급하다)
+it removes the PODs assigned to that node and provisions them on the healthy ones. If the PODs are part of a replica set.
+해당 노드에 할당된 파드를 제거해버립니다. 그리고 해당 파드가 레플리카 세트의 부분이라면 건강한 새 녀석으로 할당합니다.
+
+
+
+[레플리카 컨트롤러]
+
+the next controller is the replication controller.
+다음 컨트롤러는 복제 컨트롤러 입니다.
+
+It is responsible for monitoring the status of replica sets 
+이 컨트롤러는 복제 세트의 상태를 모니터링 하는 역할입니다.
+
+and 
+그리고
+
+ensuring that the desired number of PODs are available at all times within the set.
+원하는 수의 파드가 세트안에서 항상 이용 가능하도록 보장합니다.
+
+If a pod dies. it creates another one.
+만약 한 파드가 죽게되면 복제컨트롤러는 또다른 파드를 생성합니다.
+
+
+
+[컨트롤러 2개 알려줬다고 생색내기]
+
+Now those were just two examples of controllers.
+이제 컨트롤러 예제 2개째 입니다.
+
+There are many more such controllers available within kubernetes.
+쿠버 컨트롤러 매니저에는 사용가능한 더 많은 컨트롤러 들이 있습니다.
+
+(Whatever:무엇이든) (have seen so far:지금까지 본)
+Whatever concepts(어떤 개념이던) we have seen so far in kubernetes such as deployments, Services, namespaces, persistent volumes 
+배포, 서비스, 네임스페이스, 저장공간과 같이 쿠버네티스에서 우리가 본 개념이 어떤 것이건
+
+and 
+
+(어떤 지적 능력이건)
+whatever intelligence is built into these constructs. 
+어떤 지식이건 이 구조에 짓습니다.
+
+(through:통해)
+it is implemented through these various controllers.
+이건은 다양한 컨트롤러를 통해 구현되어집니다.
+
+As you can imagine this is kind of the brain behind a lot of things in kubernetes.
+당신이 상상한 것 처럼. 이것은 쿠버네티스 뒤에 존재하는 다양한 브레인의 일종입니다.
+
+Now how do you see these controllers and where are they located in your cluster.
+이제 이 컨트롤러들은 어떻게 보고 클러스터 어디에 위치해 있을까요?
+
+They're all packaged into a single process known as kubernetes controller manager.
+요놈들은 쿠버네티스 컨트롤러 매니저라 불리는 단일 프로세스 안에 포함되어있습니다.
+
+(as well:게다가, 마찬가지로 잘)
+When you install the kubernetes controller manager the different controllers get installed as well.
+당신이 쿠버네시트 컨트롤러 매니저를 설치할때 다른 컨트롤러 들도 인스톨 됩니다.
+
+So how do you install and view the kubernetes Controller manager.
+그럼 어떻게 쿠버네티스 컨트롤러 매니저를 인스톨 하고 볼 수 있을까요?
+
+download the kube-controller-manager from the kubernetes release page.
+쿠버네티스 배포 페이지에서 쿠버 컨트롤 매니저를 다운로드 받습니다.
+ 
+Extract it and run it as a service.
+압축을 해제하고 서비스를 실행하세요.
+
+When you run it as you can see there are a list of options provided.
+당신이 본것처럼 이것을 실행하면, 제공되는 옵션목록이 나옵니다.
+
+this is where you provide additional options to customize your controller.
+이것이 당신이 커스터마이즈할 컨트롤러의 추가적인 옵션을 넣을 위치입니다.
+
+Remember some of the default settings for node controller. 
+기억하세요. 노드 컨트롤러를 위한 몇몇 기본 세팅을
+
+(eviction:축출, 거주자등을 추방)
+we discussed earlier such as the node monitor period the grace period and the eviction timeout.
+우린 일전에 응답이 없는 노드의 모니터링 노드 추출의 타임 아웃 같은것들을 살펴보았습니다.
+
+These go in here as options.
+그걸들은 여기 옵션으로 들어 갑니다.
+
+
+
+[컨트롤러 비활성화는 여기에]
+
+There is an additional option called "controllers" that you can use to specify which controllers to enable.
+여기 어느 컨트롤러를 활성화 시킬지 정의하는데 쓰이는 "controllers"라고 불리는 추가가능한 옵션들이 있습니다.
+
+By default all of them are enabled but you can choose to enable a select few.
+기본적으로 모든 컨트롤러들이 활성화 되어 있습니다만 당신이 몇가지 고를수도 있습니다.
+
+So in case, any of your controllers don't seem to work or exist this would be a good starting point to look at.
+따라서, 컨트롤러가 작동하지 않는것 같은 경우, 여기가 살펴보기 좋은 장소 일수 있씁니다.
+
+
+
+
+[쿠버컨트롤러매니저 옵션보기]
+
+So how do you view the Kube-controller-manager server options?
+그럼 쿠버네티스 컨트롤러 매니저 서버 옵션은 어떻게 볼 수 있을까요?
+
+Again it depends on how you set up your cluster.
+또 한번 이것은 당신이 설정한 바에 따라 다릅니다.
+
+
+[쿠베드민으로 설치 하는 경우]
+
+If you set it up with kubeadm tool, kubeadm deploys the kube-controller-manager as a pod in the kube-system namespace on the master node.
+만약 쿠버ADM툴을 이용해 셋업 했다면, 쿠버ADM은 쿠버컨트롤러 매니저를 마스터 노드에 있는 네임스페이스에 쿠버시스템의 포드처럼 배포합니다.
+
+You can see the options within the pod definition file located at etc kubernetes manifests folder.
+포드 정의파일 위치에 쿠버네티스 manifests 폴더에서 옵션들을 확인할 수 있씁니다.
+
+
+[쿠베드민이 아닌 경우]
+
+In a non-kubeadm setup, you can inspect the options by viewing the kube-controller-manager service located at the services directory.
+쿠버ADM 설정이 아닌 경우, 서비스 디렉토리의 쿠버네티스 컨트롤러 매니저의 보이는 옵션들을 검사해야 합니다.
+
+You can also see the running process and the effective options by listing the process on the master node and searching for kube-controller-manager.
+마스터 노드의 프로세스 목록과 쿠버컨트롤러매니저의 검색으로 실행중인 프로세스와 효과적인 옵션을 확인할 수 있습니다.
+
+>> grep kube-controller-manager
+
+
+Well that's it for this lecture and I will see you in the next.
+생략

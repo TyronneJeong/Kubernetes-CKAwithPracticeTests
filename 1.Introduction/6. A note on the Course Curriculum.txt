@@ -1,0 +1,9 @@
+A note on the Course Curriculum
+One of the questions we frequently get asked is:
+
+"Is this course sufficient to prepare for the CKA exam? Do we need to go through any other materials."
+
+The answer is: 
+
+Yes! This course is sufficient to prepare and clear the CKA exam. We have carefully crafted this course with just the topics required for the CKA exam and any pre-requisite knowledge you may need to understand them. And we have practice tests after each concept so you don't just learn theory, but gain enough practice to appear for the exam. In addition, we have multiple mock exams that will help you test your skills, so you shouldn't have to rely on any additional training materials elsewhere. This is all you need!
+

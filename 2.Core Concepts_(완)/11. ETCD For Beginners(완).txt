@@ -1,0 +1,115 @@
+Hello and welcome to this lecture.
+안녕하세요 이번강좌에 오신걸 환영합니다.
+
+This is a quick introduction to ETCD for beginners, if you already know about ETCD.
+이번은 초보자를 위한 ETCD 의 빠른 소개입니다. 만약 ETCD 에 대해 이미 알고 있다면.
+
+Feel free to skip this video and head over to the next video where we discuss about ETCD in kubernetes.
+해당 클립을 건너 뛰는데 부담을 느끼지 않으셔도 됩니다. 그리고 쿠버네티스 ETCD 에 대해 토론하는 다음 비디오로 넘어가세요.
+
+We start with a basic introduction to what a key value storagy is and how it is different from traditional databases, how to quickly get started with ETCD and how to use the claim(청구,요구) tool to operate ETCD.
+키-벨류 스토리지가 전통적인 DBMS와 어떻게 다른지, 어떻게 ETCD를 빨리 동작시키고 어떻게 사용하는지 어떻게 도구들을 사용해서 ETCD를 운용하는지 등의 기본적인 소개부터 부터 시작하겠습니다.
+
+
+(cover:한사람분의 식기, 덮다, 품다, 보상하다, 떠맡다)
+(discuss:질의하다, 담론하다, 토의하다, 토론하다)
+Later In this course, when we cover high availability, 
+
+(what it means to be :그것이 무엇을 의미하는지)
+we will discuss about what it means to be 
+a distributed system,
+how it works in a cluster mode,
+what RAFT protocol is, 
+and what are the best practices around the number of nodes Internet, the cluster.
+이 코스 후반에는, 우리가 고가용성을 커버할 수 있을 때,
+시스템 배포가 무엇인지, 클러스터 모드가 어떻게 동작하는지, RAFT프로토콜은 무엇인지, 그리고 어떤게 인터넷 노드를 구성하는 가장 좋은 수의 노드인지에 대해서도 논해볼 것입니다.
+
+------------------------------------------------------------------------
+
+So what is ETCD?
+ETCD란 무엇인가요?
+
+It is a distributed, reliable key value store that is simple, secure and fast.
+이것은 분산되어 있으며, 심플하고 안전하고 빠른 신뢰할 수 있는 키 벨류 저장소 입니다.
+
+So let's break it up.
+그럼 분해해 보겠습니다.
+
+So what is a key value store.
+그럼 키-벨류 저장소란 무엇인가요?
+
+traditionally, databases have been in a tabular format.
+전통적으로 데이터 베이스는 표의 형식이였습니다. 
+
+you must have heard about SQL or relational databases.
+SQL이나 RDBMS에 대해 들어보셨을 겁니다.
+
+They store data in the form of rows and columns.
+그것들은 행과 열의 형태로 저장된 데이터들 입니다.
+
+For example, here's a table that stores information regarding a few individuals.
+예를 들면, 여기 몇몇 개인에 관한 저장된 표가 있습니다.
+
+The row represents each person and the column represents the type of information being stored.
+row 는 각 사람을 표현하고 컬럼은 저장된 정보 유형을 대표합니다.
+
+A key value store stores information in a key and a value format.
+키-벨류 저장소는 키-벨류의 포맷으로 정보를 저장합니다.
+
+You put a key and a value and it saves that in the database and then you get the key and it returns the value and you cannot have duplicate keys.
+당신이 키와 벨류를 입력하면 이는 데이터베이스에 저장됩니다. 그리고 당신이 키를 출력하면 벨류가 리턴 되는 식입니다.
+그리고 이와같은 중복된 키는 가질 수 없습니다.
+
+As such, It is not used as a replacement for a regular tabular database.
+따라서, 키벨류 데이터베이스는 일반 표형태의 데이터베이스를 대체하는 용도는 아닙니다.
+
+Instead, it is used to store and retrieve small chunks of data, such as configuration data that requires fast read and write.
+대신에,  이건 빠르게 읽고 쓰기가 요구되는 데이터 같이 작은 데이터를 저장하고 불러오는데 쓰입니다. 
+
+It's easy to install and get started with ETCD.
+이건 쉽게 설치하고 다운로드 받을 수 있습니다.
+
+Download The binary extracted it and run.
+Download the relevant binary for your operating system from the GitHub releases pages.
+extracted and run the ETCD executable.
+이진파일을 다운로드 하고 압축 해제 하고 실행합니다.
+깃허브 릴리즈 페이지에서 당신의 운영체제에 맞는 바이너리 파일을 다운로드 합니다.
+실행파일을 실행합니다.
+
+When you run ETCD, it starts a service that listens on port. two three seven nine by default.
+ETCD 를 실행하면, 포트 2379을 기본으로 실행될 것입니다.
+
+You can then attach any clients to the ETCD service to store and retrieve information.
+and default client that comes with ETCD is the "etcdctl client".
+모든 클라이언트들을 정보를 저장하거나 조회할 목적으로 ETCD 서비스에 어태치 할 수 있습니다.
+그리고 기본 클라이언트로 ETCD와 함께 제공되는 ETCD 제어 클라이언트가 있습니다.
+
+The "etcdctl" client is a command line client for ETCD.
+ETCD 제어 클라이언트는 ETCD를 위한 커맨드 라인 클라이언트 입니다.
+
+You can use it to store and retrieve key value pairs 
+to store a key value pair from the ETCD control.
+'./etcdctl set key1' command followed by the value. 'value1'.
+당신은 ectcdctl을 키-벨류 쌍으로 데이터를 저장하거나 조회하는 용도로 사용할 수 있습니다.
+키-벨류 쌍으로 ETCD 컨트롤 세트로부터 저장을 하려면 'etcdctl set key1 value1' 형태로 입력해야 합니다.
+
+
+This creates an entry in the database with the information.
+이렇게 생성된 항목은 그 값과 함께 데이터 베이스에 등록됩니다.
+
+To retrieve the stored data, run the "etcdctl", get key one command.
+저장된 데이터를 조회하려면, etcdctl을 켜고 'get ket1' 명령어를 입력합니다.
+
+To view more options from the etcdctl command without any argument.
+좀 더 많은 옵션을 보려면 별도의 etcdctl 명령어에 아규먼트 없이 커맨드를 입력합니다.
+
+Well, that's a quick introduction to the next.
+예, 여기까지 다음으로 가는 빠른소개였습니다.
+
+We will see how it works in communities.
+이제 우리는 이것들이 커뮤니티내에서 어떻게 작동하는지 볼 것입니다.
+
+And later in this course, we will discuss more about configuring ETCD clusters in a high availability
+이루 강좌에서는 ETCD 클러스터의 특성에 대해 더 많이 알아볼 것입니다. 
+
+set up and the best practices around.

@@ -1,0 +1,90 @@
+Certification Tip!
+Here's a tip!
+
+As you might have seen already, it is a bit difficult to create and edit YAML files. 
+이미 보았을지도 모르겠지만.YAML파일을 만들고 수정하는건 살짝 어렵습니다.
+
+
+Especially in the CLI. 
+특히나 CLI 환경에서 말이죠.
+
+During the exam, you might find it difficult to copy and paste YAML files from browser to terminal. 
+시험을 보는 동안, 야물 파일을 복사하고 붙여 넣기가 어려울 수 있습니다.. 브라우저의 터미널에서 
+
+
+Using the kubectl run command can help in generating a YAML template. And sometimes, you can even get away with just the kubectl run command without having to create a YAML file at all. For example, if you were asked to create a pod or deployment with specific name and image. you can simply run the kubectl run command.
+kubectl run 커맨드가 yaml 템플릿 파일을 생성하는데 도움을 줄 수 있습니다.
+때때로 당신은 kubectl run 커맨드를 통해 YAML 파일 생성 없이도 할수 있씁니다.
+예를 들면, 특정이름이나 이미지로 pod 또는 디플로이먼트를 생성하길 요청할때, 
+
+[kubectl run] 커맨드를 이용해 이런것들을 할 수 있습니다.
+
+
+Use the below set of commands and try the previous practice tests again, 
+아래 명령어 집합을 사용해서 이전의 연습과제를 다시 해 보십시오.
+
+(instead of:~대신에)
+but this time try to use the below commands instead of YAML files. 
+하지만 이번시간은 야물파일 대신에 아래 커맨드를 사용하여서 시도하세요.
+
+Try to use these as much as you can going forward in all exercises
+이걸 사용하면 모든 연습과제에서 진일보 할 수 있습니다.
+
+Reference (Bookmark this page for exam. It will be very handy):
+
+https://kubernetes.io/docs/reference/kubectl/conventions/
+
+Create an NGINX Pod
+nginx pod 를 생성
+
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+kubectl run nginx --image=nginx
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+kubectl run nginx --image=nginx
+
+(Manifest:명백한의 의미이지만 각 컴포넌트들의 메타데이터를 포함하는 파일)
+Generate POD Manifest YAML file (-o yaml). Don't create it(--dry-run)
+pod
+POD를 정의하는 파일 생성 옵션 -o yaml
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+kubectl run nginx --image=nginx --dry-run=client -o yaml
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+--dry-run 은 무슨 옵션?
+
+
+
+Create a deployment
+
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+kubectl create deployment --image=nginx nginx
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+
+
+Generate Deployment YAML file (-o yaml). Don't create it(--dry-run)
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+
+Generate Deployment YAML file (-o yaml). Don't create it(--dry-run) with 4 Replicas (--replicas=4)
+
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+
+
+Save it to a file, make necessary changes to the file (for example, adding more replicas) and then create the deployment.
+
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+kubectl create -f nginx-deployment.yaml
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+
+OR
+
+In k8s version 1.19+, we can specify the --replicas option to create a deployment with 4 replicas.
+
+kubectl create deployment --image=nginx nginx --replicas=4 --dry-run=client -o yaml > nginx-deployment.yaml

@@ -1,0 +1,581 @@
+------------------------------------------------------------
+[인증서와 키의 종류]
+[서버인증서]
+- KubeAPI 서버 인증서
+- ETCD 서버 인증서
+- 큐블렛 서버 인증서
+
+[클라이언트인증서]
+- 관리자 인증서
+- 스케쥴러 인증서
+- 큐브 컨트롤 매니저
+- 큐브 프록시
+
+[ETCD <-> API Server]
+- apiserver 키와 인증서를 그대로 사용가능
+
+[Kubelet 서버 <-> API Server]
+- kubelet.crt 키와 인증서를 그대로 사용가능
+
+[CA 서버]
+- ca.crt 와 ca.key 인증 파일을 사용
+------------------------------------------------------------
+
+
+In this lecture, we'll look at how to generate the certificates for the cluster 
+이번 강의에서는 클러스터에서 어떻게 인증서 파일을 생성하는지 알아 보겠습니다.
+
+to generate certificates There are different tools available, such as Easy RSA, Open SSL or CF SSL, etc, or many others.
+인증서를 생성하는데에는 다양한 도구가 이용가능 합니다. EASY RSA 라던가 OPENSSL, CFSSL 등등 다양합니다.
+
+In this lecture we will use as a OPENSSL tool to generate the certificates.
+이번 강의에서 인증서를 생성하기 위해 우리는 OPENSSL 을 사용합니다.
+
+This is where we left off.
+여기서 우리가 중단했던것 같습니다.
+
+We will start with the CA certificates.
+CA 인증서부터 출발을 할 것입니다.
+
+
+
+
+[CA 인증서의 생성]
+-----------------------------------------------------------------
+>> openssl genrsa -out ca.key 2048
+
+First, we create a private key using the open SSL command 
+첫번째로 우리는 openssl 명령을 이용하여 개인키를 생성하겠습니다.
+
+
+[☆★CA.KEY 생성★☆]
+
+
+(along with:~와 함께)
+Then we use the open SSL request command along with the key we just created to generate a certificate signing request.
+그런 다음 방금 만든 키와 함께 openssl req 명령을 실행하여 CSR 인증서 서명 요청을 생성합니다.
+
+[자체 키와 이로 인증서 서명 요청을 통해 CA 발급을 진행함.]
+
+[☆★CA.KEY 를 이용하여 CA.CSR 생성 ★☆]
+
+>> openssl req -new -key ca.key -subj "/CN=KUBERNETES-CA" -out ca.csr
+
+The certificates signing a request is like a certificate with all of your details, but with no signature.
+CSR 은 요청자의 모든 상세 정보가 있는 인증서와 같지만 서명은 존재하지 않습니다.
+
+in the certificate signing request, we specify the name of the component the certificate is for in the common name on CN field.
+인증서 서명 요청서에서 우리는 인증서 커먼 네임이라는 컴포넌트의 이름을 지정 합니다.
+
+(since:~때문에 로 해석)
+In this case, since we are creating a certificate for the kubernetes CA, we named KUBERNETES-CA.
+이 경우에 쿠버네티스 CA 인증을 위해 인증서를 생성하기 때문에 우리는 Kubernetes-CA 라고 이름 붙였습니다.
+
+[☆★ CSR 속에 생성될 CA 이름 생성 ★☆]
+
+[아직 까지 CSR 작성중]
+
+Finally, we sign the certificate using the open SSL X509 command and by specifying the certificates signing request be generated in the previous command.
+마지막으로 우리는 이전에 생성된 CSR 을 지정하고 OPENSSL x509 명령을 이용하여 인증서에 서명을 합니다. 
+
+>> openssl x509 -req -in -ca.csr -signkey ca.key -out ca.crt
+
+[☆★ x509 명령을 이용하여 CA.CRT 생성 ★☆]
+
+Since this is for the CA itself, it is self signed by the CA using its own private key that it generated in the first step.
+해당 작업은 CA 자체를 인증 하는 작업이기 때문에. CA 는 첫번째 스탭에서 생성한 자기가 가지고 있는 키를 이용하여 스스로 서명 합니다. 
+
+---------------------------------------------------------------
+(going forward:앞으로)
+going forward for all other certificates we will use to see a key pair to sign them.
+앞으로 모든 다른 인정서들은 우리가 본 키쌍을 확인하는데 사용할 것입니다.
+
+[CA는 올바른 발급자인지를 증명해주는 기관의 공개키와 인증서 이므로]
+
+The CA now has its private key and root certificate file.
+CA는 이제 개인키와 루트 인증서 파일이 생겼습니다.
+
+Great.
+좋습니다.
+
+Let's now look at generating the client certificates.
+이제 클라이언트 인증서의 생성을 살펴보겠습니다.
+
+We start with the admin user.
+우리는 관리자 로 시작 하겠습니다.
+
+(follow:따르다)
+We follow the same process where we create a private key for the admin user using the open SSL command.
+우리는 어드민 유저의 개인키를 생성하기위해 OPENSSL 명령을 사용하여 똑같이 따라하겠습니다.
+
+>> openssl genrsa -out admin.key 2048
+
+[☆★ 어드민 유저 ADMIN.KEY 생성 ★☆]
+-----------------------------------------------------------------
+We then generate CSR and that is where we specify the name of the admin user, which is kube admin.
+그런다음 우리는 CSR 을 생성하고 CSR에 어드민 유저의 이름을 지점 합니다. kube-admin 이라고.
+
+>> openssl req -onew -key admin.key -subj "/CN=kube-admin" -out admin.csr
+
+[☆★ 어드민 유저 ADMIN.CSR 생성 ★☆]
+
+A quick note about the name.
+이름에 관한 빠른 메모 입니다.
+
+It doesn't really have to be kube admin.
+이것은 실제로 kube admin 으로 하지 않아도 됩니다. 
+
+It could be anything. but remember, this is the name that kube control client authenticate with And when you run the kube control command.
+이 이름은 어떤것으로든 할 수 있습니다. 하지만 기억하세요. 이 이름은 큐브 컨트롤러 클라이언트 인증과 kubectl 명령어에 사용되는 이름이라는 걸.
+
+So in the audit logs and elsewhere, this is the name that you will see.
+따라서 감시 로그와 다른곳들에서 이 이름이 당신이 보게될 이름입니다.
+
+So provide a relevant name in this field.
+따라서 해당 필드에 해당되는 이름을 넣어주세요.
+
+[☆★ 어드민 유저 ADMIN.CSR 에 [이름:KUBE-ADMIN] 생성 ★☆]
+
+Finally generate a signed certificate using the openssl X509 command, but this time you specify the CA a certificate and the CA key.
+마지막으로 openssl x509 명령을 이용하여 서명된 인증서를 생성합니다. 하지만 이번에는 CA 인증서와 CA KEY 로 지정해 줍니다.
+
+[☆★ 어드민 유저 ADMIN.CRT 생성 with CA 키 & CA 인증서 ★☆]
+
+You're signing a certificate with the CA key pair that makes this a valid certificate within your cluster.
+당신의 CA 키와 인증서로 서명된 KUBE-ADMIN 인증서는 당신의 클러스터안에서 유효한 인증서로 취급 받게 됩니다.
+
+The signed certificate is then output to admin.crt file.
+서명된 인증서는 admin.crt 파일을 생성합니다.
+
+That is the certificate that the admin user will use to authenticate to kubernetes cluster.
+이 파일은 어드민 유저가 쿠버네티스 클러스터에 인증을 받을 때 이용됩니다.
+
+If you look at it, this whole process of generating a key and a certificate pair is similar to creating a user account for a new user.
+이 과정을 보면, 전제 키와 인증서 생성 전체 과정은 새로운 유저를 위해 계정을 생성하는 것과 유사합니다.
+
+The certificate is the validated user ID and the key is like the password.
+인증서는 유효한 유저 ID 이고 키는 패스워드와 같습니다.
+
+-------------------------------------------------------
+인증서 : 유저 ID
+키 : 패스워드
+-------------------------------------------------------
+
+It's just that it's much more secure than a simple username and password.
+이는 유저이름과 패스워드 보다 더 보안적이다.
+
+So this is for the admin user.
+따라서 이것이 어드민 유저를 위한 것이다.
+
+How do you differentiate this user from any other users?
+이 사용자를 다른 유저로부터 어떻게 구분 할까?
+
+The user account needs to be identified as an admin user and not just another basic user.
+사용자 계정은 식별될 필요가 있다. 어드민 유저와 그렇지 않은 일반 유저으로
+
+You do that by adding the group details for the user in the certificate.
+이는 인증서 안에 사용자를 위한 그룹 상세정보를 추가함으로써 할 수 있다.
+
+[☆★ 어드민 유저 인증서 - 그룹 상세를 추가 ★☆]
+
+In this case, a group named System Masters Existant Kubernetes with administrative privileges.
+이 경우 관리자 권한이 부여된 시스템 관리자라고 이름지어진 그룹이다.
+
+We will discuss about groups later.
+그룹에 대해서는 나중에 다루 겠습니다.
+
+But for now, it's important to know you must mention this information in your certificate signing a request.
+하지만 지금 이 인증서 서명 요청에 해당 정보를 언급해야하는것을 아는것이 중요합니다.
+
+You can do this by adding group details with the O you parameter while generating a certificate signing request.
+인증서 서명 요청을 작성 하는 동안 O= 파라미터를 이용해 그룹 상세를 추가하는 것을 할 수 있다.
+
+
+[☆★ 어드민 유저 인증서 - 그룹 상세 추가 명령어 ★☆]
+>> openssl req -new -key admin.key -subj "/CN=kube-admin/O=system:masteres" -out admin.scr
+
+Once it's signed, we now have our certificate for the admin user with admin privileges.
+서명이 되고 나면, 관리자 권한을 가진 어드민유저의 인증서를 우리는 가지게 된다.
+
+We follow the same process to generate client certificates for all other components that access the KubeAPI server.
+우리는 KubeAPI 서버에 통신을 하기 위한 모든 기타 컴포넌트들을 위해 클라이언트 인증서 생성에도 동일한 절차를 따라합니다.
+
+[☆★ KubeAPI 에 클라이언트로 접근하는 모든 컴포넌트들에게 인증서 생성 ★☆]
+------------------------------------------------------------------
+The Kube scheduler.
+Kube 스케쥴러
+
+Now the Kube scheduler is a system component, part of the Kubernetes control plane.
+스케쥴러는 시스템 컴포넌트 입니다. 쿠버네티스 제어 갑판의 일부입니다.
+
+So its name must be prefixed with the key word system.
+따라서 스케쥴러의 이름은 반듯이 system 이라는 접두어가 붙어야 합니다.
+
+[☆★ kube-scheduler 에 system 접두어 부착 ★☆]
+
+The same with Kube control manager.
+kube 컨트롤 매니저도 마찬가지입니다.
+
+It is again a system component, so its name must be prefixed with the keyword "system" 
+큐브 컨트롤 매니저도 마찬가지로 시스템 컴포넌트 입니다. 그래서 system 이라는 접두어를 반듯이 붙여야 합니다.
+
+[☆★ kube-control-manager 에 system 접두어 부착 ★☆]
+
+[☆★ 시스템 컴포넌트의 인증서 이름에는 SYSTEMKUBE-PROXY 처럼 접두어가 붙는다 ★☆]
+------------------------------------------------------------------
+and finally kube proxy.
+마지막으로 큐브 프록시.
+
+So far we have created CA certificates.
+지금까지 우리는 CA인증서를 생성했습니다.
+
+Then all of the client certificates, including the admin user, scheduler, controller manager and proxy.
+그 다음 모든 클라이언트의 인증서, 어드민 유저를 포함하여 스케쥴러 컨트롤 매니저, 그리고 프록시.
+
+We will follow the same procedure to create the remaining three client certificates for API servers And kubelet when we create the service certificates for them.
+우리는 API 서버, 큐블렛, 우리가 만든 서비스 인증서등 남은 3개의 클라이언트 인증서 생성을 위해 동일한 프로세스를 따를 것입니다.
+
+so we will set them aside for now.
+그러니 지금은 잠시 제쳐두겠습니다.
+------------------------------------------------------------------
+Now, what do you do with these certificates?
+이제 우리는 이 인증서로 무엇을 할 수 있습니까?
+
+Take the admin certificate for instance,
+관리자 인증서를 획득을 예로 들어 봅시다.
+
+to manage the cluster You can use this certificate instead of a username and password (in a https call) you make to the kube API server
+예를 들어 클러스터를 관리하기 위해 당신은 유저 네임과 패스워드 대신에 이 인증서를 이용할 수 있도록 Kube API 서버를 만들 수 있습니다.
+
+>> curl https://kube-apirserver:6443/api/v1/pods
+>> 	--key admin.key --cert admin.crt
+>> 	--cacert ca.crt
+
+you specify the key, the certificate and the CA certificate as options.
+관리자의 키, 관리자의 인증서, 그리고 이 인증서가 유효하다는걸 증명해줄 CA 이증서를 옵션으로 지정할 수 있습니다.
+
+That's one simple way.
+그것은 하나의 간단한 방법입니다.
+
+The other way is to move all of these parameters into a configuration file called Kube Config.
+다른 방법으로는 Kube Config 라 불리는 설정 파일 속에서 이 파라미터 들을 옮겨 적는 방법이 있습니다.
+
+[☆★ kube-config.yaml 에 인증서 파라미터를 추가 ★☆]
+
+Within that, specify the API server endpoint details, the certificates to use, etc..
+이 파일 속에, API 서버의 엔드포인트 상세
+
+-----------------------------------------------------------------
+[kube-config.yaml] -- /etc/kubernetes/manifests/ 에 있음
+설정 파일속에 사용자의 인증키를 등록 할 수 있음.
+
+apiVersion: v1
+cluster:
+...
+user:
+	-name: kuberenetes-admin
+	user:
+		client:certificate: admin.crt
+		client-key: admin.key
+-----------------------------------------------------------------
+That is what most of the kubernetes clients use.
+저것이 대부분의 쿠버네티스 클라이언트들이 사용하는 방법입니다.
+
+we Will look at Kube config in depth in one of the upcoming lectures.
+우리는 kube config 파일에 깊은곳을 다가오는 강의중 하나에서 살펴보겠습니다.
+-----------------------------------------------------------------
+Okay, so we are now left with the server side certificates.
+좋습니다. 그럼 이제 서버사이드 인증서가 남아있습니다.
+
+But before we proceed, one more thing remember
+진행하기에 앞서 한가지 한가지 기억할 것이 있습니다.
+
+(vice versa:그 반대도)
+in the prerequisite lecture, we mentioned that for clients to validate the certificates sent by the server and vice versa,
+선행 강의에서 클라이언트는 서버가 보낸 인증서를 검사하고 그 반대의 경우도 마찬가지라고 언급했었습니다.
+
+they all need a copy of the certificate authorities public certificate, the one that we said is already installed within the user's browsers in case of a Web application.
+그들은 모두 인증 기관의 공인인증서 사본(CA의 공개키)이 필요합니다. 이는 이미 우리가 말했었습니다. 사용자의 브라우저에 인스톨 되어 있다고.
+
+Similarly, in kubernetes, for these various components to verify each other, they all need a copy of the CA root certificate.
+마찬가지로 쿠버네티스에서 이런 다양한 구성 요소가 서로를 확인하려면 모두 CA 루트 인증서 사본이 필요합니다.
+
+So whenever you configure a server or a client with certificates, you will need to specify the CA root certificate as well.
+따라서 인증서로 서버나 클라이언트를 구성할때 마다 CA 루트 인증서도 지정해야 합니다.
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+☆★ 브라우저에는 빌트 인으로 CA 인증을 위한 공개키가 있어 진위를 확인할 수 있지만 쿠버네티스 에서는 어떻게 할 수 있을까? CA 루트 인증서를 컴포넌트들이 다 가지고 있어야 하는데 방법은?? ★☆
+
+[서버사이트 인증서 시작]
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+Let's look at the server side certificates Now.
+서버 사이드 인증서를 살펴 봅시다.
+
+let's start with ETCD server.
+ETCD 서버 부터 시작해 봅시다.
+
+We follow the same procedure as before to generate a certificate for ETCD. we will name it ETCD-server.
+이전에 인증서 생성과 동일하게 ETCD 인증서도 생성해 보겠습니다. 그리고 이름은 ETCD-server 라고 합시다.
+
+The ETCD server can be deployed as a cluster across multiple servers as in high availability environment.
+ETCD 서버는 고가용성 환경에서 다수의 서버에 클러스터로 배포될수 있습니다.
+
+In that case, to secure communication between the different members in the cluster, we must generate additional peer certificates.
+해당 경우에 클러스터의 다른 멤버들과 통신 보안을 위해서는 우린 반듯이 추가적인 peer 인증서를 생성해야 합니다.
+
+[☆★ PEER 인증서의 등장 ★☆]
+
+Once the certificates are generated, specify them while starting the ETCD server.
+인증서가 한번 생성되면 ETCD 서버가 기동되는 동안 지정하십시오.(ETCD 시작 설정에 지정하라는 말)
+
+>> cat etcd.yaml
+
+There are key and cert file options where you specify the ETCD server keys.
+저기에 ETCD 서버키를 지정할 수 있는 키와 인증서 파일 옵션이 있습니다.
+
+[☆★ ETCD.yaml 파일에 CA 인증서 등록 ★☆]
+------------------------------------------------------------------
+-etcd
+	# ETCD 서버가 다른 컴포넌트들과 통신을 하기 위한 인증 키
+	- --key-file=/path-to-cert/etcdserver.key
+	- --cert-file=/path-to-cert/etcdserver.crt
+	
+	# 다른 클러스터와의 통신을 위한 인증 키
+	- --peer-client-cert-auth=true
+	- --peer-key-file=/path-to-cert/etcdpeer1.key
+	- --peer-cert-file=/path-to-cert/etcdpeer1.crt
+	
+	# CA 인증키
+	- trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+	- peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+------------------------------------------------------------------
+There are other options available for specifying the peer certificates.
+저기에 PEER 인증서를 위핸 다른 옵션도 이용가능 합니다.
+
+[☆★ CA 인증서의 유효여부를 확인하기 위한 대조키는 ETCD 서버가 갖고 있다 ★☆]
+
+And finally, as we discussed earlier, it requires to see a root certificate to verify that the client's connecting to ETCD server are valid.
+그리고 마지막으로 이전에 언급한 바와 같이. 클라이언트가 ETCD 서버에 접속하는 것이 유효한지 확인하려면 루트 인증서를 확인 해야 합니다.
+
+----------------------------------------------------------------
+Let's talk about the server now.
+서버 사이드에 대해 이야기해 봅시다.
+
+We generate a certificate for the API server like before, but with the API server is the most popular of all components within the cluster.
+우리는 일전에 API 서버를 위한 인증서를 생성했습니다. 하지만 API 서버와 함께하기엔 클러스터내 가장 인기 있는 컴포넌트 입니다.
+
+Everyone talks to the kubeAPI server.
+모든 컴포넌트들은 KubeAPI 서버를 통합니다.
+
+Every operation goes through the Kube API server.
+모든 명령은 API 서버를 거쳐 갑니다.
+
+Anything moves within the cluster.
+클러스터 안에서 무엇이 지나가건
+
+The API server knows about it.
+API 서버는 그것을 압니다.
+
+You need information.
+당신은 정보가 필요하고
+
+You talk to the API server.
+API 서버와 통신을 합니다.
+
+(goes by:~으로 진행합니다.)
+And so it goes by many names and aliases within the cluster.
+따라서 클러스터내에 많은 이름과 별칭들을 사용합니다.
+
+it's real name is KubeAPI Server, but some call it kubernetes because for a lot of people who don't really know what goes under the hood of kubernetes, the kube API server is kubernetes.
+이것의 실제 이름은 KubeAPI 서버 입니다. 하지만 떄때로 쿠버네티스라고 불립니다. 이유는 쿠버네티스 아래에 무엇이 있는지 실제로 모르는 많은 사람들 때문입니다. KubeAPI 서버는 쿠버네티스 입니다.
+
+Others like to call it kubernetes.default.
+다른 이름으로는 kubernetes.default 입니다.
+
+Well, some refer to it as kubernetes.default.svc and some like to call it by Its full name kubernetes.default.svc.cluster.local.
+어떤 사람들은 kubernetes.default.svc 라 부르고 어떤 사람들은 kubernetes.default.svc.cluster.local이라 부르기를 좋아합니다.
+
+Finally, it is also referred to in some places simply by its IP address, the IP address of the host running the kube API server or the pod running it.
+마지막으로, 이것은 또한 어떤 장소에서는 IP 주소로 참조되기도 합니다. KubeAPI 서버가 호스팅 되는 IP 주소 또는 POD 가 돌고 있는 IP 주소로
+
+So all of these names must be present in the certificate generated for the kubeAPI server.
+따라서 이 모든 이름은 kubeAPI 서버용으로 생성된 인증서에 표기되어 있어야 합니다.
+☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★☆★
+
+(Only then:이래야만)
+Only then those referring to the KubeAPI server by these names will be able to establish a valid connection.
+이래야만 해당 이름으로 KubeAPI 서버를 참조하는 사람들이 유효한 커넥션을 생성할 수 있습니다.
+
+So we used the same set of commands as earlier to generate a key in the certificates signing a request.
+우리는 일전에 인증서 서명 요청에 키를 생성할때 동일한 명령어 셋을 이용했습니다. 
+
+you specify the name KubeAPI server.
+(Common Name) KubeAPI 서버라고 지정했습니다.
+
+>> openssl genrsa -out apiserver.key 2048
+>> openssl req -new -key apiserver.key -subj "/CN=kube-apiserver" -out apiserver.csr
+
+(alternate:대체)
+But how do you specify all the alternate names for that, 
+하지만 어떻게 모든 대체 이름을 모두 지정 할까요?
+
+you must create an openssl.config file,
+당신은 openssl 설정 파일을 생성해야만 합니다.
+
+create an openssl.cnf file and specify the alternate names in the alt names section of the file
+openssl.cnf 파일을 생성하고 대체이름을 [alt_names] 섹션에 지정을 합니다.
+---------------------------------------------------------------
+[OPENSSL.CNF] - 인증서 요청이 들어오는 DNS 설정을 설정 파일에 명시할 수 있다.
+[req]
+...
+[alt_names]
+DNS.1 = kubernetes
+DNS.2 = kubernetes.default
+DNS.3 = kubernetes.default.svc
+DNS4 = kubernetes.default.svc.cluster.local
+IP.1 = 10.96.0.1
+IP.2 = 172.17.0.87
+---------------------------------------------------------------
+include all the DNS names the API server goes by, as well as the IP address past this config file as an option while generating the certificates signing request.
+서버가 사용하는 모든 DNS 이름과 이 구성파일을 지나는 IP 주소를 옵션으로 포함합니다. CSR을 생성하는 동안.
+
+Finally, sign the certificate using the CA certificate and key.
+마지막으로 CA인증서와 키를 이용하여 인증서에 서명을 합니다.
+---------------------------------------------------------------
+[kube-apiserver.yaml]
+ExecStart=/usr/local/bin/kube-apiserver
+	# API 서버가 서버로서 가지는 인증서
+	--etcd-cafile=/var/lib/kubernetes/ca.pem
+	--etcd-certfile=/var/lib/kubernetes/apiserver-etcd-client.crt
+	--etcd-keyfile=/var/lib/kubernetes/apiserver-etcd-client.key
+	
+	# API 서버가 클라이언트로서 가지는 인증서 (<-> ETCD 서버)
+	--client-ca-file=/var/lib/kubernetes/ca.pem
+	--tls-cert-file=/var/lib/kubernetes/apiserver.crt
+	--tls-private-key-file=/var/lib/kubernetes/apiserver.key
+---------------------------------------------------------------
+
+[☆★ API 서버 인증서 생성 apiserver.crt ★☆]
+
+You then have the API server certificate.
+이제 API 서버 인증서가 생겼습니다.
+--------------------------------------------------------------
+It is time to look at where we are going to specify these keys.
+이제 이 키를 지정할 장소를 살펴 볼 차레 입니다.
+
+Remember to consider the API client certificates that are used by the API server.
+기억하세요 API 서버가 사용할 API 클라이언트 인증서에 대해서도 고려하는걸 잊지 마세요.
+
+Well, communicating as a client to the ETCD and Kubelet servers, the location of these certificates are passed in to the Kube API servers executable or service configuration file.
+좋습니다. ETCD서버와 큐블렛 서버에 클라이언트로 통신하는 것. 이 인증서에 대한 위치는 KubeAPI 서버 실행파일 또는 서비스 설정 파일에 전달되어 있습니다.
+
+First, the CA file needs to be passed in.
+첫번쨰로 CA 파일이 전달될 필요가 있습니다.
+
+>> --client-ca-file=/var/lib/kubernetes/ca.pem
+
+remember every component needs to CA certificate to verify its clients. 
+기억하세요 모든 컴포넌트들은 클라이언트를 확인하기위해 CA 인증서가 필요합니다.
+
+Then we provide the API server certificates under the TLS cert options 
+그런다음 API 서버 인증서는 TLS 인증서 옵션 아래에 넣습니다.
+
+>> --tls-cert-file=/var/lib/kubernetes/apiserver.crt
+>> --tls-private-key-file=/var/lib/kubernetes/apiserver.key
+
+(by : ~~가 로 해석하는게 자연스러움)
+we then specifiy the client certificates used by kubeAPI server to connect to the ETCD server again with the CA file.
+그런다음 우린 클라이언트 인증서는 KubeAPI가 ETCD서버에 접속하는데 다시 사용됩니다.
+
+And finally, the kubeAPI server client certificates to connect to the kubelet.
+그리고 마침내 KubeAPI 서버의 클라이언트 인증서는 큐블렛에 연결 됩니다.
+------------------------------------------------------------------
+Let's next comes the kubelet server.
+다음으로 큐블렛 서버로 가봅시다.
+
+The kubelet server is any https API server that runs on each node.
+큐블렛은 각각의 노드 마다 실행되는 모든 https API 서버 입니다.
+
+responsible for managing the node.
+노드의 관리를 담당하고 있습니다.
+
+That's who the API server talks to, to monitor the node, as well as any information regarding what pod to schedule on this node.
+노드를 모니터링 하는 것 그리고 어떤 POD 가 어느 노드에 스케쥴링 되는지에 관한 모든 정보를 API 서버와 통신하는 존재입니다.
+
+[노드 <-> 큐블렛 <-> API 서버]
+
+As such, you need a key certificate pair for each node in the cluster.
+마찬가지로, 클러스터내 존재하는 각각의 노드를 위해 키와 인증서 쌍이 필요합니다.
+
+Now what are you nameed these certificates?
+그럼 이 인증서들을 뭐라고 이름 짓겠습니까?
+
+Are they all going to be named kubelet?
+모든 인증서 이름을 큐블렛이라고 지을까요?
+
+(be named after:~를 따서 명명되다)
+No, they will be named after their nodes.
+아닙니다. 노드 이름을 따서 명명 됩니다.
+
+Node zero one zero two and not zero three.
+노드01, 노드02, 노드03
+
+Once the certificates are created, use them in the kubelet config file.
+인증서가 생성되면, 노드들은 큐블렛 설정 파일에서 이를 이용합니다.
+
+As always, you specify the root certificate and then provide the kubelet node certificates.
+언제나 처럼, 루트 인증서와 큐블렛 노드 인증서를 지정해야 합니다.
+
+You must do this for each node in the cluster.
+해당 작업을 클러스터의 각 노드마다 해야 합니다.
+
+We also talked about a set of client certificates that will be used by the kubelet to communicate with the kubeAPI server.
+우린 또한 클라이언트 인증서 집합에 대해 이야기 할 것입니다. 큐블릿이 큐브API 서버와 통신하기 위해 사용되는 
+
+These are used by the kubelet to authenticate into the Kube API server. 큐블릿 클라이언트 인증서는 큐블릿이 KubeAPI 서버에 인증을 받기 위해 사용됩니다
+
+They need to be generated as well.
+이것 역시 생성될 필요가 있습니다.
+
+What do you name these certificates?
+이 큐블렛 클라이언트 인증서의 이름은 뭐라고 지을까요?
+
+The API server needs to know which node is authenticated and give it the right set of permissions.
+API 서버는 어떤 노드가 인증이 되었는지 그리고 올바른 권한이 주어졌는지 알 필요가 있습니다.
+
+So it requires the nodes to have the right names in the right formats.
+따라서 노드에 올바른 포맷으로 이름이 지정될 필요가 있습니다.
+
+Since the nodes are system components like the kube scheduler and the controller manager we talked about earlier, the format starts with the system keyword.
+노드는 스케쥴러나 컨트롤 매니저 같은 시스템 컴포넌트 이기 때문에. 이전에 ㅁ라했던 것 처럼. system 이라는 키워드로 시작 해야 합니다.
+
+followed by node and then the node name.
+더듬어서 이해불가.
+
+in this case, node zero one to node zero three.
+이번 경우에는 노드01 ~ 노드03 입니다.
+
+And how would the API server give it the right set of permissions.
+그리고 어떻게 API 서버가 올바른 권한을 줄 수 있을까요?
+
+Remember, we specified a group name for the admin user so the admin user gets administrative privileges.
+우리는 어드민 유저를 위해 그룹을 지정했던걸 기억하세요. 그래서 어드민 유저는 관리자 권한을 얻었습니다.
+
+Similarly, the nodes must be added to a group named System Node.
+유사하게. 노드 역시 시스템 노드라는 이름의 그룹을 추가해야만 합니다.
+
+Once the certificates are generated, they going to the kube config files, as we discussed earlier.
+인증서가 한번 생성되면, 우리가 지난번 얘기했던것 처럼 kube 설정파일로 갑니다.
+
+Well, that's it for this lecture.
+
+In the next lecture, we will see how you can view cert information and how certificates are configured by the kubeADM tool.
+다음 강의에서는 어떻게 인증 정보를 볼수 있고 KubeADM 으로 인증서를 설정하는 법에 대해 알아보겠습니다.
